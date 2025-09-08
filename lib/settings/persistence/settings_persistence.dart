@@ -6,6 +6,4 @@ abstract class SettingsPersistence {
   Future<void> setString(String name, String value);
   Future<void> setBool(String name, bool value);
   Future<void> setInt(String name, int value);
-
-  Future<Map<String, dynamic>> getAll();
 }

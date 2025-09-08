@@ -4,7 +4,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
 //import '../settings/settings.dart';
 import '/utils/responsive_page.dart';
@@ -29,7 +28,7 @@ class MainMenuPage extends StatelessWidget {
           ),
         ),
         rectangularMenuArea: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             FilledButton(
               onPressed: () {
