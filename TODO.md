@@ -1,4 +1,5 @@
--   Make a landing page so we don't stare at a white screen while loading
--   Allow keyboard to narrow for mobile
--   Add Fosterdle stats
--   Start working on more games!
+- Clean up code for alternate keyboard width
+- Make a landing page so we don't stare at a white screen while loading
+- Allow keyboard to narrow for mobile
+- Add Fosterdle stats
+- Start working on more games!

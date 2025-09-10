@@ -31,17 +31,25 @@ class KeyboardWidget extends StatelessWidget {
 
   final double _keySpacing = 7.0;
 
-  const KeyboardWidget({required this.adapter, required this.letterStates, super.key});
+  const KeyboardWidget({
+    required this.adapter,
+    required this.letterStates,
+    super.key,
+  });
 
-  Widget _keyButton(String letter, Palette pal) => SizedBox(
-    width: 45,
+  Widget _keyButton(String letter, Palette pal, BuildContext ctx) => SizedBox(
     height: 60,
+    width: MediaQuery.of(ctx).size.width < 450 ? 25 : 45,
     child: FilledButton(
       onPressed: () => adapter.onLetter(letter),
       style: _keyboardButtonStyle.copyWith(
         backgroundColor: switch (letterStates[letter]) {
-          LetterState.rightPlace => WidgetStateProperty.all<Color>(pal.letterRightPlace),
-          LetterState.wrongPlace => WidgetStateProperty.all<Color>(pal.letterWrongPlace),
+          LetterState.rightPlace => WidgetStateProperty.all<Color>(
+            pal.letterRightPlace,
+          ),
+          LetterState.wrongPlace => WidgetStateProperty.all<Color>(
+            pal.letterWrongPlace,
+          ),
           LetterState.notInWord => pal.keyboardKeyNotInWord,
           _ => pal.keyboardKey,
         },
@@ -50,15 +58,17 @@ class KeyboardWidget extends StatelessWidget {
     ),
   );
 
-  Widget _controlButton(VoidCallback onPressed, Widget child, Palette pal) => SizedBox(
-    width: 70,
-    height: 60,
-    child: FilledButton(
-      onPressed: onPressed,
-      style: _keyboardButtonStyle.copyWith(backgroundColor: pal.keyboardKey),
-      child: child,
-    ),
-  );
+  Widget _controlButton(VoidCallback onPressed, Widget child, Palette pal) =>
+      ConstrainedBox(
+        constraints: BoxConstraints(minWidth: 70, minHeight: 60),
+        child: FilledButton(
+          onPressed: onPressed,
+          style: _keyboardButtonStyle.copyWith(
+            backgroundColor: pal.keyboardKey,
+          ),
+          child: child,
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -70,21 +80,35 @@ class KeyboardWidget extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           spacing: _keySpacing,
-          children: [...'QWERTYUIOP'.split('').map((ltr) => _keyButton(ltr, palette))],
+          children: [
+            ...'QWERTYUIOP'
+                .split('')
+                .map((ltr) => _keyButton(ltr, palette, context)),
+          ],
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           spacing: _keySpacing,
 
-          children: [...'ASDFGHJKL'.split('').map((ltr) => _keyButton(ltr, palette))],
+          children: [
+            ...'ASDFGHJKL'
+                .split('')
+                .map((ltr) => _keyButton(ltr, palette, context)),
+          ],
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           spacing: _keySpacing,
           children: [
             _controlButton(adapter.onSubmit, Text("ENTER"), palette),
-            ...'ZXCVBNM'.split('').map((ltr) => _keyButton(ltr, palette)),
-            _controlButton(adapter.onBackspace, Icon(Icons.backspace_outlined), palette),
+            ...'ZXCVBNM'
+                .split('')
+                .map((ltr) => _keyButton(ltr, palette, context)),
+            _controlButton(
+              adapter.onBackspace,
+              Icon(Icons.backspace_outlined),
+              palette,
+            ),
           ],
         ),
       ],
