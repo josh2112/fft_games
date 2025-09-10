@@ -2,33 +2,43 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'board_state.dart';
+import 'palette.dart';
 
 class LetterWidget extends StatelessWidget {
   final LetterWithState letterWithState;
 
-  static final Map<LetterState, Color> letterStateToColor = {
-    LetterState.untried: Colors.black,
-    LetterState.notInWord: Colors.black,
-    LetterState.wrongPlace: Colors.orange,
-    LetterState.rightPlace: Colors.green,
-  };
+  static final TextStyle letterStyle = TextStyle(
+    fontSize: 25,
+    fontWeight: FontWeight.bold,
+    leadingDistribution: TextLeadingDistribution.even,
+  );
 
   const LetterWidget(this.letterWithState, {super.key});
 
   @override
   Widget build(BuildContext context) {
+    final palette = context.watch<Palette>();
+
+    final border = letterWithState.state == LetterState.notInWord || letterWithState.state == LetterState.untried
+        ? Border.all(color: Colors.grey[800]!, width: 2)
+        : null;
+
     return AnimatedContainer(
-      width: 50,
-      height: 50,
-      margin: EdgeInsets.all(4),
+      width: 62,
+      height: 62,
+      margin: EdgeInsets.all(3),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey, width: 3),
-        color: letterStateToColor[letterWithState.state],
+        border: border,
+        color: switch (letterWithState.state) {
+          LetterState.rightPlace => palette.letterRightPlace,
+          LetterState.wrongPlace => palette.letterWrongPlace,
+          _ => Colors.transparent,
+        },
       ),
       duration: Duration(milliseconds: 330),
       child: Align(
         alignment: Alignment.center,
-        child: Text(letterWithState.letter, style: Theme.of(context).textTheme.headlineLarge),
+        child: Text(letterWithState.letter, style: letterStyle),
       ),
     );
   }

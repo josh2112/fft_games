@@ -14,6 +14,8 @@ class LetterWithState {
 class Guess {
   final List<LetterWithState> letters = List.generate(5, (v) => LetterWithState('', LetterState.untried));
 
+  bool isSubmitted = false;
+
   bool get isFull => !letters.any((lws) => lws.letter.isEmpty);
 
   bool addLetter(String letter) {
@@ -34,7 +36,7 @@ class BoardState {
 
   final WonGameCallback onWin;
 
-  final List<Guess> guesses = List.generate(5, (i) => Guess());
+  final List<Guess> guesses = List.generate(6, (i) => Guess());
 
   int _currentGuess = 0;
 
@@ -63,6 +65,8 @@ class BoardState {
   void submitGuess() {
     final g = currentGuess;
     if (g is! Guess || !g.isFull) return;
+
+    g.isSubmitted = true;
 
     final guess = [...g.letters.map((lws) => lws.letter)];
     final target = word.split('');
@@ -95,6 +99,10 @@ class BoardState {
     _currentGuess += 1;
     _keyboardStateChanges.add(null);
     _guessStateChanges.add(null);
+
+    if (!g.letters.any((lws) => lws.state != LetterState.rightPlace)) {
+      onWin(_currentGuess - 1);
+    }
   }
 
   void dispose() {}

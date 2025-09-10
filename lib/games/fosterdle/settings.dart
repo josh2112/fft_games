@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 
 import '../../settings/persistence/settings_persistence.dart';
@@ -10,6 +11,8 @@ class SettingsController with ChangeNotifier {
   static final String _keyHardMode = 'hardMode';
 
   static final _log = Logger('$_prefix.SettingsController');
+
+  late final version;
 
   /// The persistence store that is used to save settings.
   final SettingsPersistence _store;
@@ -26,6 +29,9 @@ class SettingsController with ChangeNotifier {
   }
 
   Future<void> _load() async {
+    final pubspec = await rootBundle.loadString("pubspec.yaml");
+    version = pubspec.split("version: ")[1].split("+")[0];
+
     final loadedValues = await Future.wait([
       _store.getBool("$_prefix.$_keyHardMode", defaultValue: false).then((value) => hardMode.value = value),
     ]);

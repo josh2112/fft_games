@@ -5,48 +5,52 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-//import '../settings/settings.dart';
-import '/utils/responsive_page.dart';
-
-class MainMenuPage extends StatelessWidget {
+class MainMenuPage extends StatefulWidget {
   const MainMenuPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    //final settingsController = context.watch<SettingsController>();
+  State<MainMenuPage> createState() => _MainMenuPageState();
 
+  static const _gap = SizedBox(height: 10);
+}
+
+class _MainMenuPageState extends State<MainMenuPage> {
+  String _version = "";
+
+  static const isRunningWithWasm = bool.fromEnvironment('dart.tool.dart2wasm');
+
+  @override
+  void initState() {
+    super.initState();
+
+    DefaultAssetBundle.of(
+      context,
+    ).loadString("pubspec.yaml").then((f) => setState(() => _version = f.split("version: ")[1].split("+")[0]));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      body: ResponsivePage(
-        squarishMainArea: Center(
-          child: Transform.rotate(
-            angle: -0.1,
-            child: const Text(
-              'Foster Family Times Games!',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 55, height: 1),
-            ),
+      body: Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Foster Family Times Games', style: Theme.of(context).textTheme.headlineLarge),
+              const SizedBox(height: 50),
+              FilledButton(
+                onPressed: () {
+                  GoRouter.of(context).go('/fosterdle');
+                },
+                child: const Text('Fosterdle'),
+              ),
+              MainMenuPage._gap,
+              Opacity(opacity: 0.5, child: Text("Version $_version\t${(isRunningWithWasm ? 'WASM enabled' : '')}")),
+            ],
           ),
-        ),
-        rectangularMenuArea: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            FilledButton(
-              onPressed: () {
-                GoRouter.of(context).go('/fosterdle');
-              },
-              child: const Text('Fosterdle'),
-            ),
-            _gap,
-            /*FilledButton(
-              onPressed: () => GoRouter.of(context).push('/settings'),
-              child: const Text('Settings'),
-            ),
-            _gap,*/
-          ],
         ),
       ),
     );
   }
-
-  static const _gap = SizedBox(height: 10);
 }

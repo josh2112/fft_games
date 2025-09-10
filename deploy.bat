@@ -1,2 +1,2 @@
-flutter build web --base-href /fftgames/
+flutter build web --wasm --base-href /fftgames/
 wsl -- rsync -avz --stats -p --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r --chown=josh2112:www-data build/web/* josh2112@joshuafoster.info:/var/www/public/fftgames

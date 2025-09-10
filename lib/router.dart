@@ -4,11 +4,10 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
+import 'games/fosterdle/fosterdle.dart' as fosterdle;
 //import 'game_internals/score.dart';
 import 'main_menu_page.dart';
-import 'games/fosterdle/fosterdle.dart' as fosterdle;
 //import 'settings/settings_screen.dart';
 //import 'win_game/win_game_screen.dart';
 
@@ -22,36 +21,13 @@ final router = GoRouter(
       routes: [
         GoRoute(
           path: 'fosterdle',
-          builder: (context, state) =>
-              const fosterdle.PlayPage(key: Key('fosterdle')),
-          /*routes: [
+          builder: (context, state) => const fosterdle.PlayPage(key: Key('fosterdle')),
+          routes: [
             GoRoute(
-              path: 'won',
-              redirect: (context, state) {
-                if (state.extra == null) {
-                  // Trying to navigate to a win screen without any data.
-                  // Possibly by using the browser's back button.
-                  return '/';
-                }
-
-                // Otherwise, do not redirect.
-                return null;
-              },
-              pageBuilder: (context, state) {
-                final map = state.extra! as Map<String, dynamic>;
-                final score = map['score'] as Score;
-
-                return buildMyTransition<void>(
-                  key: const ValueKey('won'),
-                  color: context.watch<Palette>().backgroundPlaySession,
-                  child: WinGameScreen(
-                    score: score,
-                    key: const Key('win game'),
-                  ),
-                );
-              },
+              path: 'stats',
+              builder: (context, state) => const fosterdle.StatsPage(key: Key('fosterdle stats')),
             ),
-          ],*/
+          ],
         ),
         /*GoRoute(
           path: 'settings',
