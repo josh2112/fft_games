@@ -29,27 +29,37 @@ class KeyboardWidget extends StatelessWidget {
     leadingDistribution: TextLeadingDistribution.proportional,
   );
 
-  final double _keySpacing = 7.0;
+  final double _keySpacingHoriz = 5.0;
+  final double _keySpacingVert = 6.0;
+  final double _keyHeight = 56;
 
-  const KeyboardWidget({
-    required this.adapter,
-    required this.letterStates,
-    super.key,
-  });
+  const KeyboardWidget({required this.adapter, required this.letterStates, super.key});
 
-  Widget _keyButton(String letter, Palette pal, BuildContext ctx) => SizedBox(
-    height: 60,
-    width: MediaQuery.of(ctx).size.width < 450 ? 25 : 45,
-    child: FilledButton(
+  Widget _bc2(Widget b) => Flexible(
+    flex: 2,
+    child: ConstrainedBox(
+      constraints: BoxConstraints(minHeight: _keyHeight, maxHeight: _keyHeight, maxWidth: 45),
+      child: b,
+    ),
+  );
+
+  Widget _bc3(Widget b) => Flexible(
+    flex: 3,
+    child: ConstrainedBox(
+      constraints: BoxConstraints(minHeight: _keyHeight, maxHeight: _keyHeight, maxWidth: 60),
+      child: b,
+    ),
+  );
+
+  Widget halfKeySpace() => Flexible(flex: 1, child: SizedBox(height: 60));
+
+  Widget _keyButton(String letter, Palette pal, BuildContext ctx) => _bc2(
+    FilledButton(
       onPressed: () => adapter.onLetter(letter),
       style: _keyboardButtonStyle.copyWith(
         backgroundColor: switch (letterStates[letter]) {
-          LetterState.rightPlace => WidgetStateProperty.all<Color>(
-            pal.letterRightPlace,
-          ),
-          LetterState.wrongPlace => WidgetStateProperty.all<Color>(
-            pal.letterWrongPlace,
-          ),
+          LetterState.rightPlace => WidgetStateProperty.all<Color>(pal.letterRightPlace),
+          LetterState.wrongPlace => WidgetStateProperty.all<Color>(pal.letterWrongPlace),
           LetterState.notInWord => pal.keyboardKeyNotInWord,
           _ => pal.keyboardKey,
         },
@@ -58,57 +68,43 @@ class KeyboardWidget extends StatelessWidget {
     ),
   );
 
-  Widget _controlButton(VoidCallback onPressed, Widget child, Palette pal) =>
-      ConstrainedBox(
-        constraints: BoxConstraints(minWidth: 70, minHeight: 60),
-        child: FilledButton(
-          onPressed: onPressed,
-          style: _keyboardButtonStyle.copyWith(
-            backgroundColor: pal.keyboardKey,
-          ),
-          child: child,
-        ),
-      );
+  Widget _controlButton(VoidCallback onPressed, Widget child, Palette pal) => _bc3(
+    FilledButton(
+      onPressed: onPressed,
+      style: _keyboardButtonStyle.copyWith(backgroundColor: pal.keyboardKey),
+      child: child,
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
     final palette = context.watch<Palette>();
 
     return Column(
-      spacing: _keySpacing,
+      spacing: _keySpacingVert,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          spacing: _keySpacing,
-          children: [
-            ...'QWERTYUIOP'
-                .split('')
-                .map((ltr) => _keyButton(ltr, palette, context)),
-          ],
+          spacing: _keySpacingHoriz,
+          children: [...'QWERTYUIOP'.split('').map((ltr) => _keyButton(ltr, palette, context))],
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          spacing: _keySpacing,
+          spacing: _keySpacingHoriz,
 
           children: [
-            ...'ASDFGHJKL'
-                .split('')
-                .map((ltr) => _keyButton(ltr, palette, context)),
+            halfKeySpace(),
+            ...'ASDFGHJKL'.split('').map((ltr) => _keyButton(ltr, palette, context)),
+            halfKeySpace(),
           ],
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          spacing: _keySpacing,
+          spacing: _keySpacingHoriz,
           children: [
             _controlButton(adapter.onSubmit, Text("ENTER"), palette),
-            ...'ZXCVBNM'
-                .split('')
-                .map((ltr) => _keyButton(ltr, palette, context)),
-            _controlButton(
-              adapter.onBackspace,
-              Icon(Icons.backspace_outlined),
-              palette,
-            ),
+            ...'ZXCVBNM'.split('').map((ltr) => _keyButton(ltr, palette, context)),
+            _controlButton(adapter.onBackspace, Icon(Icons.backspace_outlined), palette),
           ],
         ),
       ],

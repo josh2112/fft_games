@@ -1,5 +1,4 @@
-- Clean up code for alternate keyboard width
-- Make a landing page so we don't stare at a white screen while loading
-- Allow keyboard to narrow for mobile
-- Add Fosterdle stats
-- Start working on more games!
+-   Fix bug with hard mode setting not being saved
+-   Make a landing page so we don't stare at a white screen while loading
+-   Add Fosterdle stats
+-   Start working on more games!

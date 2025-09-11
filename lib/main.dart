@@ -46,8 +46,8 @@ class MyApp extends StatelessWidget {
             theme: ThemeData.light(), // Or your custom light theme
             darkTheme: ThemeData.dark(), // Or your custom dark theme
             themeMode: ThemeMode.system,
-
             routerConfig: router,
+            debugShowCheckedModeBanner: false,
           );
         },
       ),

@@ -24,8 +24,8 @@ class LetterWidget extends StatelessWidget {
         : null;
 
     return AnimatedContainer(
-      width: 62,
-      height: 62,
+      width: 65,
+      height: 65,
       margin: EdgeInsets.all(3),
       decoration: BoxDecoration(
         border: border,
@@ -62,7 +62,13 @@ class BoardWidget extends StatelessWidget {
 
     return StreamBuilder(
       stream: boardState.guessStateChanges,
-      builder: (context, child) => Column(children: [...boardState.guesses.map((g) => GuessWidget(g))]),
+      builder: (context, child) => FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [...boardState.guesses.map((g) => GuessWidget(g))],
+        ),
+      ),
     );
   }
 }

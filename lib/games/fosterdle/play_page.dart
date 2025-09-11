@@ -1,15 +1,16 @@
 import 'package:fft_games/games/fosterdle/keyboard_widget.dart';
 import 'package:fft_games/games/fosterdle/palette.dart';
+import 'package:fft_games/games/fosterdle/settings.dart';
+import 'package:fft_games/games/fosterdle/settings_dialog.dart';
+import 'package:fft_games/settings/persistence/settings_persistence.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
-import '../../settings/persistence/settings_persistence.dart';
 import 'board_state.dart';
 import 'board_widget.dart';
-import 'settings.dart';
 
 class PlayPage extends StatefulWidget {
   const PlayPage({super.key});
@@ -21,30 +22,35 @@ class PlayPage extends StatefulWidget {
 class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   static final _log = Logger('PlaySessionScreen');
 
-  late final BoardState _boardState;
+  late final SettingsController settings;
+  late final BoardState boardState;
 
   @override
   void initState() {
     super.initState();
-    _boardState = BoardState(word: 'WORDL', onWin: _onPlayerWon);
+    boardState = BoardState(word: 'WORDL', onWin: _onPlayerWon);
+    settings = SettingsController(store: context.read<SettingsPersistence>());
   }
 
   @override
   void dispose() {
-    _boardState.dispose();
+    boardState.dispose();
+    settings.dispose();
     super.dispose();
   }
 
+  bool _isModifierKeyPressed() =>
+      HardwareKeyboard.instance.isControlPressed ||
+      HardwareKeyboard.instance.isShiftPressed ||
+      HardwareKeyboard.instance.isAltPressed ||
+      HardwareKeyboard.instance.isMetaPressed;
+
   @override
   Widget build(BuildContext context) {
-    final SettingsController settings = SettingsController(store: context.watch<SettingsPersistence>());
-
-    //_log.info("Focused: ${Focus.of(context).debugLabel}");
-
     return Focus(
       autofocus: true,
       onKeyEvent: (node, event) {
-        if (event is KeyDownEvent) {
+        if (event is KeyDownEvent && !_isModifierKeyPressed()) {
           final letter = event.character?.toUpperCase();
           if (letter is String) {
             onLetter(letter);
@@ -52,14 +58,18 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
             onBackspace();
           } else if (event.logicalKey == LogicalKeyboardKey.enter) {
             onSubmit();
+          } else {
+            return KeyEventResult.ignored;
           }
+          return KeyEventResult.handled;
         }
 
-        return KeyEventResult.handled;
+        return KeyEventResult.ignored;
       },
       child: MultiProvider(
         providers: [
-          Provider.value(value: _boardState),
+          ChangeNotifierProvider.value(value: settings),
+          Provider.value(value: boardState),
           Provider.value(value: Palette()),
         ],
         child: Scaffold(
@@ -67,30 +77,25 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
             title: Text('Fosterdle'),
             centerTitle: true,
             actions: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Opacity(opacity: 0.4, child: Text("HARD\nMODE", style: Theme.of(context).textTheme.labelSmall)),
-                  const SizedBox(width: 6),
-                  ValueListenableBuilder(
-                    valueListenable: settings.hardMode,
-                    builder: (context, hardMode, child) =>
-                        Switch(value: hardMode, onChanged: (v) => _maybeToggleHardMode(v, settings)),
-                  ),
-                ],
+              IconButton(onPressed: showStats, icon: Icon(Icons.bar_chart)),
+              Builder(
+                builder: (context) => IconButton(
+                  onPressed: () => showDialogOrBottomSheet(context, SettingsDialog(callerContext: context)),
+                  icon: Icon(Icons.settings),
+                ),
               ),
             ],
           ),
           body: Padding(
-            padding: EdgeInsets.all(20),
+            padding: EdgeInsets.all(10),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const BoardWidget(),
-                const Spacer(),
+                Expanded(child: const BoardWidget()),
+                const SizedBox(height: 5),
                 StreamBuilder(
-                  stream: _boardState.keyboardStateChanges,
-                  builder: (context, child) => KeyboardWidget(adapter: this, letterStates: _boardState.keyboardState),
+                  stream: boardState.keyboardStateChanges,
+                  builder: (context, child) => KeyboardWidget(adapter: this, letterStates: boardState.keyboardState),
                 ),
               ],
             ),
@@ -101,14 +106,31 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   }
 
   @override
-  void onLetter(String letter) => _boardState.addLetter(letter);
+  void onLetter(String letter) => boardState.addLetter(letter);
 
   @override
-  void onBackspace() => _boardState.removeLetter();
+  void onBackspace() => boardState.removeLetter();
+
+  String? errorForHardModeCheckResult(HardModeCheckResult r) {
+    if (r == HardModeCheckResult.ok) {
+      return null;
+    } else if (r.place != null) {
+      return "Letter ${r.place! + 1} must be ${r.letter}";
+    } else {
+      return "Guess must contain ${r.letter}";
+    }
+  }
 
   @override
   void onSubmit() {
-    _boardState.submitGuess();
+    if (settings.hardMode.value) {
+      final err = errorForHardModeCheckResult(boardState.checkHardMode());
+      if (err != null) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+        return;
+      }
+    }
+    boardState.submitGuess();
   }
 
   Future<void> _onPlayerWon(int numGuesses) async {
@@ -124,15 +146,30 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     //await Future<void>.delayed(_gameWinAnimationDuration);
     //if (!mounted) return;
 
-    GoRouter.of(context).go('/fosterdle/stats');
+    GoRouter.of(context).go('/fosterdle/stats', extra: {"highlightNumGuesses": numGuesses});
   }
 
-  void _maybeToggleHardMode(bool hardModeOn, SettingsController settings) {
-    if (!hardModeOn && _boardState.guesses.first.isSubmitted) {
-      final messenger = ScaffoldMessenger.of(context);
-      messenger.showSnackBar(const SnackBar(content: Text("Can't turn off hard mode once you've made a guess!")));
+  void showStats() => GoRouter.of(context).go('/fosterdle/stats');
+
+  void showSettings(BuildContext context) {
+    if (MediaQuery.of(context).size.width < 500) {
+      Scaffold.of(context).showBottomSheet((context) => SettingsDialog(callerContext: context));
     } else {
-      settings.toggleHardMode();
+      showDialog(
+        context: context,
+        builder: (c) => Dialog(child: SettingsDialog(callerContext: context)),
+      );
     }
+  }
+}
+
+void showDialogOrBottomSheet(BuildContext context, Widget widget) {
+  if (MediaQuery.of(context).size.width < 500) {
+    Scaffold.of(context).showBottomSheet((c) => widget);
+  } else {
+    showDialog(
+      context: context,
+      builder: (c) => Dialog(child: widget),
+    );
   }
 }
