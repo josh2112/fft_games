@@ -11,6 +11,7 @@ class LetterWidget extends StatelessWidget {
     fontSize: 25,
     fontWeight: FontWeight.bold,
     leadingDistribution: TextLeadingDistribution.even,
+    color: Colors.white,
   );
 
   const LetterWidget(this.letterWithState, {super.key});
@@ -19,7 +20,9 @@ class LetterWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = context.watch<Palette>();
 
-    final border = letterWithState.state == LetterState.notInWord || letterWithState.state == LetterState.untried
+    final border =
+        letterWithState.state == LetterState.notInWord ||
+            letterWithState.state == LetterState.untried
         ? Border.all(color: Colors.grey[800]!, width: 2)
         : null;
 
@@ -32,7 +35,7 @@ class LetterWidget extends StatelessWidget {
         color: switch (letterWithState.state) {
           LetterState.rightPlace => palette.letterRightPlace,
           LetterState.wrongPlace => palette.letterWrongPlace,
-          _ => Colors.transparent,
+          _ => null,
         },
       ),
       duration: Duration(milliseconds: 330),
@@ -49,8 +52,10 @@ class GuessWidget extends StatelessWidget {
   const GuessWidget(this.guess, {super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      Row(mainAxisAlignment: MainAxisAlignment.center, children: [...guess.letters.map((lws) => LetterWidget(lws))]);
+  Widget build(BuildContext context) => Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: [...guess.letters.map((lws) => LetterWidget(lws))],
+  );
 }
 
 class BoardWidget extends StatelessWidget {

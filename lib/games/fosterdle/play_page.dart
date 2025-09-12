@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 
 import 'board_state.dart';
 import 'board_widget.dart';
+import 'stats_page.dart';
 
 class PlayPage extends StatefulWidget {
   const PlayPage({super.key});
@@ -28,7 +29,11 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   @override
   void initState() {
     super.initState();
-    boardState = BoardState(word: 'WORDL', onWin: _onPlayerWon);
+    boardState = BoardState(
+      word: 'WORDL',
+      onWon: _onPlayerWin,
+      onLost: _onPlayerLost,
+    );
     settings = SettingsController(store: context.read<SettingsPersistence>());
   }
 
@@ -80,7 +85,10 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
               IconButton(onPressed: showStats, icon: Icon(Icons.bar_chart)),
               Builder(
                 builder: (context) => IconButton(
-                  onPressed: () => showDialogOrBottomSheet(context, SettingsDialog(callerContext: context)),
+                  onPressed: () => showDialogOrBottomSheet(
+                    context,
+                    SettingsDialog(callerContext: context),
+                  ),
                   icon: Icon(Icons.settings),
                 ),
               ),
@@ -95,7 +103,10 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
                 const SizedBox(height: 5),
                 StreamBuilder(
                   stream: boardState.keyboardStateChanges,
-                  builder: (context, child) => KeyboardWidget(adapter: this, letterStates: boardState.keyboardState),
+                  builder: (context, child) => KeyboardWidget(
+                    adapter: this,
+                    letterStates: boardState.keyboardState,
+                  ),
                 ),
               ],
             ),
@@ -126,14 +137,16 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     if (settings.hardMode.value) {
       final err = errorForHardModeCheckResult(boardState.checkHardMode());
       if (err != null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(err)));
         return;
       }
     }
     boardState.submitGuess();
   }
 
-  Future<void> _onPlayerWon(int numGuesses) async {
+  Future<void> _onPlayerWin(int numGuesses) async {
     _log.info('Player won!');
 
     //final score = Score(1, 1, DateTime.now().difference(_startOfPlay));
@@ -146,14 +159,34 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     //await Future<void>.delayed(_gameWinAnimationDuration);
     //if (!mounted) return;
 
-    GoRouter.of(context).go('/fosterdle/stats', extra: {"highlightNumGuesses": numGuesses});
+    GoRouter.of(
+      context,
+    ).go('/fosterdle/stats', extra: StatsPageWonGameData(numGuesses));
+  }
+
+  Future<void> _onPlayerLost(String word) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Oh no!"),
+        actions: [
+          TextButton(
+            onPressed: () => GoRouter.of(context).go('/'),
+            child: Text("OK"),
+          ),
+        ],
+        content: Text("The word is $word. Better luck tomorrow!"),
+      ),
+    );
   }
 
   void showStats() => GoRouter.of(context).go('/fosterdle/stats');
 
   void showSettings(BuildContext context) {
     if (MediaQuery.of(context).size.width < 500) {
-      Scaffold.of(context).showBottomSheet((context) => SettingsDialog(callerContext: context));
+      Scaffold.of(
+        context,
+      ).showBottomSheet((context) => SettingsDialog(callerContext: context));
     } else {
       showDialog(
         context: context,

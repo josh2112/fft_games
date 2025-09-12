@@ -15,20 +15,30 @@ class SettingsController with ChangeNotifier {
 
   ValueNotifier<bool> hardMode = ValueNotifier(true);
 
-  SettingsController({SettingsPersistence? store}) : _store = store ?? SharedPrefsPersistence() {
+  SettingsController({SettingsPersistence? store})
+    : _store = store ?? SharedPrefsPersistence() {
     _load();
   }
 
   void toggleHardMode() {
     hardMode.value = !hardMode.value;
-    _store.setBool("$_prefix.$_keyHardMode", hardMode.value);
+    _store
+        .setBool("$_prefix.$_keyHardMode", hardMode.value)
+        .then(
+          (_) => _log.fine(
+            "Saved setting $_prefix.$_keyHardMode to ${hardMode.value}",
+          ),
+        );
   }
 
   Future<void> _load() async {
-    final loadedValues = await Future.wait([
-      _store.getBool("$_prefix.$_keyHardMode", defaultValue: false).then((value) => hardMode.value = value),
+    Future.wait([
+      _store.getBool("$_prefix.$_keyHardMode", defaultValue: false).then((
+        value,
+      ) {
+        hardMode.value = value;
+        _log.fine(() => 'Loaded setting $_prefix.$_keyHardMode = $value');
+      }),
     ]);
-
-    _log.fine(() => 'Loaded settings: $loadedValues');
   }
 }

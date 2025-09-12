@@ -1,6 +1,7 @@
 import 'dart:async';
 
 typedef WonGameCallback = Future<void> Function(int n);
+typedef LostGameCallback = Future<void> Function(String answer);
 
 enum LetterState { untried, notInWord, wrongPlace, rightPlace }
 
@@ -12,7 +13,10 @@ class LetterWithState {
 }
 
 class Guess {
-  final List<LetterWithState> letters = List.generate(5, (v) => LetterWithState('', LetterState.untried));
+  final List<LetterWithState> letters = List.generate(
+    5,
+    (v) => LetterWithState('', LetterState.untried),
+  );
 
   bool isSubmitted = false;
 
@@ -34,7 +38,8 @@ class Guess {
 class BoardState {
   final String word;
 
-  final WonGameCallback onWin;
+  final WonGameCallback onWon;
+  final LostGameCallback onLost;
 
   final List<Guess> guesses = List.generate(6, (i) => Guess());
 
@@ -43,16 +48,20 @@ class BoardState {
   Guess? get currentGuess => guesses.elementAtOrNull(_currentGuess);
 
   final Map<String, LetterState> keyboardState = {
-    for (var k in 'QWERTYUIOPASDFGHJKLZXCVBNM'.split('')) k: LetterState.untried,
+    for (var k in 'QWERTYUIOPASDFGHJKLZXCVBNM'.split(''))
+      k: LetterState.untried,
   };
 
-  final StreamController<void> _keyboardStateChanges = StreamController<void>.broadcast();
-  final StreamController<void> _guessStateChanges = StreamController<void>.broadcast();
+  final StreamController<void> _keyboardStateChanges =
+      StreamController<void>.broadcast();
+  final StreamController<void> _guessStateChanges =
+      StreamController<void>.broadcast();
 
   Stream<void> get keyboardStateChanges => _keyboardStateChanges.stream;
   Stream<void> get guessStateChanges => _guessStateChanges.stream;
 
-  BoardState({required String word, required this.onWin}) : word = word.toUpperCase();
+  BoardState({required String word, required this.onWon, required this.onLost})
+    : word = word.toUpperCase();
 
   void addLetter(String letter) {
     if (true == currentGuess?.addLetter(letter)) _guessStateChanges.add(null);
@@ -64,12 +73,15 @@ class BoardState {
 
   HardModeCheckResult checkHardMode() {
     final g = currentGuess;
-    if (_currentGuess == 0 || g is! Guess || !g.isFull) return HardModeCheckResult.ok;
+    if (_currentGuess == 0 || g is! Guess || !g.isFull)
+      return HardModeCheckResult.ok;
 
     final guess = [...g.letters.map((lws) => lws.letter)];
     final prevGuess = guesses.elementAt(_currentGuess - 1).letters;
 
-    final prevRight = prevGuess.indexed.where((item) => item.$2.state == LetterState.rightPlace);
+    final prevRight = prevGuess.indexed.where(
+      (item) => item.$2.state == LetterState.rightPlace,
+    );
 
     // Xth letter must be X
     for (final rp in prevRight) {
@@ -80,13 +92,19 @@ class BoardState {
 
     // wrong-place letters in previous guess
     final prevWrong = [
-      ...prevGuess.indexed.where((item) => item.$2.state == LetterState.wrongPlace).map((item) => item.$2.letter),
+      ...prevGuess.indexed
+          .where((item) => item.$2.state == LetterState.wrongPlace)
+          .map((item) => item.$2.letter),
     ];
 
     final rightIndices = [...prevRight.map((item) => item.$1)];
 
     // remaining letters in new guess (after right place have been checked)
-    final guessRemaining = [...guess.indexed.where((item) => !rightIndices.contains(item.$1)).map((item) => item.$2)];
+    final guessRemaining = [
+      ...guess.indexed
+          .where((item) => !rightIndices.contains(item.$1))
+          .map((item) => item.$2),
+    ];
 
     // Guess must contain X
     for (String ltr in prevWrong) {
@@ -120,7 +138,9 @@ class BoardState {
     // Next, look for letters that are in the word but in the wrong spot
     for (final (j, c) in guess.indexed) {
       final i = target.indexOf(c);
-      if (i >= 0 && g.letters[j].state == LetterState.untried && target.contains(c)) {
+      if (i >= 0 &&
+          g.letters[j].state == LetterState.untried &&
+          target.contains(c)) {
         g.letters[j].state = LetterState.wrongPlace;
         target[i] = '_';
       }
@@ -128,7 +148,9 @@ class BoardState {
 
     // Finally, color all other letters
     for (final (i, c) in guess.indexed) {
-      if (g.letters[i].state == LetterState.untried) g.letters[i].state == LetterState.notInWord;
+      if (g.letters[i].state == LetterState.untried) {
+        g.letters[i].state = LetterState.notInWord;
+      }
 
       final state = g.letters[i].state;
       if (state.index > keyboardState[c]!.index) keyboardState[c] = state;
@@ -139,7 +161,9 @@ class BoardState {
     _guessStateChanges.add(null);
 
     if (!g.letters.any((lws) => lws.state != LetterState.rightPlace)) {
-      onWin(_currentGuess - 1);
+      onWon(_currentGuess);
+    } else if (_currentGuess == guesses.length) {
+      onLost(word);
     }
   }
 
