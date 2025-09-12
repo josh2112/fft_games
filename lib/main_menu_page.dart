@@ -2,6 +2,8 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -23,9 +25,12 @@ class _MainMenuPageState extends State<MainMenuPage> {
   void initState() {
     super.initState();
 
-    DefaultAssetBundle.of(
-      context,
-    ).loadString("pubspec.yaml").then((f) => setState(() => _version = f.split("version: ")[1].split("+")[0]));
+    DefaultAssetBundle.of(context)
+        .loadString("pubspec.yaml")
+        .then(
+          (f) =>
+              setState(() => _version = f.split("version: ")[1].split("+")[0]),
+        );
   }
 
   @override
@@ -37,7 +42,10 @@ class _MainMenuPageState extends State<MainMenuPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Foster Family Times Games', style: Theme.of(context).textTheme.headlineLarge),
+              Text(
+                'Foster Family Times Games',
+                style: Theme.of(context).textTheme.headlineLarge,
+              ),
               const SizedBox(height: 50),
               FilledButton(
                 onPressed: () {
@@ -46,7 +54,12 @@ class _MainMenuPageState extends State<MainMenuPage> {
                 child: const Text('Fosterdle'),
               ),
               MainMenuPage._gap,
-              Opacity(opacity: 0.5, child: Text("Version $_version\t${(isRunningWithWasm ? 'WASM enabled' : '')}")),
+              Opacity(
+                opacity: 0.5,
+                child: Text(
+                  "Version $_version\t${(isRunningWithWasm ? 'WASM enabled' : '')}",
+                ),
+              ),
             ],
           ),
         ),
