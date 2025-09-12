@@ -2,59 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'board_state.dart';
-import 'palette.dart';
+import 'letter_widget.dart';
 
-class LetterWidget extends StatelessWidget {
-  final LetterWithState letterWithState;
+// TODO: Cache current guess
+// In didUpdateWidget(), see what letters have changed and rebuild them
 
-  static final TextStyle letterStyle = TextStyle(
-    fontSize: 25,
-    fontWeight: FontWeight.bold,
-    leadingDistribution: TextLeadingDistribution.even,
-    color: Colors.white,
-  );
+class GuessRowWidget extends StatefulWidget {
+  final Guess guess;
 
-  const LetterWidget(this.letterWithState, {super.key});
+  const GuessRowWidget(this.guess, {super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final palette = context.watch<Palette>();
-
-    final border =
-        letterWithState.state == LetterState.notInWord ||
-            letterWithState.state == LetterState.untried
-        ? Border.all(color: Colors.grey[800]!, width: 2)
-        : null;
-
-    return AnimatedContainer(
-      width: 65,
-      height: 65,
-      margin: EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        border: border,
-        color: switch (letterWithState.state) {
-          LetterState.rightPlace => palette.letterRightPlace,
-          LetterState.wrongPlace => palette.letterWrongPlace,
-          _ => null,
-        },
-      ),
-      duration: Duration(milliseconds: 330),
-      child: Align(
-        alignment: Alignment.center,
-        child: Text(letterWithState.letter, style: letterStyle),
-      ),
-    );
-  }
+  State<GuessRowWidget> createState() => _GuessRowWidgetState();
 }
 
-class GuessWidget extends StatelessWidget {
-  final Guess guess;
-  const GuessWidget(this.guess, {super.key});
+class _GuessRowWidgetState extends State<GuessRowWidget> {
+  @override
+  void didUpdateWidget(covariant GuessRowWidget oldWidget) {
+    // TODO: implement didUpdateWidget
+    super.didUpdateWidget(oldWidget);
+  }
 
   @override
   Widget build(BuildContext context) => Row(
     mainAxisAlignment: MainAxisAlignment.center,
-    children: [...guess.letters.map((lws) => LetterWidget(lws))],
+    children: [...widget.guess.letters.map((lws) => LetterWidget(lws))],
   );
 }
 
@@ -65,14 +37,14 @@ class BoardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final boardState = context.watch<BoardState>();
 
-    return StreamBuilder(
-      stream: boardState.guessStateChanges,
-      builder: (context, child) => FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [...boardState.guesses.map((g) => GuessWidget(g))],
-        ),
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          for (final guess in boardState.guesses)
+            ListenableBuilder(listenable: guess, builder: (context, child) => GuessRowWidget(guess)),
+        ],
       ),
     );
   }
