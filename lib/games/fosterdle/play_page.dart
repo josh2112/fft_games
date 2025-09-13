@@ -29,11 +29,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   @override
   void initState() {
     super.initState();
-    boardState = BoardState(
-      word: 'WORDL',
-      onWon: _onPlayerWin,
-      onLost: _onPlayerLost,
-    );
+    boardState = BoardState(word: 'WORDL', onWon: _onPlayerWin, onLost: _onPlayerLost);
     settings = SettingsController(store: context.read<SettingsPersistence>());
   }
 
@@ -57,7 +53,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
       onKeyEvent: (node, event) {
         if (event is KeyDownEvent && !_isModifierKeyPressed()) {
           final letter = event.character?.toUpperCase();
-          if (letter is String) {
+          if (letter is String && RegExp(r'^[a-zA-Z]$').hasMatch(letter)) {
             onLetter(letter);
           } else if (event.logicalKey == LogicalKeyboardKey.backspace) {
             onBackspace();
@@ -85,10 +81,8 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
               IconButton(onPressed: showStats, icon: Icon(Icons.bar_chart)),
               Builder(
                 builder: (context) => IconButton(
-                  onPressed: () => showDialogOrBottomSheet(
-                    context,
-                    SettingsDialog(callerContext: context),
-                  ),
+                  onPressed: () =>
+                      showDialogOrBottomSheet(context, SettingsDialog(callerContext: context)),
                   icon: Icon(Icons.settings),
                 ),
               ),
@@ -103,10 +97,8 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
                 const SizedBox(height: 5),
                 StreamBuilder(
                   stream: boardState.keyboardStateChanges,
-                  builder: (context, child) => KeyboardWidget(
-                    adapter: this,
-                    letterStates: boardState.keyboardState,
-                  ),
+                  builder: (context, child) =>
+                      KeyboardWidget(adapter: this, letterStates: boardState.keyboardState),
                 ),
               ],
             ),
@@ -137,9 +129,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     if (settings.hardMode.value) {
       final err = errorForHardModeCheckResult(boardState.checkHardMode());
       if (err != null) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(err)));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
         return;
       }
     }
@@ -159,9 +149,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     //await Future<void>.delayed(_gameWinAnimationDuration);
     //if (!mounted) return;
 
-    GoRouter.of(
-      context,
-    ).go('/fosterdle/stats', extra: StatsPageWonGameData(numGuesses));
+    GoRouter.of(context).go('/fosterdle/stats', extra: StatsPageWonGameData(numGuesses));
   }
 
   Future<void> _onPlayerLost(String word) async {
@@ -169,12 +157,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
       context: context,
       builder: (context) => AlertDialog(
         title: Text("Oh no!"),
-        actions: [
-          TextButton(
-            onPressed: () => GoRouter.of(context).go('/'),
-            child: Text("OK"),
-          ),
-        ],
+        actions: [TextButton(onPressed: () => GoRouter.of(context).go('/'), child: Text("OK"))],
         content: Text("The word is $word. Better luck tomorrow!"),
       ),
     );
@@ -184,9 +167,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
 
   void showSettings(BuildContext context) {
     if (MediaQuery.of(context).size.width < 500) {
-      Scaffold.of(
-        context,
-      ).showBottomSheet((context) => SettingsDialog(callerContext: context));
+      Scaffold.of(context).showBottomSheet((context) => SettingsDialog(callerContext: context));
     } else {
       showDialog(
         context: context,

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:flutter/material.dart';
 
@@ -7,51 +8,75 @@ typedef LostGameCallback = Future<void> Function(String answer);
 
 enum LetterState { untried, notInWord, wrongPlace, rightPlace }
 
-class LetterWithState {
-  final String letter;
-  final LetterState state;
-  final bool submitted;
+class LetterWithState with ChangeNotifier {
+  String letter;
+  LetterState state;
 
-  LetterWithState({this.letter = '', this.state = LetterState.untried, this.submitted = false});
+  LetterWithState({this.letter = '', this.state = LetterState.untried});
 
-  LetterWithState copyWith({String? letter, LetterState? state, bool? submitted}) => LetterWithState(
-    letter: letter ?? this.letter,
-    state: state ?? this.state,
-    submitted: submitted ?? this.submitted,
-  );
+  LetterWithState copy() => LetterWithState(letter: letter, state: state);
+
+  void updateLetter(String letter) {
+    this.letter = letter;
+    notifyListeners();
+  }
+
+  void updateLetterState(LetterState state) {
+    this.state = state;
+    notifyListeners();
+  }
 }
 
-class Guess with ChangeNotifier {
-  final List<LetterWithState> letters = List.generate(5, (v) => LetterWithState());
+class LetterStateChangeEvent {
+  final int index;
+  final LetterState state;
 
+  LetterStateChangeEvent(this.index, this.state);
+}
+
+class Guess {
+  final List<LetterWithState> letters;
   bool isSubmitted = false;
 
   bool get isFull => !letters.any((lws) => lws.letter.isEmpty);
 
+  Guess(int length) : letters = List.generate(5, (v) => LetterWithState(), growable: false);
+
   void addLetter(String letter) {
-    final idx = letters.indexWhere((l) => l.letter.isEmpty);
-    if (idx >= 0) {
-      letters[idx] = letters[idx].copyWith(letter: letter);
-      notifyListeners();
+    final i = letters.indexWhere((l) => l.letter.isEmpty);
+    if (i >= 0) {
+      letters[i].updateLetter(letter);
     }
   }
 
   void backspace() {
-    final idx = letters.lastIndexWhere((l) => l.letter.isNotEmpty);
-    if (idx >= 0) {
-      letters[idx] = letters[idx].copyWith(letter: '');
-      notifyListeners();
+    final i = letters.lastIndexWhere((l) => l.letter.isNotEmpty);
+    if (i >= 0) {
+      letters[i].updateLetter('');
+    }
+  }
+
+  void submit(List<LetterState> updatedStates) {
+    _cascade(updatedStates).then((_) => isSubmitted = true);
+  }
+
+  Future<void> _cascade(List<LetterState> updatedStates) async {
+    for (final (i, state) in updatedStates.indexed) {
+      letters[i].updateLetterState(state);
+      await Future.delayed(Duration(milliseconds: 200));
     }
   }
 }
 
 class BoardState {
+  static final numGuesses = 6;
+
   final String word;
 
   final WonGameCallback onWon;
   final LostGameCallback onLost;
 
-  final List<Guess> guesses = List.generate(6, (i) => Guess());
+  final List<Guess> guesses;
 
   int _currentGuess = 0;
 
@@ -65,7 +90,9 @@ class BoardState {
 
   Stream<void> get keyboardStateChanges => _keyboardStateChanges.stream;
 
-  BoardState({required String word, required this.onWon, required this.onLost}) : word = word.toUpperCase();
+  BoardState({required String word, required this.onWon, required this.onLost})
+    : word = word.toUpperCase(),
+      guesses = List.generate(numGuesses, (i) => Guess(word.length));
 
   void addLetter(String letter) => currentGuess?.addLetter(letter);
 
@@ -89,13 +116,17 @@ class BoardState {
 
     // wrong-place letters in previous guess
     final prevWrong = [
-      ...prevGuess.indexed.where((item) => item.$2.state == LetterState.wrongPlace).map((item) => item.$2.letter),
+      ...prevGuess.indexed
+          .where((item) => item.$2.state == LetterState.wrongPlace)
+          .map((item) => item.$2.letter),
     ];
 
     final rightIndices = [...prevRight.map((item) => item.$1)];
 
     // remaining letters in new guess (after right place have been checked)
-    final guessRemaining = [...guess.indexed.where((item) => !rightIndices.contains(item.$1)).map((item) => item.$2)];
+    final guessRemaining = [
+      ...guess.indexed.where((item) => !rightIndices.contains(item.$1)).map((item) => item.$2),
+    ];
 
     // Guess must contain X
     for (String ltr in prevWrong) {
@@ -113,15 +144,15 @@ class BoardState {
     final g = currentGuess;
     if (g is! Guess || !g.isFull) return;
 
-    g.isSubmitted = true;
-
     final guess = [...g.letters.map((lws) => lws.letter)];
     final target = word.split('');
+
+    final updatedLetterStates = g.letters.map((lws) => lws.state).toList(growable: false);
 
     // First, look for letters that are in the right spot
     for (final (i, c) in guess.indexed) {
       if (target[i] == c) {
-        g.letters[i] = g.letters[i].copyWith(state: LetterState.rightPlace);
+        updatedLetterStates[i] = LetterState.rightPlace;
         target[i] = '_';
       }
     }
@@ -129,24 +160,27 @@ class BoardState {
     // Next, look for letters that are in the word but in the wrong spot
     for (final (j, c) in guess.indexed) {
       final i = target.indexOf(c);
-      if (i >= 0 && g.letters[j].state == LetterState.untried && target.contains(c)) {
-        g.letters[j] = g.letters[i].copyWith(state: LetterState.wrongPlace);
+      if (i >= 0 && updatedLetterStates[j] == LetterState.untried && target.contains(c)) {
+        updatedLetterStates[j] = LetterState.wrongPlace;
         target[i] = '_';
       }
     }
 
     // Finally, color all other letters
     for (final (i, c) in guess.indexed) {
-      if (g.letters[i].state == LetterState.untried) {
-        g.letters[i] = g.letters[i].copyWith(state: LetterState.notInWord);
+      if (updatedLetterStates[i] == LetterState.untried) {
+        updatedLetterStates[i] = LetterState.notInWord;
       }
 
-      final state = g.letters[i].state;
-      if (state.index > keyboardState[c]!.index) keyboardState[c] = state;
+      if (updatedLetterStates[i].index > keyboardState[c]!.index) {
+        keyboardState[c] = updatedLetterStates[i];
+      }
     }
 
     _currentGuess += 1;
     _keyboardStateChanges.add(null);
+
+    g.submit(updatedLetterStates);
 
     if (!g.letters.any((lws) => lws.state != LetterState.rightPlace)) {
       onWon(_currentGuess);

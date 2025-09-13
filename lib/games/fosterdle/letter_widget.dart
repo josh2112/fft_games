@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -6,38 +8,74 @@ import 'palette.dart';
 
 class LetterWidget extends StatefulWidget {
   final LetterWithState letterWithState;
-  late final LetterWithState letterWithStatePrev;
 
-  LetterWidget(this.letterWithState, {super.key}) {
-    letterWithStatePrev = LetterWithState(letterWithState.letter, letterWithState.state);
-  }
+  const LetterWidget(this.letterWithState, {super.key});
 
   @override
   State<LetterWidget> createState() => _LetterWidgetState();
 }
 
-class _LetterWidgetState extends State<LetterWidget> {
+class _LetterWidgetState extends State<LetterWidget> with TickerProviderStateMixin {
   static final TextStyle letterStyle = TextStyle(
     fontSize: 25,
     fontWeight: FontWeight.bold,
     leadingDistribution: TextLeadingDistribution.even,
   );
 
-  @override
-  void didUpdateWidget(covariant LetterWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
-  }
+  LetterWithState? prev;
+
+  late final AnimationController _animationController = AnimationController(
+    duration: const Duration(milliseconds: 60),
+    vsync: this,
+  );
+
+  late final _bounceAnimation = Tween<double>(
+    begin: 1,
+    end: 1.2,
+  ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
 
   @override
   Widget build(BuildContext context) {
     final palette = context.watch<Palette>();
 
+    return ListenableBuilder(
+      listenable: widget.letterWithState,
+      builder: (context, child) {
+        Widget? w;
+        if (prev != null && prev != widget.letterWithState) {
+          // Determine what changed
+          final cur = widget.letterWithState;
+
+          if (cur.letter != prev!.letter) {
+            // Do scale
+            log("Scale transition");
+            _animationController.repeat(reverse: true, count: 2);
+            w = ScaleTransition(scale: _bounceAnimation, child: letterWidget(palette));
+          } else if (cur.state != prev!.state) {
+            // Do flip
+            log("Flip transition");
+            w = AnimatedSwitcher(
+              duration: Duration(milliseconds: 250),
+              child: letterWidget(palette),
+            );
+          }
+        }
+
+        prev = widget.letterWithState.copy();
+        return w ??= letterWidget(palette);
+      },
+    );
+  }
+
+  Widget letterWidget(Palette palette, {Key? key}) {
     final border =
-        widget.letterWithState.state == LetterState.notInWord || widget.letterWithState.state == LetterState.untried
+        widget.letterWithState.state == LetterState.notInWord ||
+            widget.letterWithState.state == LetterState.untried
         ? Border.all(color: palette.letterWidgetBorder, width: 2)
         : null;
 
-    return AnimatedContainer(
+    return Container(
+      key: key,
       width: 65,
       height: 65,
       margin: EdgeInsets.all(3),
@@ -49,7 +87,6 @@ class _LetterWidgetState extends State<LetterWidget> {
           _ => Colors.transparent,
         },
       ),
-      duration: Duration(milliseconds: 330),
       child: Align(
         alignment: Alignment.center,
         child: Text(widget.letterWithState.letter, style: letterStyle),

@@ -4,9 +4,6 @@ import 'package:provider/provider.dart';
 import 'board_state.dart';
 import 'letter_widget.dart';
 
-// TODO: Cache current guess
-// In didUpdateWidget(), see what letters have changed and rebuild them
-
 class GuessRowWidget extends StatefulWidget {
   final Guess guess;
 
@@ -17,12 +14,6 @@ class GuessRowWidget extends StatefulWidget {
 }
 
 class _GuessRowWidgetState extends State<GuessRowWidget> {
-  @override
-  void didUpdateWidget(covariant GuessRowWidget oldWidget) {
-    // TODO: implement didUpdateWidget
-    super.didUpdateWidget(oldWidget);
-  }
-
   @override
   Widget build(BuildContext context) => Row(
     mainAxisAlignment: MainAxisAlignment.center,
@@ -41,10 +32,7 @@ class BoardWidget extends StatelessWidget {
       fit: BoxFit.scaleDown,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          for (final guess in boardState.guesses)
-            ListenableBuilder(listenable: guess, builder: (context, child) => GuessRowWidget(guess)),
-        ],
+        children: [for (final guess in boardState.guesses) GuessRowWidget(guess)],
       ),
     );
   }
