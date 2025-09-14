@@ -56,8 +56,9 @@ class Guess {
     }
   }
 
-  void submit(List<LetterState> updatedStates) {
-    _cascade(updatedStates).then((_) => isSubmitted = true);
+  Future<void> submit(List<LetterState> updatedStates) async {
+    await _cascade(updatedStates);
+    isSubmitted = true;
   }
 
   Future<void> _cascade(List<LetterState> updatedStates) async {
@@ -146,7 +147,7 @@ class BoardState {
     return HardModeCheckResult.ok;
   }
 
-  void submitGuess() {
+  Future<void> submitGuess() async {
     final g = currentGuess;
     if (g is! Guess || !g.isFull) return;
 
@@ -183,21 +184,18 @@ class BoardState {
       }
     }
 
-    g.submit(updatedLetterStates);
+    await g.submit(updatedLetterStates);
+    await Future.delayed(Duration(milliseconds: 300));
 
-    Future.delayed(Duration(milliseconds: 1200), () {
-      _currentGuess += 1;
-      keyboard.notify();
+    _currentGuess += 1;
+    keyboard.notify();
 
-      if (!updatedLetterStates.any((s) => s != LetterState.rightPlace)) {
-        onWon(_currentGuess);
-      } else if (_currentGuess == guesses.length) {
-        onLost(word);
-      }
-    });
+    if (!updatedLetterStates.any((s) => s != LetterState.rightPlace)) {
+      onWon(_currentGuess);
+    } else if (_currentGuess == guesses.length) {
+      onLost(word);
+    }
   }
-
-  void dispose() {}
 }
 
 class HardModeCheckResult {

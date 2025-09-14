@@ -26,6 +26,8 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   late final SettingsController settings;
   late final BoardState boardState;
 
+  bool isProcessingGuess = false;
+
   @override
   void initState() {
     super.initState();
@@ -35,7 +37,6 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
 
   @override
   void dispose() {
-    boardState.dispose();
     settings.dispose();
     super.dispose();
   }
@@ -109,10 +110,14 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   }
 
   @override
-  void onLetter(String letter) => boardState.addLetter(letter);
+  void onLetter(String letter) {
+    if (!isProcessingGuess) boardState.addLetter(letter);
+  }
 
   @override
-  void onBackspace() => boardState.removeLetter();
+  void onBackspace() {
+    if (!isProcessingGuess) boardState.removeLetter();
+  }
 
   String? errorForHardModeCheckResult(HardModeCheckResult r) {
     if (r == HardModeCheckResult.ok) {
@@ -126,6 +131,8 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
 
   @override
   void onSubmit() {
+    if (isProcessingGuess) return;
+
     if (settings.hardMode.value) {
       final err = errorForHardModeCheckResult(boardState.checkHardMode());
       if (err != null) {
@@ -133,7 +140,9 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
         return;
       }
     }
-    boardState.submitGuess();
+
+    isProcessingGuess = true;
+    boardState.submitGuess().then((_) => isProcessingGuess = false);
   }
 
   Future<void> _onPlayerWin(int numGuesses) async {

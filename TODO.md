@@ -2,8 +2,7 @@
 
 ## Fosterdle
 
-- hard mode doesn't work if turned on mid-match
-- settings screen needs a max width
+- Add word checking
 - Add stats page
 
 # Other
