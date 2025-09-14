@@ -68,6 +68,18 @@ class Guess {
   }
 }
 
+class KeyboardState with ChangeNotifier {
+  final Map<String, LetterState> keys = {
+    for (var k in 'QWERTYUIOPASDFGHJKLZXCVBNM'.split('')) k: LetterState.untried,
+  };
+
+  LetterState state(String c) => keys[c]!;
+
+  void setState(String c, LetterState state) => keys[c] = state;
+
+  void notify() => notifyListeners();
+}
+
 class BoardState {
   static final numGuesses = 6;
 
@@ -82,13 +94,7 @@ class BoardState {
 
   Guess? get currentGuess => guesses.elementAtOrNull(_currentGuess);
 
-  final Map<String, LetterState> keyboardState = {
-    for (var k in 'QWERTYUIOPASDFGHJKLZXCVBNM'.split('')) k: LetterState.untried,
-  };
-
-  final StreamController<void> _keyboardStateChanges = StreamController<void>.broadcast();
-
-  Stream<void> get keyboardStateChanges => _keyboardStateChanges.stream;
+  final KeyboardState keyboard = KeyboardState();
 
   BoardState({required String word, required this.onWon, required this.onLost})
     : word = word.toUpperCase(),
@@ -172,21 +178,23 @@ class BoardState {
         updatedLetterStates[i] = LetterState.notInWord;
       }
 
-      if (updatedLetterStates[i].index > keyboardState[c]!.index) {
-        keyboardState[c] = updatedLetterStates[i];
+      if (updatedLetterStates[i].index > keyboard.state(c)!.index) {
+        keyboard.setState(c, updatedLetterStates[i]);
       }
     }
 
-    _currentGuess += 1;
-    _keyboardStateChanges.add(null);
-
     g.submit(updatedLetterStates);
 
-    if (!g.letters.any((lws) => lws.state != LetterState.rightPlace)) {
-      onWon(_currentGuess);
-    } else if (_currentGuess == guesses.length) {
-      onLost(word);
-    }
+    Future.delayed(Duration(milliseconds: 1200), () {
+      _currentGuess += 1;
+      keyboard.notify();
+
+      if (!updatedLetterStates.any((s) => s != LetterState.rightPlace)) {
+        onWon(_currentGuess);
+      } else if (_currentGuess == guesses.length) {
+        onLost(word);
+      }
+    });
   }
 
   void dispose() {}

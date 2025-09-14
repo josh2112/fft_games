@@ -95,10 +95,10 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
               children: [
                 Expanded(child: const BoardWidget()),
                 const SizedBox(height: 5),
-                StreamBuilder(
-                  stream: boardState.keyboardStateChanges,
+                ListenableBuilder(
+                  listenable: boardState.keyboard,
                   builder: (context, child) =>
-                      KeyboardWidget(adapter: this, letterStates: boardState.keyboardState),
+                      KeyboardWidget(adapter: this, letterStates: boardState.keyboard.keys),
                 ),
               ],
             ),

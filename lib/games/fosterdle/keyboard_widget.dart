@@ -35,7 +35,7 @@ class KeyboardWidget extends StatelessWidget {
 
   const KeyboardWidget({required this.adapter, required this.letterStates, super.key});
 
-  Widget _bc2(Widget b) => Flexible(
+  Widget regularKey(Widget b) => Flexible(
     flex: 2,
     child: ConstrainedBox(
       constraints: BoxConstraints(minHeight: _keyHeight, maxHeight: _keyHeight, maxWidth: 45),
@@ -43,7 +43,7 @@ class KeyboardWidget extends StatelessWidget {
     ),
   );
 
-  Widget _bc3(Widget b) => Flexible(
+  Widget wideKey(Widget b) => Flexible(
     flex: 3,
     child: ConstrainedBox(
       constraints: BoxConstraints(minHeight: _keyHeight, maxHeight: _keyHeight, maxWidth: 60),
@@ -53,7 +53,7 @@ class KeyboardWidget extends StatelessWidget {
 
   Widget halfKeySpace() => Flexible(flex: 1, child: SizedBox(height: 60));
 
-  Widget _keyButton(String letter, Palette pal, BuildContext ctx) => _bc2(
+  Widget _keyButton(String letter, Palette pal, BuildContext ctx) => regularKey(
     FilledButton(
       onPressed: () => adapter.onLetter(letter),
       style: _keyboardButtonStyle.copyWith(
@@ -68,7 +68,7 @@ class KeyboardWidget extends StatelessWidget {
     ),
   );
 
-  Widget _controlButton(VoidCallback onPressed, Widget child, Palette pal) => _bc3(
+  Widget _controlButton(VoidCallback onPressed, Widget child, Palette pal) => wideKey(
     FilledButton(
       onPressed: onPressed,
       style: _keyboardButtonStyle.copyWith(backgroundColor: pal.keyboardKey),

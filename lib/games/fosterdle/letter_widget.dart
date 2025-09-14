@@ -1,4 +1,4 @@
-import 'dart:developer';
+import 'dart:math' hide log;
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +15,9 @@ class LetterWidget extends StatefulWidget {
   State<LetterWidget> createState() => _LetterWidgetState();
 }
 
-class _LetterWidgetState extends State<LetterWidget> with TickerProviderStateMixin {
+enum _Transition { pop, flip }
+
+class _LetterWidgetState extends State<LetterWidget> {
   static final TextStyle letterStyle = TextStyle(
     fontSize: 25,
     fontWeight: FontWeight.bold,
@@ -24,16 +26,6 @@ class _LetterWidgetState extends State<LetterWidget> with TickerProviderStateMix
 
   LetterWithState? prev;
 
-  late final AnimationController _animationController = AnimationController(
-    duration: const Duration(milliseconds: 60),
-    vsync: this,
-  );
-
-  late final _bounceAnimation = Tween<double>(
-    begin: 1,
-    end: 1.2,
-  ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeInOut));
-
   @override
   Widget build(BuildContext context) {
     final palette = context.watch<Palette>();
@@ -41,55 +33,105 @@ class _LetterWidgetState extends State<LetterWidget> with TickerProviderStateMix
     return ListenableBuilder(
       listenable: widget.letterWithState,
       builder: (context, child) {
-        Widget? w;
-        if (prev != null && prev != widget.letterWithState) {
-          // Determine what changed
-          final cur = widget.letterWithState;
-
-          if (cur.letter != prev!.letter) {
-            // Do scale
-            log("Scale transition");
-            _animationController.repeat(reverse: true, count: 2);
-            w = ScaleTransition(scale: _bounceAnimation, child: letterWidget(palette));
-          } else if (cur.state != prev!.state) {
-            // Do flip
-            log("Flip transition");
-            w = AnimatedSwitcher(
-              duration: Duration(milliseconds: 250),
-              child: letterWidget(palette),
-            );
-          }
-        }
+        final which = prev?.state == widget.letterWithState.state
+            ? _Transition.pop
+            : _Transition.flip;
+        final w = AnimatedSwitcher(
+          duration: switch (which) {
+            _Transition.pop => Duration(milliseconds: 500),
+            _Transition.flip => Duration(milliseconds: 500),
+          },
+          transitionBuilder: switch (which) {
+            _Transition.pop => _popTransitionBuilder,
+            _Transition.flip => _flipTransitionBuilder,
+          },
+          layoutBuilder: (widget, list) => Stack(children: [widget!, ...list]),
+          child: letterWidget(palette),
+        );
 
         prev = widget.letterWithState.copy();
-        return w ??= letterWidget(palette);
+        return w;
       },
     );
   }
 
-  Widget letterWidget(Palette palette, {Key? key}) {
-    final border =
-        widget.letterWithState.state == LetterState.notInWord ||
-            widget.letterWithState.state == LetterState.untried
-        ? Border.all(color: palette.letterWidgetBorder, width: 2)
-        : null;
+  Widget _popTransitionBuilder(Widget widget, Animation<double> animation) {
+    final scaleAnim = TweenSequence<double>(<TweenSequenceItem<double>>[
+      TweenSequenceItem<double>(
+        tween: Tween<double>(begin: 1.0, end: 1.2).chain(CurveTween(curve: Curves.ease)),
+        weight: 50.0,
+      ),
+      TweenSequenceItem<double>(
+        tween: Tween<double>(begin: 1.2, end: 1.0).chain(CurveTween(curve: Curves.ease)),
+        weight: 50.0,
+      ),
+    ]).animate(animation);
 
+    return AnimatedBuilder(
+      animation: scaleAnim,
+      child: widget,
+      builder: (context, child) {
+        // This is called once per widget for each animation frame. The old and new widgets must
+        // have unique keys so we can tell which one we're animating here!
+        final isOldWidget = keyForState(this.widget.letterWithState) != widget.key;
+
+        final value = isOldWidget ? 0.0 : scaleAnim.value;
+
+        return Transform.scale(scale: value, alignment: Alignment.center, child: child!);
+      },
+    );
+  }
+
+  Widget _flipTransitionBuilder(Widget widget, Animation<double> animation) {
+    final rotateAnim = Tween(begin: pi, end: 0.0).animate(animation);
+
+    return AnimatedBuilder(
+      animation: rotateAnim,
+      child: widget,
+      builder: (context, child) {
+        // This is called once per widget for each animation frame. The old and new widgets must
+        // have unique keys so we can tell which one we're animating here!
+        final isOldWidget = keyForState(this.widget.letterWithState) != widget.key;
+
+        var tilt = ((animation.value - 0.5).abs() - 0.5) * 0.003 * (isOldWidget ? -1.0 : 1.0);
+
+        final value = isOldWidget ? min(rotateAnim.value, pi / 2) : rotateAnim.value;
+
+        if (!isOldWidget) {
+          //log(value.toString());
+        }
+
+        return Transform(
+          transform: Matrix4.rotationX(value)..setEntry(3, 1, tilt),
+          alignment: Alignment.center,
+          child: child!,
+        );
+      },
+    );
+  }
+
+  static ValueKey keyForState(LetterWithState? lws) => ValueKey((lws?.letter, lws?.state.index));
+
+  Widget letterWidget(Palette palette) {
+    final lws = widget.letterWithState;
     return Container(
-      key: key,
+      key: keyForState(lws),
       width: 65,
       height: 65,
       margin: EdgeInsets.all(3),
       decoration: BoxDecoration(
-        border: border,
-        color: switch (widget.letterWithState.state) {
+        border: lws.state == LetterState.notInWord || lws.state == LetterState.untried
+            ? Border.all(color: palette.letterWidgetBorder, width: 2)
+            : null,
+        color: switch (lws.state) {
           LetterState.rightPlace => palette.letterRightPlace,
           LetterState.wrongPlace => palette.letterWrongPlace,
-          _ => Colors.transparent,
+          _ => Theme.of(context).canvasColor,
         },
       ),
       child: Align(
         alignment: Alignment.center,
-        child: Text(widget.letterWithState.letter, style: letterStyle),
+        child: Text(lws.letter, style: letterStyle),
       ),
     );
   }
