@@ -142,7 +142,15 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     }
 
     isProcessingGuess = true;
-    boardState.submitGuess().then((_) => isProcessingGuess = false);
+    boardState.submitGuess().then((result) {
+      isProcessingGuess = false;
+      if (!mounted) return;
+      if (result == SubmissionResult.wordNotInDictionary) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Word not in dictionary")));
+      }
+    });
   }
 
   Future<void> _onPlayerWin(int numGuesses) async {

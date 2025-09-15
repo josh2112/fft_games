@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 typedef WonGameCallback = Future<void> Function(int n);
 typedef LostGameCallback = Future<void> Function(String answer);
@@ -84,6 +86,8 @@ class KeyboardState with ChangeNotifier {
 class BoardState {
   static final numGuesses = 6;
 
+  late final HashSet<String> words;
+
   final String word;
 
   final WonGameCallback onWon;
@@ -99,7 +103,11 @@ class BoardState {
 
   BoardState({required String word, required this.onWon, required this.onLost})
     : word = word.toUpperCase(),
-      guesses = List.generate(numGuesses, (i) => Guess(word.length));
+      guesses = List.generate(numGuesses, (i) => Guess(word.length)) {
+    rootBundle.loadString("assets/fosterdle/words_5.txt").then((str) {
+      words = HashSet.from(str.split(RegExp(r'\r?\n')));
+    });
+  }
 
   void addLetter(String letter) => currentGuess?.addLetter(letter);
 
@@ -147,11 +155,16 @@ class BoardState {
     return HardModeCheckResult.ok;
   }
 
-  Future<void> submitGuess() async {
+  Future<SubmissionResult> submitGuess() async {
     final g = currentGuess;
-    if (g is! Guess || !g.isFull) return;
+    if (g is! Guess || !g.isFull) return SubmissionResult.incomplete;
 
     final guess = [...g.letters.map((lws) => lws.letter)];
+
+    if (!words.contains(guess.join('').toLowerCase())) {
+      return SubmissionResult.wordNotInDictionary;
+    }
+
     final target = word.split('');
 
     final updatedLetterStates = g.letters.map((lws) => lws.state).toList(growable: false);
@@ -195,8 +208,12 @@ class BoardState {
     } else if (_currentGuess == guesses.length) {
       onLost(word);
     }
+
+    return SubmissionResult.ok;
   }
 }
+
+enum SubmissionResult { ok, incomplete, wordNotInDictionary }
 
 class HardModeCheckResult {
   static final HardModeCheckResult ok = HardModeCheckResult("");
