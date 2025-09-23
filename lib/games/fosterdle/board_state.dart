@@ -35,9 +35,17 @@ class LetterStateChangeEvent {
   LetterStateChangeEvent(this.index, this.state);
 }
 
+enum GuessState { ok, wordNotInDictionary }
+
 class Guess {
+  final _incorrectGuessStreamController = StreamController.broadcast();
+
   final List<LetterWithState> letters;
   bool isSubmitted = false;
+
+  Stream get incorrectGuessStream => _incorrectGuessStreamController.stream;
+
+  final guessState = ValueNotifier<GuessState>(GuessState.ok);
 
   bool get isFull => !letters.any((lws) => lws.letter.isEmpty);
 
@@ -68,6 +76,8 @@ class Guess {
       await Future.delayed(Duration(milliseconds: 200));
     }
   }
+
+  void fireIncorrectGuess() => _incorrectGuessStreamController.add(null);
 }
 
 class KeyboardState with ChangeNotifier {
@@ -170,6 +180,7 @@ class BoardState with ChangeNotifier {
     final guess = [...g.letters.map((lws) => lws.letter)];
 
     if (!words.contains(guess.join('').toLowerCase())) {
+      g.fireIncorrectGuess();
       return SubmissionResult.wordNotInDictionary;
     }
 
@@ -200,7 +211,7 @@ class BoardState with ChangeNotifier {
         updatedLetterStates[i] = LetterState.notInWord;
       }
 
-      if (updatedLetterStates[i].index > keyboard.state(c)!.index) {
+      if (updatedLetterStates[i].index > keyboard.state(c).index) {
         keyboard.setState(c, updatedLetterStates[i]);
       }
     }

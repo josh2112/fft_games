@@ -2,7 +2,6 @@
 
 ## Fosterdle
 
-- Add word checking
 - Add stats page
 
 # Other

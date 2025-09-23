@@ -1,3 +1,4 @@
+import 'package:fft_games/utils/shake_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -14,11 +15,24 @@ class GuessRowWidget extends StatefulWidget {
 }
 
 class _GuessRowWidgetState extends State<GuessRowWidget> {
+  final shakeController = ShakeController();
+
   @override
-  Widget build(BuildContext context) => Row(
-    mainAxisAlignment: MainAxisAlignment.center,
-    children: [...widget.guess.letters.map((lws) => LetterWidget(lws))],
-  );
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: widget.guess.incorrectGuessStream,
+      builder: (context, snapshot) {
+        shakeController.shake();
+        return ShakeWidget(
+          controller: shakeController,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [...widget.guess.letters.map((lws) => LetterWidget(lws))],
+          ),
+        );
+      },
+    );
+  }
 }
 
 class BoardWidget extends StatelessWidget {
@@ -29,12 +43,8 @@ class BoardWidget extends StatelessWidget {
     final boardState = context.watch<BoardState>();
 
     if (boardState.guesses.isEmpty) {
-      return Column(
-        children: [
-          const Spacer(),
-          SizedBox.square(dimension: 64, child: const CircularProgressIndicator(value: null)),
-          const Spacer(),
-        ],
+      return Center(
+        child: SizedBox.square(dimension: 64, child: const CircularProgressIndicator(value: null)),
       );
     } else {
       return FittedBox(

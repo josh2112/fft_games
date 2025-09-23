@@ -33,6 +33,8 @@ class _LetterWidgetState extends State<LetterWidget> {
     return ListenableBuilder(
       listenable: widget.letterWithState,
       builder: (context, child) {
+        // If the letter changed, do a pop animation (scale up and back down). If the state
+        // changed, do a flip animation.
         final which = prev?.state == widget.letterWithState.state
             ? _Transition.pop
             : _Transition.flip;
