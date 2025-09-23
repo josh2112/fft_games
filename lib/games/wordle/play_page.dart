@@ -1,8 +1,7 @@
-import 'package:fft_games/games/fosterdle/keyboard_widget.dart';
-import 'package:fft_games/games/fosterdle/palette.dart';
-import 'package:fft_games/games/fosterdle/settings.dart';
-import 'package:fft_games/games/fosterdle/settings_dialog.dart';
-import 'package:fft_games/settings/persistence/settings_persistence.dart';
+import 'package:fft_games/games/wordle/keyboard_widget.dart';
+import 'package:fft_games/games/wordle/palette.dart';
+import 'package:fft_games/games/wordle/settings.dart';
+import 'package:fft_games/games/wordle/settings_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -32,13 +31,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   void initState() {
     super.initState();
     boardState = BoardState(onWon: _onPlayerWin, onLost: _onPlayerLost);
-    settings = SettingsController(store: context.read<SettingsPersistence>());
-  }
-
-  @override
-  void dispose() {
-    settings.dispose();
-    super.dispose();
+    settings = context.read<SettingsController>();
   }
 
   bool _isModifierKeyPressed() =>
@@ -70,20 +63,20 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
       },
       child: MultiProvider(
         providers: [
-          ChangeNotifierProvider.value(value: settings),
+          Provider.value(value: settings),
           ChangeNotifierProvider.value(value: boardState),
-          Provider.value(value: Palette()),
+          Provider(create: (_) => Palette()),
         ],
         child: Scaffold(
           appBar: AppBar(
+            leading: BackButton(onPressed: () => context.pop()),
             title: Text('Fosterdle'),
             centerTitle: true,
             actions: [
               IconButton(onPressed: showStats, icon: Icon(Icons.bar_chart)),
               Builder(
                 builder: (context) => IconButton(
-                  onPressed: () =>
-                      showDialogOrBottomSheet(context, SettingsDialog(callerContext: context)),
+                  onPressed: () => showDialogOrBottomSheet(context, SettingsDialog(callerContext: context)),
                   icon: Icon(Icons.settings),
                 ),
               ),
@@ -98,8 +91,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
                 const SizedBox(height: 5),
                 ListenableBuilder(
                   listenable: boardState.keyboard,
-                  builder: (context, child) =>
-                      KeyboardWidget(adapter: this, letterStates: boardState.keyboard.keys),
+                  builder: (context, child) => KeyboardWidget(adapter: this, letterStates: boardState.keyboard.keys),
                 ),
               ],
             ),
@@ -133,7 +125,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   void onSubmit() {
     if (isProcessingGuess) return;
 
-    if (settings.hardMode.value) {
+    if (settings.isHardMode.value) {
       final err = errorForHardModeCheckResult(boardState.checkHardMode());
       if (err != null) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
@@ -146,41 +138,34 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
       isProcessingGuess = false;
       if (!mounted) return;
       if (result == SubmissionResult.wordNotInDictionary) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Word not in dictionary")));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Word not in dictionary")));
       }
     });
   }
 
   Future<void> _onPlayerWin(int numGuesses) async {
-    _log.info('Player won!');
+    final solveCounts = List<int>.from(settings.solveCounts.value);
+    solveCounts[numGuesses - 1] += 1;
+    settings.solveCounts.value = solveCounts;
 
-    //final score = Score(1, 1, DateTime.now().difference(_startOfPlay));
+    settings.numPlayed.value += 1;
+    settings.numWon.value += 1;
+    settings.currentStreak.value += 1;
+    if (settings.currentStreak.value > settings.maxStreak.value) {
+      settings.maxStreak.value = settings.currentStreak.value;
+    }
 
-    // final playerProgress = context.read<PlayerProgress>();
-    // playerProgress.setLevelReached(widget.level.number);
-
-    //setState(() => _isGameWinAnimationInProgress = true);
-
-    //await Future<void>.delayed(_gameWinAnimationDuration);
-    //if (!mounted) return;
-
-    GoRouter.of(context).go('/fosterdle/stats', extra: StatsPageWonGameData(numGuesses));
+    context.go('/fosterdle/stats', extra: StatsPageContext(numGuesses, boardState.word));
   }
 
   Future<void> _onPlayerLost(String word) async {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Oh no!"),
-        actions: [TextButton(onPressed: () => GoRouter.of(context).go('/'), child: Text("OK"))],
-        content: Text("The word is $word. Better luck tomorrow!"),
-      ),
-    );
+    settings.numPlayed.value += 1;
+    settings.currentStreak.value = 0;
+
+    context.go('/fosterdle/stats', extra: StatsPageContext(-1, boardState.word));
   }
 
-  void showStats() => GoRouter.of(context).go('/fosterdle/stats');
+  void showStats() => context.go('/fosterdle/stats');
 
   void showSettings(BuildContext context) {
     if (MediaQuery.of(context).size.width < 500) {

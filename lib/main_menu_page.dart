@@ -17,12 +17,9 @@ class _MainMenuPageState extends State<MainMenuPage> {
   void initState() {
     super.initState();
 
-    DefaultAssetBundle.of(context)
-        .loadString("pubspec.yaml")
-        .then(
-          (f) =>
-              setState(() => _version = f.split("version: ")[1].split("+")[0]),
-        );
+    DefaultAssetBundle.of(
+      context,
+    ).loadString("pubspec.yaml").then((f) => setState(() => _version = f.split("version: ")[1].split("+")[0]));
   }
 
   @override
@@ -37,20 +34,16 @@ class _MainMenuPageState extends State<MainMenuPage> {
               Text(
                 'Foster Family Times Games',
                 style: Theme.of(context).textTheme.headlineLarge,
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 50),
               FilledButton(
                 onPressed: () {
-                  GoRouter.of(context).go('/fosterdle');
+                  context.go('/fosterdle');
                 },
                 child: const Text('Fosterdle'),
               ),
-              Opacity(
-                opacity: 0.5,
-                child: Text(
-                  "Version $_version\t${(isRunningWithWasm ? 'WASM enabled' : '')}",
-                ),
-              ),
+              Opacity(opacity: 0.5, child: Text("Version $_version\t${(isRunningWithWasm ? 'WASM enabled' : '')}")),
             ],
           ),
         ),

@@ -1,5 +1,5 @@
-import 'package:fft_games/games/fosterdle/board_state.dart';
-import 'package:fft_games/games/fosterdle/settings.dart';
+import 'package:fft_games/games/wordle/board_state.dart';
+import 'package:fft_games/games/wordle/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -40,11 +40,9 @@ class SettingsDialog extends StatelessWidget {
               title: Text("Hard mode"),
               subtitle: Text("Each guess must use the letters you've learned"),
               trailing: ValueListenableBuilder(
-                valueListenable: settings.hardMode,
-                builder: (context, hardMode, child) => Switch(
-                  value: hardMode,
-                  onChanged: (v) => _maybeToggleHardMode(settings, boardState, context),
-                ),
+                valueListenable: settings.isHardMode,
+                builder: (context, hardMode, child) =>
+                    Switch(value: hardMode, onChanged: (v) => _maybeToggleHardMode(settings, boardState, context)),
               ),
             ),
           ],
@@ -53,17 +51,13 @@ class SettingsDialog extends StatelessWidget {
     );
   }
 
-  void _maybeToggleHardMode(
-    SettingsController settings,
-    BoardState boardState,
-    BuildContext context,
-  ) {
-    if (settings.hardMode.value && boardState.guesses.first.isSubmitted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Can't turn off hard mode once you've made a guess!")),
-      );
+  void _maybeToggleHardMode(SettingsController settings, BoardState boardState, BuildContext context) {
+    if (settings.isHardMode.value && boardState.guesses.first.isSubmitted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Can't turn off hard mode once you've made a guess!")));
     } else {
-      settings.toggleHardMode();
+      settings.isHardMode.value = !settings.isHardMode.value;
     }
   }
 }
