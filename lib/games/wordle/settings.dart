@@ -9,6 +9,8 @@ import '../../settings/persistence/shared_prefs_persistence.dart';
 class Setting<T> extends ValueNotifier<T> {
   final String key;
 
+  bool _isLoaded = false;
+
   final T defaultValue;
 
   final SettingsPersistence store;
@@ -18,13 +20,16 @@ class Setting<T> extends ValueNotifier<T> {
     _load().then((t) {
       value = t;
       log?.fine(() => 'Loaded setting $key => $value');
+      _isLoaded = true;
     });
   }
 
   @override
   set value(T newValue) {
     super.value = newValue;
-    _save().then((_) => log?.fine("Saved setting $key to $value"));
+    if (_isLoaded) {
+      _save().then((_) => log?.fine("Saved setting $key to $value"));
+    }
   }
 
   Future<T> _load() {
@@ -49,6 +54,8 @@ class Setting<T> extends ValueNotifier<T> {
 class JsonSetting<T> extends ValueNotifier<T> {
   final String key;
 
+  bool _isLoaded = false;
+
   final T defaultValue;
   final T Function(dynamic) convert;
 
@@ -59,13 +66,18 @@ class JsonSetting<T> extends ValueNotifier<T> {
     _load().then((t) {
       value = t;
       log?.fine(() => 'Loaded setting $key => $value');
+      _isLoaded = true;
     });
   }
 
   @override
   set value(T newValue) {
-    super.value = newValue;
-    _save().then((_) => log?.fine("Saved setting $key to $value"));
+    if (super.value != newValue) {
+      super.value = newValue;
+      if (_isLoaded) {
+        _save().then((_) => log?.fine("Saved setting $key to $value"));
+      }
+    }
   }
 
   Future<T> _load() =>

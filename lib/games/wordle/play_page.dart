@@ -1,11 +1,10 @@
 import 'package:fft_games/games/wordle/keyboard_widget.dart';
-import 'package:fft_games/games/wordle/palette.dart';
 import 'package:fft_games/games/wordle/settings.dart';
 import 'package:fft_games/games/wordle/settings_dialog.dart';
+import 'package:fft_games/utils/top_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 
 import 'board_state.dart';
@@ -20,8 +19,6 @@ class PlayPage extends StatefulWidget {
 }
 
 class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
-  static final _log = Logger('PlaySessionScreen');
-
   late final SettingsController settings;
   late final BoardState boardState;
 
@@ -41,8 +38,24 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
       HardwareKeyboard.instance.isMetaPressed;
 
   @override
-  Widget build(BuildContext context) {
-    return Focus(
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      leading: BackButton(onPressed: () => context.pop()),
+      title: Text('Fosterdle'),
+      centerTitle: true,
+      actions: [
+        IconButton(onPressed: showStats, icon: Icon(Icons.bar_chart)),
+        Builder(
+          builder: (context) => IconButton(
+            onPressed: () {
+              return showDialogOrBottomSheet(context, SettingsDialog(settings, boardState));
+            },
+            icon: Icon(Icons.settings),
+          ),
+        ),
+      ],
+    ),
+    body: Focus(
       autofocus: true,
       onKeyEvent: (node, event) {
         if (event is KeyDownEvent && !_isModifierKeyPressed()) {
@@ -61,45 +74,25 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
 
         return KeyEventResult.ignored;
       },
-      child: MultiProvider(
-        providers: [
-          Provider.value(value: settings),
-          ChangeNotifierProvider.value(value: boardState),
-          Provider(create: (_) => Palette()),
-        ],
-        child: Scaffold(
-          appBar: AppBar(
-            leading: BackButton(onPressed: () => context.pop()),
-            title: Text('Fosterdle'),
-            centerTitle: true,
-            actions: [
-              IconButton(onPressed: showStats, icon: Icon(Icons.bar_chart)),
-              Builder(
-                builder: (context) => IconButton(
-                  onPressed: () => showDialogOrBottomSheet(context, SettingsDialog(callerContext: context)),
-                  icon: Icon(Icons.settings),
-                ),
+      child: Padding(
+        padding: EdgeInsets.all(10),
+        child: ChangeNotifierProvider.value(
+          value: boardState,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Expanded(child: const BoardWidget()),
+              const SizedBox(height: 5),
+              ListenableBuilder(
+                listenable: boardState.keyboard,
+                builder: (context, child) => KeyboardWidget(adapter: this, letterStates: boardState.keyboard.keys),
               ),
             ],
           ),
-          body: Padding(
-            padding: EdgeInsets.all(10),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Expanded(child: const BoardWidget()),
-                const SizedBox(height: 5),
-                ListenableBuilder(
-                  listenable: boardState.keyboard,
-                  builder: (context, child) => KeyboardWidget(adapter: this, letterStates: boardState.keyboard.keys),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
-    );
-  }
+    ),
+  );
 
   @override
   void onLetter(String letter) {
@@ -128,7 +121,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     if (settings.isHardMode.value) {
       final err = errorForHardModeCheckResult(boardState.checkHardMode());
       if (err != null) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
+        showTopSnackBar(context, err);
         return;
       }
     }
@@ -138,7 +131,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
       isProcessingGuess = false;
       if (!mounted) return;
       if (result == SubmissionResult.wordNotInDictionary) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Word not in dictionary")));
+        showTopSnackBar(context, "Word not in dictionary");
       }
     });
   }
@@ -167,25 +160,14 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
 
   void showStats() => context.go('/fosterdle/stats');
 
-  void showSettings(BuildContext context) {
+  void showDialogOrBottomSheet(BuildContext context, Widget widget) {
     if (MediaQuery.of(context).size.width < 500) {
-      Scaffold.of(context).showBottomSheet((context) => SettingsDialog(callerContext: context));
+      Scaffold.of(context).showBottomSheet((c) => widget);
     } else {
       showDialog(
         context: context,
-        builder: (c) => Dialog(child: SettingsDialog(callerContext: context)),
+        builder: (c) => Dialog(child: widget),
       );
     }
-  }
-}
-
-void showDialogOrBottomSheet(BuildContext context, Widget widget) {
-  if (MediaQuery.of(context).size.width < 500) {
-    Scaffold.of(context).showBottomSheet((c) => widget);
-  } else {
-    showDialog(
-      context: context,
-      builder: (c) => Dialog(child: widget),
-    );
   }
 }

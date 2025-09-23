@@ -5,7 +5,6 @@
 import 'package:fft_games/games/wordle/stats_page.dart';
 import 'package:fft_games/settings/persistence/settings_persistence.dart';
 import 'package:flutter/material.dart';
-import 'package:go_provider/go_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -23,18 +22,32 @@ final router = GoRouter(
       path: '/',
       builder: (context, state) => const MainMenuPage(key: Key('main menu')),
       routes: [
-        GoProviderRoute(
-          path: 'fosterdle',
-          providers: [
-            Provider(create: (context) => fosterdle.SettingsController(store: context.read<SettingsPersistence>())),
-            Provider(create: (context) => fosterdle.Palette()),
-          ],
-          builder: (context, state) => const fosterdle.PlayPage(key: Key('fosterdle')),
+        // Use a "shell route" to provide a MultiProvider to all the Fosterdle subroutes.
+        // Any child route will be able to grab whatever we put in the MultiProvider. The
+        // only downside is the AppBar inside a first-level shell route won't show
+        // the Back button, even if there is a previous route, so it has to be
+        // provided manually (with BackButton( onPressed: () => context.pop())).
+        ShellRoute(
+          builder: (context, state, child) {
+            return MultiProvider(
+              providers: [
+                Provider(create: (context) => fosterdle.SettingsController(store: context.read<SettingsPersistence>())),
+                Provider(create: (context) => fosterdle.Palette()),
+              ],
+              child: child,
+            );
+          },
           routes: [
             GoRoute(
-              path: 'stats',
-              builder: (context, state) =>
-                  fosterdle.StatsPage(key: Key('fosterdle stats'), wonGameData: state.extra as StatsPageContext?),
+              path: 'fosterdle',
+              builder: (context, state) => const fosterdle.PlayPage(key: Key('fosterdle')),
+              routes: [
+                GoRoute(
+                  path: 'stats',
+                  builder: (context, state) =>
+                      fosterdle.StatsPage(key: Key('fosterdle stats'), wonGameData: state.extra as StatsPageContext?),
+                ),
+              ],
             ),
           ],
         ),

@@ -80,7 +80,7 @@ class StatsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    width: 75,
+    width: 80,
     child: Column(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
