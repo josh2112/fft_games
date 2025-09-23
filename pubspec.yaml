@@ -94,3 +94,4 @@ flutter:
   assets:
     - pubspec.yaml
     - assets/fosterdle/words_5.txt
+    - assets/fosterdle/ordering.txt

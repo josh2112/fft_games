@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -83,17 +82,15 @@ class KeyboardState with ChangeNotifier {
   void notify() => notifyListeners();
 }
 
-class BoardState {
+class BoardState with ChangeNotifier {
   static final numGuesses = 6;
 
   late final HashSet<String> words;
-
-  final String word;
+  late final String word;
+  final List<Guess> guesses = [];
 
   final WonGameCallback onWon;
   final LostGameCallback onLost;
-
-  final List<Guess> guesses;
 
   int _currentGuess = 0;
 
@@ -101,11 +98,22 @@ class BoardState {
 
   final KeyboardState keyboard = KeyboardState();
 
-  BoardState({required String word, required this.onWon, required this.onLost})
-    : word = word.toUpperCase(),
-      guesses = List.generate(numGuesses, (i) => Guess(word.length)) {
-    rootBundle.loadString("assets/fosterdle/words_5.txt").then((str) {
-      words = HashSet.from(str.split(RegExp(r'\r?\n')));
+  BoardState({required this.onWon, required this.onLost}) {
+    Future.wait([
+      rootBundle.loadString("assets/fosterdle/ordering.txt"),
+      rootBundle.loadString("assets/fosterdle/words_5.txt"),
+    ]).then((value) {
+      final ordering = value[0].split(RegExp(r'\r?\n'));
+      final wordList = value[1].split(RegExp(r'\r?\n'));
+
+      final epoch = DateTime.utc(2025, 9, 23);
+      final now = DateTime.timestamp();
+      final wordIdx = int.parse(ordering[now.difference(epoch).inDays]);
+      word = wordList[wordIdx].toUpperCase();
+      guesses.addAll(List.generate(numGuesses, (i) => Guess(word.length)));
+      words = HashSet.from(wordList);
+
+      notifyListeners();
     });
   }
 

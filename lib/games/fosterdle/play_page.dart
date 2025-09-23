@@ -31,7 +31,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   @override
   void initState() {
     super.initState();
-    boardState = BoardState(word: 'WORDL', onWon: _onPlayerWin, onLost: _onPlayerLost);
+    boardState = BoardState(onWon: _onPlayerWin, onLost: _onPlayerLost);
     settings = SettingsController(store: context.read<SettingsPersistence>());
   }
 
@@ -71,7 +71,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
       child: MultiProvider(
         providers: [
           ChangeNotifierProvider.value(value: settings),
-          Provider.value(value: boardState),
+          ChangeNotifierProvider.value(value: boardState),
           Provider.value(value: Palette()),
         ],
         child: Scaffold(

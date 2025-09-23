@@ -28,12 +28,22 @@ class BoardWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final boardState = context.watch<BoardState>();
 
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [for (final guess in boardState.guesses) GuessRowWidget(guess)],
-      ),
-    );
+    if (boardState.guesses.isEmpty) {
+      return Column(
+        children: [
+          const Spacer(),
+          SizedBox.square(dimension: 64, child: const CircularProgressIndicator(value: null)),
+          const Spacer(),
+        ],
+      );
+    } else {
+      return FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [for (final guess in boardState.guesses) GuessRowWidget(guess)],
+        ),
+      );
+    }
   }
 }
