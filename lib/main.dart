@@ -1,5 +1,6 @@
 import 'dart:developer' as dev;
 
+import 'package:fft_games/settings/global_settings.dart';
 import 'package:fft_games/settings/persistence/settings_persistence.dart';
 import 'package:fft_games/settings/persistence/shared_prefs_persistence.dart';
 import 'package:flutter/foundation.dart';
@@ -20,11 +21,13 @@ void main() async {
   // Put game into full screen mode on mobile devices.
   //await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final settingsStore = SharedPrefsPersistence();
+
+  MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -35,16 +38,26 @@ class MyApp extends StatelessWidget {
       // Every widget in the game can access these objects by calling
       // `context.watch()` or `context.read()`.
       // See `lib/main_menu/main_menu_screen.dart` for example usage.
-      providers: [Provider<SettingsPersistence>(create: (context) => /*MemoryPersistence()*/ SharedPrefsPersistence())],
+      providers: [
+        Provider<SettingsPersistence>.value(value: settingsStore),
+        Provider<GlobalSettingsController>(
+          create: (context) => GlobalSettingsController(store: settingsStore),
+        ),
+      ],
       child: Builder(
         builder: (context) {
-          return MaterialApp.router(
-            title: 'Foster Family Times Games',
-            theme: ThemeData.light(), // Or your custom light theme
-            darkTheme: ThemeData.dark(), // Or your custom dark theme
-            themeMode: ThemeMode.system,
-            routerConfig: router,
-            debugShowCheckedModeBanner: false,
+          return Consumer<GlobalSettingsController>(
+            builder: (context, globalSettings, child) => ValueListenableBuilder(
+              valueListenable: globalSettings.themeMode,
+              builder: (context, themeMode, child) => MaterialApp.router(
+                title: 'Foster Family Times Games',
+                theme: ThemeData.light(), // Or your custom light theme
+                darkTheme: ThemeData.dark(), // Or your custom dark theme
+                themeMode: ThemeMode.values[themeMode],
+                routerConfig: router,
+                debugShowCheckedModeBanner: false,
+              ),
+            ),
           );
         },
       ),
