@@ -20,11 +20,12 @@ class StatsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String message = switch (wonGameData?.numGuesses) {
-      null => 'Fosterdle stats',
+    final String? message = switch (wonGameData?.numGuesses) {
+      null => null,
       < 0 => "The word was ${wonGameData!.word}. Better luck tomorrow!",
       _ => 'You won!',
     };
+
     final settings = context.watch<SettingsController>();
 
     return Scaffold(
@@ -34,8 +35,9 @@ class StatsPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Spacer(),
-          Text(message, style: TextTheme.of(context).displaySmall, textAlign: TextAlign.center),
-          const Spacer(),
+          if (message != null)
+            Text(message, style: TextTheme.of(context).displaySmall, textAlign: TextAlign.center),
+          if (message != null) const Spacer(),
           subtitle(context, "STATISTICS"),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -43,7 +45,10 @@ class StatsPage extends StatelessWidget {
             spacing: 5,
             children: [
               StatsWidget("Played", settings.numPlayed.value.toString()),
-              StatsWidget("Win %", (settings.numWon.value / max(settings.numPlayed.value, 1) * 100).round().toString()),
+              StatsWidget(
+                "Win %",
+                (settings.numWon.value / max(settings.numPlayed.value, 1) * 100).round().toString(),
+              ),
               StatsWidget("Current Streak", settings.currentStreak.value.toString()),
               StatsWidget("Max Streak", settings.maxStreak.value.toString()),
             ],
@@ -96,7 +101,8 @@ class SolveCountsGraph extends StatelessWidget {
   final StatsPageContext? wonGameData;
   final int maxSolveCount;
 
-  SolveCountsGraph(this.solveCounts, this.wonGameData, {super.key}) : maxSolveCount = solveCounts.reduce(max);
+  SolveCountsGraph(this.solveCounts, this.wonGameData, {super.key})
+    : maxSolveCount = solveCounts.reduce(max);
 
   @override
   Widget build(BuildContext context) {
@@ -112,10 +118,15 @@ class SolveCountsGraph extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 3),
               child: Row(
                 children: [
-                  SizedBox(width: 20, child: Text("${i + 1}", style: TextTheme.of(context).labelLarge)),
+                  SizedBox(
+                    width: 20,
+                    child: Text("${i + 1}", style: TextTheme.of(context).labelLarge),
+                  ),
                   Container(
                     width: 180 - 160 * (maxSolveCount - solveCounts[i]) / maxSolveCount,
-                    color: wonGameData?.numGuesses == i + 1 ? palette.letterRightPlace : palette.letterWidgetBorder,
+                    color: wonGameData?.numGuesses == i + 1
+                        ? palette.letterRightPlace
+                        : palette.letterWidgetBorder,
                     child: Padding(
                       padding: EdgeInsets.only(right: 6),
                       child: Align(
@@ -124,7 +135,9 @@ class SolveCountsGraph extends StatelessWidget {
                       ),
                     ),
                   ),
-                  solveCounts[i] == maxSolveCount ? SizedBox(width: 0) : Spacer(flex: maxSolveCount - solveCounts[i]),
+                  solveCounts[i] == maxSolveCount
+                      ? SizedBox(width: 0)
+                      : Spacer(flex: maxSolveCount - solveCounts[i]),
                 ],
               ),
             ),
