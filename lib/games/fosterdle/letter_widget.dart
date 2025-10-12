@@ -35,12 +35,10 @@ class _LetterWidgetState extends State<LetterWidget> {
       builder: (context, child) {
         // If the letter changed, do a pop animation (scale up and back down). If the state
         // changed, do a flip animation.
-        final which = prev?.state == widget.letterWithState.state
-            ? _Transition.pop
-            : _Transition.flip;
+        final which = prev?.state == widget.letterWithState.state ? _Transition.pop : _Transition.flip;
         final w = AnimatedSwitcher(
           duration: switch (which) {
-            _Transition.pop => Duration(milliseconds: 500),
+            _Transition.pop => Duration(milliseconds: 250),
             _Transition.flip => Duration(milliseconds: 500),
           },
           transitionBuilder: switch (which) {
@@ -91,17 +89,9 @@ class _LetterWidgetState extends State<LetterWidget> {
       animation: rotateAnim,
       child: widget,
       builder: (context, child) {
-        // This is called once per widget for each animation frame. The old and new widgets must
-        // have unique keys so we can tell which one we're animating here!
-        final isOldWidget = keyForState(this.widget.letterWithState) != widget.key;
+        var tilt = ((animation.value - 0.5).abs() - 0.5) * -0.003;
 
-        var tilt = ((animation.value - 0.5).abs() - 0.5) * 0.003 * (isOldWidget ? -1.0 : 1.0);
-
-        final value = isOldWidget ? min(rotateAnim.value, pi / 2) : rotateAnim.value;
-
-        if (!isOldWidget) {
-          //log(value.toString());
-        }
+        final value = min(rotateAnim.value, pi / 2);
 
         return Transform(
           transform: Matrix4.rotationX(value)..setEntry(3, 1, tilt),
@@ -125,6 +115,7 @@ class _LetterWidgetState extends State<LetterWidget> {
         border: lws.state == LetterState.notInWord || lws.state == LetterState.untried
             ? Border.all(color: palette.letterWidgetBorder, width: 2)
             : null,
+        borderRadius: BorderRadius.circular(10),
         color: switch (lws.state) {
           LetterState.rightPlace => palette.letterRightPlace,
           LetterState.wrongPlace => palette.letterWrongPlace,

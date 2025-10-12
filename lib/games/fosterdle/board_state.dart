@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:collection';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -81,9 +82,7 @@ class Guess {
 }
 
 class KeyboardState with ChangeNotifier {
-  final Map<String, LetterState> keys = {
-    for (var k in 'QWERTYUIOPASDFGHJKLZXCVBNM'.split('')) k: LetterState.untried,
-  };
+  final Map<String, LetterState> keys = {for (var k in 'QWERTYUIOPASDFGHJKLZXCVBNM'.split('')) k: LetterState.untried};
 
   LetterState state(String c) => keys[c]!;
 
@@ -95,7 +94,7 @@ class KeyboardState with ChangeNotifier {
 class BoardState with ChangeNotifier {
   static final numGuesses = 6;
 
-  late final HashSet<String> words;
+  late final HashSet<String> allowed;
   late final String word;
   final List<Guess> guesses = [];
 
@@ -109,19 +108,25 @@ class BoardState with ChangeNotifier {
   final KeyboardState keyboard = KeyboardState();
 
   BoardState({required this.onWon, required this.onLost}) {
+    _init();
+  }
+
+  Future _init() async {
     Future.wait([
-      rootBundle.loadString("assets/fosterdle/ordering.txt"),
-      rootBundle.loadString("assets/fosterdle/words_5.txt"),
+      rootBundle.loadString("assets/fosterdle/allowed.txt"),
+      rootBundle.loadString("assets/fosterdle/wod.txt"),
     ]).then((value) {
-      final ordering = value[0].split(RegExp(r'\r?\n'));
-      final wordList = value[1].split(RegExp(r'\r?\n'));
+      final ls = LineSplitter();
+      final wod = ls.convert(value[1]);
+      allowed = HashSet.from(ls.convert(value[0]))..addAll(wod);
+
+      var shit = allowed.contains('later');
 
       final epoch = DateTime.utc(2025, 9, 23);
       final now = DateTime.timestamp();
-      final wordIdx = int.parse(ordering[now.difference(epoch).inDays]);
-      word = wordList[wordIdx].toUpperCase();
+      final idx = now.difference(epoch).inDays % wod.length;
+      word = wod[idx].toUpperCase();
       guesses.addAll(List.generate(numGuesses, (i) => Guess(word.length)));
-      words = HashSet.from(wordList);
 
       notifyListeners();
     });
@@ -149,17 +154,13 @@ class BoardState with ChangeNotifier {
 
     // wrong-place letters in previous guess
     final prevWrong = [
-      ...prevGuess.indexed
-          .where((item) => item.$2.state == LetterState.wrongPlace)
-          .map((item) => item.$2.letter),
+      ...prevGuess.indexed.where((item) => item.$2.state == LetterState.wrongPlace).map((item) => item.$2.letter),
     ];
 
     final rightIndices = [...prevRight.map((item) => item.$1)];
 
     // remaining letters in new guess (after right place have been checked)
-    final guessRemaining = [
-      ...guess.indexed.where((item) => !rightIndices.contains(item.$1)).map((item) => item.$2),
-    ];
+    final guessRemaining = [...guess.indexed.where((item) => !rightIndices.contains(item.$1)).map((item) => item.$2)];
 
     // Guess must contain X
     for (String ltr in prevWrong) {
@@ -179,7 +180,7 @@ class BoardState with ChangeNotifier {
 
     final guess = [...g.letters.map((lws) => lws.letter)];
 
-    if (!words.contains(guess.join('').toLowerCase())) {
+    if (!allowed.contains(guess.join('').toLowerCase())) {
       g.fireIncorrectGuess();
       return SubmissionResult.wordNotInDictionary;
     }

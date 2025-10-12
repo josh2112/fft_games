@@ -1,6 +1,7 @@
-import 'package:fft_games/games/wordle/keyboard_widget.dart';
-import 'package:fft_games/games/wordle/settings.dart';
-import 'package:fft_games/games/wordle/settings_dialog.dart';
+import 'package:fft_games/games/fosterdle/keyboard_widget.dart';
+import 'package:fft_games/games/fosterdle/settings.dart';
+import 'package:fft_games/games/fosterdle/settings_dialog.dart';
+import 'package:fft_games/utils/dialog_or_bottom_sheet.dart';
 import 'package:fft_games/utils/top_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -41,15 +42,13 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
       leading: BackButton(onPressed: () => context.pop()),
-      title: Text('Fosterdle'),
+      title: Text('Fosterdle', style: TextStyle(fontFamily: 'FacultyGlyphic')),
       centerTitle: true,
       actions: [
         IconButton(onPressed: showStats, icon: Icon(Icons.bar_chart)),
         Builder(
           builder: (context) => IconButton(
-            onPressed: () {
-              return showDialogOrBottomSheet(context, SettingsDialog(settings, boardState));
-            },
+            onPressed: () => showDialogOrBottomSheet(context, SettingsDialog(settings, boardState)),
             icon: Icon(Icons.settings),
           ),
         ),
@@ -159,15 +158,4 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   }
 
   void showStats() => context.go('/fosterdle/stats');
-
-  void showDialogOrBottomSheet(BuildContext context, Widget widget) {
-    if (MediaQuery.of(context).size.width < 500) {
-      Scaffold.of(context).showBottomSheet((c) => widget);
-    } else {
-      showDialog(
-        context: context,
-        builder: (c) => Dialog(child: widget),
-      );
-    }
-  }
 }

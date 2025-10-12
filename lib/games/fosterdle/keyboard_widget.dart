@@ -1,4 +1,4 @@
-import 'package:fft_games/games/wordle/board_state.dart';
+import 'package:fft_games/games/fosterdle/board_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

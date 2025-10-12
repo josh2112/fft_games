@@ -1,5 +1,5 @@
-import 'package:fft_games/games/wordle/board_state.dart';
-import 'package:fft_games/games/wordle/settings.dart';
+import 'package:fft_games/games/fosterdle/board_state.dart';
+import 'package:fft_games/games/fosterdle/settings.dart';
 import 'package:fft_games/settings/global_settings.dart';
 import 'package:fft_games/utils/top_snack_bar.dart';
 import 'package:flutter/material.dart';
@@ -46,10 +46,8 @@ class SettingsDialog extends StatelessWidget {
                   onChanged: (v) => globalSettings.themeMode.value = v!.index,
                   items: ThemeMode.values
                       .map(
-                        (m) => DropdownMenuItem(
-                          value: m,
-                          child: Text("${m.name[0].toUpperCase()}${m.name.substring(1)}"),
-                        ),
+                        (m) =>
+                            DropdownMenuItem(value: m, child: Text("${m.name[0].toUpperCase()}${m.name.substring(1)}")),
                       )
                       .toList(),
                 ),
@@ -60,10 +58,8 @@ class SettingsDialog extends StatelessWidget {
               subtitle: Text("Each guess must use the letters you've learned"),
               trailing: ValueListenableBuilder(
                 valueListenable: settings.isHardMode,
-                builder: (context, hardMode, child) => Switch(
-                  value: hardMode,
-                  onChanged: (v) => _maybeToggleHardMode(settings, boardState, context),
-                ),
+                builder: (context, hardMode, child) =>
+                    Switch(value: hardMode, onChanged: (v) => _maybeToggleHardMode(settings, boardState, context)),
               ),
             ),
           ],
@@ -72,11 +68,7 @@ class SettingsDialog extends StatelessWidget {
     );
   }
 
-  void _maybeToggleHardMode(
-    SettingsController settings,
-    BoardState boardState,
-    BuildContext context,
-  ) {
+  void _maybeToggleHardMode(SettingsController settings, BoardState boardState, BuildContext context) {
     if (settings.isHardMode.value && boardState.guesses.first.isSubmitted) {
       showTopSnackBar(context, "Can't turn off hard mode once you've made a guess!");
     } else {

@@ -1,7 +1,7 @@
 import 'dart:math';
 
-import 'package:fft_games/games/wordle/palette.dart';
-import 'package:fft_games/games/wordle/settings.dart';
+import 'package:fft_games/games/fosterdle/palette.dart';
+import 'package:fft_games/games/fosterdle/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -26,17 +26,20 @@ class StatsPage extends StatelessWidget {
       _ => 'You won!',
     };
 
+    final palette = context.watch<Palette>();
     final settings = context.watch<SettingsController>();
 
     return Scaffold(
-      appBar: AppBar(title: Text('Fosterdle Stats'), centerTitle: true),
+      appBar: AppBar(
+        title: Text('Fosterdle Stats', style: TextStyle(fontFamily: palette.titleFontFamily)),
+        centerTitle: true,
+      ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Spacer(),
-          if (message != null)
-            Text(message, style: TextTheme.of(context).displaySmall, textAlign: TextAlign.center),
+          if (message != null) Text(message, style: TextTheme.of(context).displaySmall, textAlign: TextAlign.center),
           if (message != null) const Spacer(),
           subtitle(context, "STATISTICS"),
           Row(
@@ -45,10 +48,7 @@ class StatsPage extends StatelessWidget {
             spacing: 5,
             children: [
               StatsWidget("Played", settings.numPlayed.value.toString()),
-              StatsWidget(
-                "Win %",
-                (settings.numWon.value / max(settings.numPlayed.value, 1) * 100).round().toString(),
-              ),
+              StatsWidget("Win %", (settings.numWon.value / max(settings.numPlayed.value, 1) * 100).round().toString()),
               StatsWidget("Current Streak", settings.currentStreak.value.toString()),
               StatsWidget("Max Streak", settings.maxStreak.value.toString()),
             ],
@@ -101,8 +101,7 @@ class SolveCountsGraph extends StatelessWidget {
   final StatsPageContext? wonGameData;
   final int maxSolveCount;
 
-  SolveCountsGraph(this.solveCounts, this.wonGameData, {super.key})
-    : maxSolveCount = solveCounts.reduce(max);
+  SolveCountsGraph(this.solveCounts, this.wonGameData, {super.key}) : maxSolveCount = solveCounts.reduce(max);
 
   @override
   Widget build(BuildContext context) {
@@ -112,21 +111,18 @@ class SolveCountsGraph extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 200),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           for (var i = 0; i < solveCounts.length; i++)
             Padding(
               padding: EdgeInsets.symmetric(vertical: 3),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    width: 20,
-                    child: Text("${i + 1}", style: TextTheme.of(context).labelLarge),
-                  ),
+                  SizedBox(width: 20, child: Text("${i + 1}", style: TextTheme.of(context).labelLarge)),
                   Container(
-                    width: 180 - 160 * (maxSolveCount - solveCounts[i]) / maxSolveCount,
-                    color: wonGameData?.numGuesses == i + 1
-                        ? palette.letterRightPlace
-                        : palette.letterWidgetBorder,
+                    width: 180 - 160 * (maxSolveCount - solveCounts[i]) / max(maxSolveCount, 1),
+                    color: wonGameData?.numGuesses == i + 1 ? palette.letterRightPlace : palette.letterWidgetBorder,
                     child: Padding(
                       padding: EdgeInsets.only(right: 6),
                       child: Align(
@@ -135,9 +131,7 @@ class SolveCountsGraph extends StatelessWidget {
                       ),
                     ),
                   ),
-                  solveCounts[i] == maxSolveCount
-                      ? SizedBox(width: 0)
-                      : Spacer(flex: maxSolveCount - solveCounts[i]),
+                  solveCounts[i] == maxSolveCount ? SizedBox(width: 0) : Spacer(flex: maxSolveCount - solveCounts[i]),
                 ],
               ),
             ),
