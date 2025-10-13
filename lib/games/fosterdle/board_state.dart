@@ -120,8 +120,6 @@ class BoardState with ChangeNotifier {
       final wod = ls.convert(value[1]);
       allowed = HashSet.from(ls.convert(value[0]))..addAll(wod);
 
-      var shit = allowed.contains('later');
-
       final epoch = DateTime.utc(2025, 9, 23);
       final now = DateTime.timestamp();
       final idx = now.difference(epoch).inDays % wod.length;

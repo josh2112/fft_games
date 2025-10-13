@@ -43,9 +43,7 @@ class BoardWidget extends StatelessWidget {
     final boardState = context.watch<BoardState>();
 
     if (boardState.guesses.isEmpty) {
-      return Center(
-        child: SizedBox.square(dimension: 64, child: const CircularProgressIndicator(value: null)),
-      );
+      return Center(child: SizedBox.square(dimension: 64, child: const CircularProgressIndicator(value: null)));
     } else {
       return FittedBox(
         fit: BoxFit.scaleDown,
