@@ -26,14 +26,10 @@ class StatsPage extends StatelessWidget {
       _ => 'You won!',
     };
 
-    final palette = context.watch<Palette>();
     final settings = context.watch<SettingsController>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Fosterdle Stats', style: TextStyle(fontFamily: palette.titleFontFamily)),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: Text('Fosterdle Stats'), centerTitle: true),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -127,7 +123,10 @@ class SolveCountsGraph extends StatelessWidget {
                       padding: EdgeInsets.only(right: 6),
                       child: Align(
                         alignment: Alignment.centerRight,
-                        child: Text("${solveCounts[i]}", style: TextTheme.of(context).labelLarge),
+                        child: Text(
+                          "${solveCounts[i]}",
+                          style: TextTheme.of(context).labelLarge!.copyWith(color: Colors.white),
+                        ),
                       ),
                     ),
                   ),

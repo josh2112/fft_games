@@ -40,9 +40,7 @@ class MyApp extends StatelessWidget {
       // See `lib/main_menu/main_menu_screen.dart` for example usage.
       providers: [
         Provider<SettingsPersistence>.value(value: settingsStore),
-        Provider<GlobalSettingsController>(
-          create: (context) => GlobalSettingsController(store: settingsStore),
-        ),
+        Provider<GlobalSettingsController>(create: (context) => GlobalSettingsController(store: settingsStore)),
       ],
       child: Builder(
         builder: (context) {
@@ -51,8 +49,8 @@ class MyApp extends StatelessWidget {
               valueListenable: globalSettings.themeMode,
               builder: (context, themeMode, child) => MaterialApp.router(
                 title: 'Foster Family Times Games',
-                theme: ThemeData.light(), // Or your custom light theme
-                darkTheme: ThemeData.dark(), // Or your custom dark theme
+                theme: ThemeData.light().copyWith(textTheme: Typography().black.apply(fontFamily: 'FacultyGlyphic')),
+                darkTheme: ThemeData.dark().copyWith(textTheme: Typography().white.apply(fontFamily: 'FacultyGlyphic')),
                 themeMode: ThemeMode.values[themeMode],
                 routerConfig: router,
                 debugShowCheckedModeBanner: false,

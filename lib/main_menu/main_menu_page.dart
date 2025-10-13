@@ -25,37 +25,50 @@ class _MainMenuPageState extends State<MainMenuPage> {
     ).loadString("pubspec.yaml").then((f) => setState(() => _version = f.split("version: ")[1].split("\n")[0]));
   }
 
+  // , icon:
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          'Foster Family Times Games',
-          style: TextTheme.of(context).headlineLarge!.apply(fontFamily: 'FacultyGlyphic'),
-        ),
-        centerTitle: true,
-        actions: [
-          IconButton(onPressed: () => showDialogOrBottomSheet(context, SettingsDialog()), icon: Icon(Icons.settings)),
-        ],
-      ),
       body: Center(
         child: Padding(
           padding: EdgeInsets.all(20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              Text('Foster Family Times Games', style: TextTheme.of(context).titleLarge, textAlign: TextAlign.center),
               Expanded(
-                child: Align(
-                  alignment: Alignment.center,
-                  child: FilledButton(
-                    onPressed: () {
-                      context.go('/fosterdle');
-                    },
-                    child: const Text('Fosterdle'),
-                  ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Transform.scale(
+                      scale: 1.5,
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          context.go('/fosterdle');
+                        },
+                        label: Text('Fosterdle'),
+                        icon: Icon(Icons.grid_on),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Opacity(opacity: 0.5, child: Text("Version $_version\t${(isRunningWithWasm ? 'WASM enabled' : '')}")),
+
+              Builder(
+                builder: (context) => OutlinedButton.icon(
+                  onPressed: () => showDialogOrBottomSheet(context, SettingsDialog()),
+                  label: Text("Settings"),
+                  icon: Icon(Icons.settings),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 20),
+                child: Opacity(
+                  opacity: 0.5,
+                  child: Text("Version $_version\t${(isRunningWithWasm ? 'WASM enabled' : '')}"),
+                ),
+              ),
             ],
           ),
         ),
