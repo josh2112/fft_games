@@ -17,11 +17,12 @@ class LetterWidget extends StatefulWidget {
 
 class _LetterWidgetState extends State<LetterWidget> {
   static final TextStyle letterStyle = TextStyle(
-    fontSize: 25,
+    fontSize: 28,
     fontWeight: FontWeight.bold,
     leadingDistribution: TextLeadingDistribution.even,
   );
 
+  // Copy of the previous state so we can animate between the two
   LetterWithState? prev;
 
   @override
@@ -34,12 +35,11 @@ class _LetterWidgetState extends State<LetterWidget> {
         Widget? w;
 
         if (prev != null) {
-          if (prev?.letter != widget.letterWithState.letter) {
+          if (prev?.letter != widget.letterWithState.letter && prev?.letter == '') {
             w = PopTile(
               key: ValueKey(widget.letterWithState.letter),
-              animationDuration: Duration(milliseconds: 250),
-              oldChild: tile(prev!, palette),
-              newChild: tile(widget.letterWithState, palette),
+              animationDuration: Duration(milliseconds: 200),
+              child: tile(widget.letterWithState, palette),
             );
           } else if (prev?.state != widget.letterWithState.state) {
             w = FlipTile(

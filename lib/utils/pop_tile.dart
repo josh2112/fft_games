@@ -1,20 +1,10 @@
 import 'package:flutter/material.dart';
 
-abstract class TileAnimation extends StatefulWidget {
-  final Widget oldChild, newChild;
-
+class PopTile extends StatefulWidget {
+  final Widget child;
   final Duration animationDuration;
 
-  const TileAnimation({
-    super.key,
-    required this.oldChild,
-    required this.newChild,
-    this.animationDuration = const Duration(milliseconds: 500),
-  });
-}
-
-class PopTile extends TileAnimation {
-  const PopTile({super.key, required super.oldChild, required super.newChild, super.animationDuration});
+  const PopTile({super.key, required this.child, this.animationDuration = const Duration(milliseconds: 500)});
 
   @override
   PopTileState createState() => PopTileState();
@@ -47,11 +37,7 @@ class PopTileState extends State<PopTile> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
     animation: animationController,
-    builder: (context, child) => Transform.scale(
-      scale: animation.value,
-      alignment: Alignment.center,
-      // Show oldChild for the first half of the animation and newChild for the second half
-      child: animationController.value < 0.5 ? widget.oldChild : widget.newChild,
-    ),
+    builder: (context, child) =>
+        Transform.scale(scale: animation.value, alignment: Alignment.center, child: widget.child),
   );
 }

@@ -2,7 +2,7 @@ import 'package:fft_games/games/fosterdle/keyboard_widget.dart';
 import 'package:fft_games/games/fosterdle/settings.dart';
 import 'package:fft_games/games/fosterdle/settings_dialog.dart';
 import 'package:fft_games/utils/dialog_or_bottom_sheet.dart';
-import 'package:fft_games/utils/top_snack_bar.dart';
+import 'package:fft_games/utils/multi_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -23,13 +23,22 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   late final SettingsController settings;
   late final BoardState boardState;
 
+  late final MultiSnackBarMessenger messenger;
+
   bool isProcessingGuess = false;
 
   @override
   void initState() {
     super.initState();
+    messenger = MultiSnackBarMessenger();
     boardState = BoardState(onWon: _onPlayerWin, onLost: _onPlayerLost);
     settings = context.read<SettingsController>();
+  }
+
+  @override
+  void dispose() {
+    messenger.dispose();
+    super.dispose();
   }
 
   bool _isModifierKeyPressed() =>
@@ -54,42 +63,47 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
         ),
       ],
     ),
-    body: Focus(
-      autofocus: true,
-      onKeyEvent: (node, event) {
-        if (event is KeyDownEvent && !_isModifierKeyPressed()) {
-          final letter = event.character?.toUpperCase();
-          if (letter is String && RegExp(r'^[a-zA-Z]$').hasMatch(letter)) {
-            onLetter(letter);
-          } else if (event.logicalKey == LogicalKeyboardKey.backspace) {
-            onBackspace();
-          } else if (event.logicalKey == LogicalKeyboardKey.enter) {
-            onSubmit();
-          } else {
-            return KeyEventResult.ignored;
-          }
-          return KeyEventResult.handled;
-        }
+    body: Stack(
+      children: [
+        Focus(
+          autofocus: true,
+          onKeyEvent: (node, event) {
+            if (event is KeyDownEvent && !_isModifierKeyPressed()) {
+              final letter = event.character?.toUpperCase();
+              if (letter is String && RegExp(r'^[a-zA-Z]$').hasMatch(letter)) {
+                onLetter(letter);
+              } else if (event.logicalKey == LogicalKeyboardKey.backspace) {
+                onBackspace();
+              } else if (event.logicalKey == LogicalKeyboardKey.enter) {
+                onSubmit();
+              } else {
+                return KeyEventResult.ignored;
+              }
+              return KeyEventResult.handled;
+            }
 
-        return KeyEventResult.ignored;
-      },
-      child: Padding(
-        padding: EdgeInsets.all(10),
-        child: ChangeNotifierProvider.value(
-          value: boardState,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Expanded(child: const BoardWidget()),
-              const SizedBox(height: 5),
-              ListenableBuilder(
-                listenable: boardState.keyboard,
-                builder: (context, child) => KeyboardWidget(adapter: this, letterStates: boardState.keyboard.keys),
+            return KeyEventResult.ignored;
+          },
+          child: Padding(
+            padding: EdgeInsets.all(10),
+            child: ChangeNotifierProvider.value(
+              value: boardState,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(child: const BoardWidget()),
+                  const SizedBox(height: 5),
+                  ListenableBuilder(
+                    listenable: boardState.keyboard,
+                    builder: (context, child) => KeyboardWidget(adapter: this, letterStates: boardState.keyboard.keys),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
-      ),
+        MultiSnackBar(messenger: messenger),
+      ],
     ),
   );
 
@@ -120,8 +134,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     if (settings.isHardMode.value) {
       final err = errorForHardModeCheckResult(boardState.checkHardMode());
       if (err != null) {
-        showTopSnackBar(context, err);
-        return;
+        messenger.showSnackBar(err);
       }
     }
 
@@ -130,7 +143,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
       isProcessingGuess = false;
       if (!mounted) return;
       if (result == SubmissionResult.wordNotInDictionary) {
-        showTopSnackBar(context, "Word not in dictionary");
+        messenger.showSnackBar("Word not in dictionary");
       }
     });
   }

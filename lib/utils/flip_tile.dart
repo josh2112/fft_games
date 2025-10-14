@@ -2,10 +2,16 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import 'pop_tile.dart';
+class FlipTile extends StatefulWidget {
+  final Widget oldChild, newChild;
+  final Duration animationDuration;
 
-class FlipTile extends TileAnimation {
-  const FlipTile({super.key, required super.oldChild, required super.newChild, super.animationDuration});
+  const FlipTile({
+    super.key,
+    required this.oldChild,
+    required this.newChild,
+    this.animationDuration = const Duration(milliseconds: 500),
+  });
 
   @override
   FlipTileState createState() => FlipTileState();
