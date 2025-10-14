@@ -57,7 +57,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
         IconButton(onPressed: showStats, icon: Icon(Icons.bar_chart)),
         Builder(
           builder: (context) => IconButton(
-            onPressed: () => showDialogOrBottomSheet(context, SettingsDialog(settings, boardState)),
+            onPressed: () => showDialogOrBottomSheet(context, SettingsDialog(settings, boardState, messenger)),
             icon: Icon(Icons.settings),
           ),
         ),
@@ -109,12 +109,12 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
 
   @override
   void onLetter(String letter) {
-    if (!isProcessingGuess) boardState.addLetter(letter);
+    if (boardState.isGameInProgress && !isProcessingGuess) boardState.addLetter(letter);
   }
 
   @override
   void onBackspace() {
-    if (!isProcessingGuess) boardState.removeLetter();
+    if (boardState.isGameInProgress && !isProcessingGuess) boardState.removeLetter();
   }
 
   String? errorForHardModeCheckResult(HardModeCheckResult r) {

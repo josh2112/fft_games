@@ -103,6 +103,8 @@ class BoardState with ChangeNotifier {
 
   int _currentGuess = 0;
 
+  bool isGameInProgress = true;
+
   Guess? get currentGuess => guesses.elementAtOrNull(_currentGuess);
 
   final KeyboardState keyboard = KeyboardState();
@@ -222,8 +224,10 @@ class BoardState with ChangeNotifier {
     keyboard.notify();
 
     if (!updatedLetterStates.any((s) => s != LetterState.rightPlace)) {
+      isGameInProgress = false;
       onWon(_currentGuess);
     } else if (_currentGuess == guesses.length) {
+      isGameInProgress = false;
       onLost(word);
     }
 
