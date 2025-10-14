@@ -6,6 +6,4 @@ class Palette {
   Color get letterWidgetBorder => Colors.grey[800]!;
   WidgetStateProperty<Color> get keyboardKey => WidgetStateProperty.all<Color>(Colors.grey[600]!);
   WidgetStateProperty<Color> get keyboardKeyNotInWord => WidgetStateProperty.all<Color>(Colors.grey[800]!);
-
-  String titleFontFamily = 'FacultyGlyphic';
 }

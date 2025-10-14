@@ -35,18 +35,18 @@ class _LetterWidgetState extends State<LetterWidget> {
         Widget? w;
 
         if (prev != null) {
-          if (prev?.letter != widget.letterWithState.letter && prev?.letter == '') {
-            w = PopTile(
-              key: ValueKey(widget.letterWithState.letter),
-              animationDuration: Duration(milliseconds: 200),
-              child: tile(widget.letterWithState, palette),
-            );
-          } else if (prev?.state != widget.letterWithState.state) {
+          if (prev?.state != widget.letterWithState.state) {
             w = FlipTile(
               key: ValueKey(widget.letterWithState.state),
               animationDuration: Duration(milliseconds: 666),
               oldChild: tile(prev!, palette),
               newChild: tile(widget.letterWithState, palette),
+            );
+          } else if (prev?.letter != widget.letterWithState.letter && prev?.letter == '') {
+            w = PopTile(
+              key: ValueKey(widget.letterWithState.letter),
+              animationDuration: Duration(milliseconds: 200),
+              child: tile(widget.letterWithState, palette),
             );
           }
         }

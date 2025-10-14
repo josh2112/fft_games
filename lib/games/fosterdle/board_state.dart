@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -45,8 +46,6 @@ class Guess {
   bool isSubmitted = false;
 
   Stream get incorrectGuessStream => _incorrectGuessStreamController.stream;
-
-  final guessState = ValueNotifier<GuessState>(GuessState.ok);
 
   bool get isFull => !letters.any((lws) => lws.letter.isEmpty);
 
@@ -94,6 +93,10 @@ class KeyboardState with ChangeNotifier {
 class BoardState with ChangeNotifier {
   static final numGuesses = 6;
 
+  final _loadCompleter = Completer<void>();
+
+  Future<void> get isLoaded => _loadCompleter.future;
+
   late final HashSet<String> allowed;
   late final String word;
   final List<Guess> guesses = [];
@@ -110,26 +113,21 @@ class BoardState with ChangeNotifier {
   final KeyboardState keyboard = KeyboardState();
 
   BoardState({required this.onWon, required this.onLost}) {
-    _init();
-  }
-
-  Future _init() async {
-    Future.wait([
-      rootBundle.loadString("assets/fosterdle/allowed.txt"),
-      rootBundle.loadString("assets/fosterdle/wod.txt"),
-    ]).then((value) {
+    Future<void> init() async {
       final ls = LineSplitter();
-      final wod = ls.convert(value[1]);
-      allowed = HashSet.from(ls.convert(value[0]))..addAll(wod);
+      final wods = ls.convert(await rootBundle.loadString("assets/fosterdle/wod.txt"));
+      allowed = HashSet.from(ls.convert(await rootBundle.loadString("assets/fosterdle/allowed.txt")))..addAll(wods);
 
       final epoch = DateTime.utc(2025, 9, 23);
       final now = DateTime.timestamp();
-      final idx = now.difference(epoch).inDays % wod.length;
-      word = wod[idx].toUpperCase();
+      final idx = now.difference(epoch).inDays % wods.length;
+      word = wods[idx].toUpperCase();
       guesses.addAll(List.generate(numGuesses, (i) => Guess(word.length)));
 
       notifyListeners();
-    });
+    }
+
+    _loadCompleter.complete(init());
   }
 
   void addLetter(String letter) => currentGuess?.addLetter(letter);
@@ -218,6 +216,7 @@ class BoardState with ChangeNotifier {
     }
 
     await g.submit(updatedLetterStates);
+
     await Future.delayed(Duration(milliseconds: 300));
 
     _currentGuess += 1;
@@ -232,6 +231,31 @@ class BoardState with ChangeNotifier {
     }
 
     return SubmissionResult.ok;
+  }
+
+  Future<int> applyGameState(List<List<LetterWithState>> state, bool isComplete) async {
+    isGameInProgress = false; // Ignore letter entry while we update the board
+
+    for (int i = 0; i < state.length; ++i) {
+      for (int j = 0; j < state[i].length; ++j) {
+        guesses[i].letters[j].updateLetter(state[i][j].letter);
+        guesses[i].letters[j].updateLetterState(state[i][j].state);
+        await Future.delayed(Duration(milliseconds: 20));
+      }
+      guesses[i].isSubmitted = true;
+      _currentGuess += 1;
+    }
+
+    isGameInProgress = !isComplete;
+
+    if (isComplete) {
+      bool won = !guesses[_currentGuess - 1].letters.any((s) => s.state != LetterState.rightPlace);
+      int numGuesses = won ? _currentGuess : -1;
+
+      return numGuesses;
+    }
+
+    return -1;
   }
 }
 

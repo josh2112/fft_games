@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:fft_games/games/fosterdle/keyboard_widget.dart';
 import 'package:fft_games/games/fosterdle/settings.dart';
 import 'package:fft_games/games/fosterdle/settings_dialog.dart';
@@ -31,8 +33,18 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   void initState() {
     super.initState();
     messenger = MultiSnackBarMessenger();
-    boardState = BoardState(onWon: _onPlayerWin, onLost: _onPlayerLost);
     settings = context.read<SettingsController>();
+    boardState = BoardState(onWon: _onPlayerWon, onLost: _onPlayerLost);
+
+    // Once the game state is loaded, check if it's current, then apply it
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => Future.wait([
+        boardState.isLoaded,
+        settings.gameStateDate.isLoaded,
+        settings.gameStateGuesses.isLoaded,
+        settings.gameStateIsCompleted.isLoaded,
+      ]).then(maybeApplyBoardState),
+    );
   }
 
   @override
@@ -51,7 +63,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
       leading: BackButton(onPressed: () => context.pop()),
-      title: Text('Fosterdle', style: TextStyle(fontFamily: 'FacultyGlyphic')),
+      title: Text('Fosterdle'),
       centerTitle: true,
       actions: [
         IconButton(onPressed: showStats, icon: Icon(Icons.bar_chart)),
@@ -135,12 +147,21 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
       final err = errorForHardModeCheckResult(boardState.checkHardMode());
       if (err != null) {
         messenger.showSnackBar(err);
+        return;
       }
     }
 
     isProcessingGuess = true;
     boardState.submitGuess().then((result) {
       isProcessingGuess = false;
+
+      settings.gameStateGuesses.value = boardState.guesses
+          .where((g) => g.isSubmitted)
+          .map((g) => g.letters.toList())
+          .toList();
+      settings.gameStateIsCompleted.value = !boardState.isGameInProgress;
+      settings.gameStateDate.value = DateUtils.dateOnly(DateTime.now());
+
       if (!mounted) return;
       if (result == SubmissionResult.wordNotInDictionary) {
         messenger.showSnackBar("Word not in dictionary");
@@ -148,7 +169,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     });
   }
 
-  Future<void> _onPlayerWin(int numGuesses) async {
+  Future<void> _onPlayerWon(int numGuesses) async {
     final solveCounts = List<int>.from(settings.solveCounts.value);
     solveCounts[numGuesses - 1] += 1;
     settings.solveCounts.value = solveCounts;
@@ -171,4 +192,19 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   }
 
   void showStats() => context.go('/fosterdle/stats');
+
+  Future maybeApplyBoardState(List<void> value) async {
+    if (DateUtils.isSameDay(settings.gameStateDate.value, DateTime.now())) {
+      await Future.delayed(Duration(milliseconds: 50));
+      final numGuesses = await boardState.applyGameState(
+        settings.gameStateGuesses.value,
+        settings.gameStateIsCompleted.value,
+      );
+      await Future.delayed(Duration(milliseconds: 750));
+
+      if (!boardState.isGameInProgress && mounted) {
+        context.go('/fosterdle/stats', extra: StatsPageContext(numGuesses, boardState.word));
+      }
+    }
+  }
 }
