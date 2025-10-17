@@ -118,7 +118,7 @@ class BoardState with ChangeNotifier {
       final wods = ls.convert(await rootBundle.loadString("assets/fosterdle/wod.txt"));
       allowed = HashSet.from(ls.convert(await rootBundle.loadString("assets/fosterdle/allowed.txt")))..addAll(wods);
 
-      final epoch = DateTime.utc(2025, 9, 23);
+      final epoch = DateTime(2025, 9, 23);
       final now = DateTime.timestamp();
       final idx = now.difference(epoch).inDays % wods.length;
       word = wods[idx].toUpperCase();
