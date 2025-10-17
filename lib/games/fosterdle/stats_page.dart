@@ -6,23 +6,23 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-class StatsPageContext {
+class StatsPageWinLoseData {
   final String word;
   final int numGuesses;
 
-  const StatsPageContext(this.numGuesses, this.word);
+  const StatsPageWinLoseData(this.numGuesses, this.word);
 }
 
 class StatsPage extends StatelessWidget {
-  final StatsPageContext? wonGameData;
+  final StatsPageWinLoseData? winLoseData;
 
-  const StatsPage({super.key, this.wonGameData});
+  const StatsPage({super.key, this.winLoseData});
 
   @override
   Widget build(BuildContext context) {
-    final String? message = switch (wonGameData?.numGuesses) {
+    final String? message = switch (winLoseData?.numGuesses) {
       null => null,
-      < 0 => "The word was ${wonGameData!.word}. Better luck tomorrow!",
+      < 0 => "The word was ${winLoseData!.word}. Better luck tomorrow!",
       _ => 'You won!',
     };
 
@@ -51,17 +51,17 @@ class StatsPage extends StatelessWidget {
           ),
           const Spacer(),
           subtitle(context, "GUESS DISTRIBUTION"),
-          SolveCountsGraph(settings.solveCounts.value, wonGameData),
+          SolveCountsGraph(settings.solveCounts.value, winLoseData),
           const Spacer(flex: 3),
           ElevatedButton(
             onPressed: () {
-              if (wonGameData != null) {
+              if (winLoseData != null) {
                 context.go('/');
               } else {
                 context.pop();
               }
             },
-            child: Text(wonGameData != null ? "Home" : 'Back'),
+            child: Text(winLoseData != null ? "Home" : 'Back'),
           ),
           const Spacer(),
         ],
@@ -94,7 +94,7 @@ class StatsWidget extends StatelessWidget {
 
 class SolveCountsGraph extends StatelessWidget {
   final List<int> solveCounts;
-  final StatsPageContext? wonGameData;
+  final StatsPageWinLoseData? wonGameData;
   final int maxSolveCount;
 
   SolveCountsGraph(this.solveCounts, this.wonGameData, {super.key}) : maxSolveCount = solveCounts.reduce(max);

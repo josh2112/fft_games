@@ -43,8 +43,10 @@ final router = GoRouter(
               routes: [
                 GoRoute(
                   path: 'stats',
-                  builder: (context, state) =>
-                      fosterdle.StatsPage(key: Key('fosterdle stats'), wonGameData: state.extra as StatsPageContext?),
+                  builder: (context, state) => fosterdle.StatsPage(
+                    key: Key('fosterdle stats'),
+                    winLoseData: state.extra as StatsPageWinLoseData?,
+                  ),
                 ),
               ],
             ),
