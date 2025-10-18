@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 void showDialogOrBottomSheet(BuildContext context, Widget widget) {
   if (MediaQuery.of(context).size.width < 500) {
-    Scaffold.of(context).showBottomSheet((c) => widget);
+    showModalBottomSheet(context: context, builder: (context) => widget);
   } else {
     showDialog(
       context: context,
