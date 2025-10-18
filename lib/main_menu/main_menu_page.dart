@@ -1,6 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:material_symbols_icons/symbols.dart';
 import '../utils/dialog_or_bottom_sheet.dart';
 import 'settings_dialog.dart';
 
@@ -31,27 +32,36 @@ class _MainMenuPageState extends State<MainMenuPage> {
     return Scaffold(
       body: Center(
         child: Padding(
-          padding: EdgeInsets.all(20),
+          padding: EdgeInsets.only(top: 40, bottom: 20, left: 20, right: 20),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text('Foster Family Times Games', style: TextTheme.of(context).titleLarge, textAlign: TextAlign.center),
               Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Transform.scale(
-                      scale: 1.5,
-                      child: FilledButton.icon(
+                child: Transform.scale(
+                  scale: 1.5,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    spacing: 20,
+                    children: [
+                      FilledButton.icon(
                         onPressed: () {
                           context.go('/fosterdle');
                         },
                         label: Text('Fosterdle'),
                         icon: Icon(Icons.grid_on),
                       ),
-                    ),
-                  ],
+                      if (kDebugMode)
+                        FilledButton.icon(
+                          onPressed: () {
+                            context.go('/fosteroes');
+                          },
+                          label: Text('Fosteroes'),
+                          icon: Icon(Symbols.background_dot_large),
+                        ),
+                    ],
+                  ),
                 ),
               ),
 

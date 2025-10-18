@@ -18,6 +18,7 @@ dependencies:
     go_router: ^16.2.1
     shared_preferences: ^2.5.3
     collection: ^1.19.1
+    material_symbols_icons: ^4.2874.0
 
 dev_dependencies:
     flutter_test:
