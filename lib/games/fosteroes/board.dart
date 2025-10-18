@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:fft_games/games/fosteroes/domino.dart';
 import 'package:flutter/material.dart';
+import 'package:path_drawing/path_drawing.dart';
 
 class DominoState {
   final int side1, side2;
@@ -28,53 +29,22 @@ class LineSegment {
   bool get isHorizontal => p1.dx == p2.dx;
 
   @override
-  String toString() {
-    return "$p1 -> $p2";
-  }
+  String toString() => "$p1 -> $p2";
 }
 
 class _BoardState extends State<Board> {
-  static const gridSize = 52.0;
+  static const gridSize = 50.0;
 
-  final boardCells = [Offset(1, 0), Offset(2, 0)]; //[Offset(1, 0), Offset(2, 0), Offset(0, 1), Offset(1, 1)];
+  // TODO: What is the size of this fucken domino?
+
+  final boardCells = [Offset(1, 0), Offset(2, 0), Offset(0, 1), Offset(1, 1)];
+
+  late final List<Offset> contour;
 
   @override
   void initState() {
-    makeContour(boardCells);
+    contour = makeContour(boardCells);
     super.initState();
-  }
-
-  void makeContour(List<Offset> cells) {
-    final lines = <LineSegment>[];
-    for (final cell in cells) {
-      final left = cell.translate(-1, 0),
-          right = cell.translate(1, 0),
-          top = cell.translate(0, -1),
-          bottom = cell.translate(0, 1);
-      // Check each of 4 sides. If no cell on that side, add a line segment, orienting it based on
-      // which side it's on.
-      if (!cells.contains(top)) lines.add(LineSegment(cell, right));
-      if (!cells.contains(right)) lines.add(LineSegment(right, right.translate(0, 1)));
-      if (!cells.contains(bottom)) lines.add(LineSegment(bottom.translate(1, 0), bottom));
-      if (!cells.contains(left)) lines.add(LineSegment(bottom, cell));
-    }
-
-    // Now connect the lines. Pick 1 to start. Find the one that connects to it. If it's the same
-    // direction, extend the previous one, otherwise append it. Continue until all have been
-    // visited.
-
-    final contour = [lines.removeAt(0)];
-
-    while (lines.isNotEmpty) {
-      final next = lines.firstWhere((ln) => ln.p1 == contour.last.p2);
-      if (next.isHorizontal == contour.last.isHorizontal) {
-        contour[contour.length - 1] = LineSegment(contour.last.p1, next.p2);
-      } else {
-        contour.add(next);
-      }
-    }
-
-    print(contour);
   }
 
   @override
@@ -88,6 +58,19 @@ class _BoardState extends State<Board> {
           height: gridSize * 4,
           child: Stack(
             children: [
+              CustomPaint(
+                painter: ContourPainter(
+                  contour,
+                  gridSize,
+                  fillPaint: Paint()
+                    ..color = Colors.brown[200]!
+                    ..style = PaintingStyle.fill,
+                  strokePaint: Paint()
+                    ..color = Colors.brown[800]!
+                    ..style = PaintingStyle.stroke
+                    ..strokeWidth = 2,
+                ),
+              ),
               for (final d in widget.dominoes) Positioned(left: d.x * gridSize, top: d.y * gridSize, child: Domino(d)),
             ],
           ),
@@ -95,4 +78,69 @@ class _BoardState extends State<Board> {
       ),
     ),
   );
+
+  List<Offset> makeContour(List<Offset> cells) {
+    final lines = <LineSegment>[];
+    for (final cell in cells) {
+      final right = cell.translate(1, 0), bottom = cell.translate(0, 1);
+      // Check each of 4 sides. If no cell on that side, add a line segment, orienting it based on
+      // which side it's on.
+      if (!cells.contains(cell.translate(0, -1))) lines.add(LineSegment(cell, right));
+      if (!cells.contains(right)) lines.add(LineSegment(right, right.translate(0, 1)));
+      if (!cells.contains(bottom)) lines.add(LineSegment(bottom.translate(1, 0), bottom));
+      if (!cells.contains(cell.translate(-1, 0))) lines.add(LineSegment(bottom, cell));
+    }
+
+    // Now connect the lines. Pick one to start. Find the one that connects to it. If it's the same
+    // direction, extend the previous one, otherwise append it. Continue until all have been
+    // visited.
+
+    final start = lines.removeAt(0);
+    final contour = [start.p1, start.p2];
+    var lastDir = start.p2 - start.p1;
+
+    while (lines.isNotEmpty) {
+      final next = lines.firstWhere((ln) => ln.p1 == contour.last);
+      var dir = next.p2 - next.p1;
+      if (dir == lastDir) {
+        contour[contour.length - 1] = next.p2;
+      } else {
+        contour.add(next.p2);
+      }
+      lines.remove(next);
+      lastDir = dir;
+    }
+
+    return contour;
+  }
+}
+
+class ContourPainter extends CustomPainter {
+  final List<Offset> contour;
+  final double gridSize;
+  final Paint? fillPaint, strokePaint;
+
+  const ContourPainter(this.contour, this.gridSize, {this.fillPaint, this.strokePaint});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path();
+
+    path.moveTo(contour.first.dx * gridSize, contour.first.dy * gridSize);
+
+    for (final ls in contour.skip(1)) {
+      path.lineTo(ls.dx * gridSize, ls.dy * gridSize);
+    }
+
+    if (fillPaint != null) {
+      canvas.drawPath(path, fillPaint!);
+    }
+
+    if (strokePaint != null) {
+      canvas.drawPath(dashPath(path, dashArray: CircularIntervalList([5, 5])), strokePaint!);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
