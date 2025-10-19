@@ -8,26 +8,25 @@ class Domino extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 5, left: 2, right: 2),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(5),
-          boxShadow: [BoxShadow(color: Colors.grey, offset: Offset(0, 2), blurRadius: 2)],
-        ),
-        child: RotatedBox(
-          quarterTurns: domino.rotation,
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _HalfDomino(domino.side1),
-                VerticalDivider(thickness: 1, indent: 5, width: 0, endIndent: 5),
-                _HalfDomino(domino.side2),
-              ],
-            ),
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(5),
+        border: BoxBorder.all(color: colors.inverseSurface, width: 1),
+        boxShadow: [BoxShadow(color: Colors.grey, offset: Offset(0, 2), blurRadius: 2)],
+      ),
+      child: RotatedBox(
+        quarterTurns: domino.rotation,
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _HalfDomino(domino.side1, colors.inverseSurface),
+              VerticalDivider(thickness: 1, indent: 5, width: 0, endIndent: 5),
+              _HalfDomino(domino.side2, colors.inverseSurface),
+            ],
           ),
         ),
       ),
@@ -36,25 +35,26 @@ class Domino extends StatelessWidget {
 }
 
 class _HalfDomino extends StatelessWidget {
-  static final size = 50.0;
-  static final hPad = 14.0;
-  static final vPad = 15.0;
+  static final width = 51.0, height = 50.0;
+  static final hInset = 14.0;
+  static final vInset = 15.0;
 
   static final pipSize = 8.0;
   static final pipRadius = pipSize / 2;
 
-  static final double col1 = hPad - pipRadius, col2 = size / 2 - pipRadius, col3 = size - hPad - pipRadius;
-  static final double row1 = vPad - pipRadius, row2 = size / 2 - pipRadius, row3 = size - vPad - pipRadius;
+  static final double col1 = hInset - pipRadius, col2 = width / 2 - pipRadius, col3 = width - hInset - pipRadius;
+  static final double row1 = vInset - pipRadius, row2 = height / 2 - pipRadius, row3 = height - vInset - pipRadius;
   //static const double
 
   final int pips;
+  final Color color;
 
-  const _HalfDomino(this.pips);
+  const _HalfDomino(this.pips, this.color);
 
   @override
   Widget build(BuildContext context) => SizedBox(
-    width: size,
-    height: size,
+    width: width,
+    height: height,
     child: Stack(
       children: switch (pips) {
         1 => [Positioned(left: col2, top: row2, child: pip())],
@@ -93,6 +93,6 @@ class _HalfDomino extends StatelessWidget {
   Widget pip() => Container(
     width: pipSize,
     height: pipSize,
-    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.black),
+    decoration: BoxDecoration(shape: BoxShape.circle, color: color),
   );
 }
