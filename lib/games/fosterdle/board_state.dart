@@ -73,7 +73,7 @@ class Guess {
   Future<void> _cascade(List<LetterState> updatedStates) async {
     for (final (i, state) in updatedStates.indexed) {
       letters[i].updateLetterState(state);
-      await Future.delayed(Duration(milliseconds: 200));
+      await Future.delayed(Duration(milliseconds: 320));
     }
   }
 
