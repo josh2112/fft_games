@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'games/fosterdle/fosterdle.dart' as fosterdle;
+import 'games/fosteroes/fosteroes.dart' as fosteroes;
 import 'main_menu/main_menu_page.dart';
 //import 'settings/settings_screen.dart';
 //import 'win_game/win_game_screen.dart';
@@ -43,10 +44,16 @@ final router = GoRouter(
               routes: [
                 GoRoute(
                   path: 'stats',
-                  builder: (context, state) =>
-                      fosterdle.StatsPage(key: Key('fosterdle stats'), wonGameData: state.extra as StatsPageContext?),
+                  builder: (context, state) => fosterdle.StatsPage(
+                    key: Key('fosterdle stats'),
+                    winLoseData: state.extra as StatsPageWinLoseData?,
+                  ),
                 ),
               ],
+            ),
+            GoRoute(
+              path: 'fosteroes',
+              builder: (context, state) => const fosteroes.PlayPage(key: Key('fosteroes')),
             ),
           ],
         ),

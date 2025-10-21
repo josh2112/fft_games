@@ -91,7 +91,8 @@ class KeyboardState with ChangeNotifier {
 }
 
 class BoardState with ChangeNotifier {
-  static final numGuesses = 6;
+  static final _numGuesses = 6;
+  static final _epoch = DateTime(2025, 9, 23);
 
   final _loadCompleter = Completer<void>();
 
@@ -118,11 +119,10 @@ class BoardState with ChangeNotifier {
       final wods = ls.convert(await rootBundle.loadString("assets/fosterdle/wod.txt"));
       allowed = HashSet.from(ls.convert(await rootBundle.loadString("assets/fosterdle/allowed.txt")))..addAll(wods);
 
-      final epoch = DateTime.utc(2025, 9, 23);
       final now = DateTime.timestamp();
-      final idx = now.difference(epoch).inDays % wods.length;
+      final idx = now.difference(_epoch).inDays % wods.length;
       word = wods[idx].toUpperCase();
-      guesses.addAll(List.generate(numGuesses, (i) => Guess(word.length)));
+      guesses.addAll(List.generate(_numGuesses, (i) => Guess(word.length)));
 
       notifyListeners();
     }

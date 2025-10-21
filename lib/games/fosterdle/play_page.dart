@@ -29,6 +29,8 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
 
   bool isProcessingGuess = false;
 
+  bool get shouldAcceptInput => boardState.isGameInProgress && !isProcessingGuess;
+
   @override
   void initState() {
     super.initState();
@@ -53,12 +55,6 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     super.dispose();
   }
 
-  bool _isModifierKeyPressed() =>
-      HardwareKeyboard.instance.isControlPressed ||
-      HardwareKeyboard.instance.isShiftPressed ||
-      HardwareKeyboard.instance.isAltPressed ||
-      HardwareKeyboard.instance.isMetaPressed;
-
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
@@ -79,23 +75,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
       children: [
         Focus(
           autofocus: true,
-          onKeyEvent: (node, event) {
-            if (event is KeyDownEvent && !_isModifierKeyPressed()) {
-              final letter = event.character?.toUpperCase();
-              if (letter is String && RegExp(r'^[a-zA-Z]$').hasMatch(letter)) {
-                onLetter(letter);
-              } else if (event.logicalKey == LogicalKeyboardKey.backspace) {
-                onBackspace();
-              } else if (event.logicalKey == LogicalKeyboardKey.enter) {
-                onSubmit();
-              } else {
-                return KeyEventResult.ignored;
-              }
-              return KeyEventResult.handled;
-            }
-
-            return KeyEventResult.ignored;
-          },
+          onKeyEvent: _processKeyEvent,
           child: Padding(
             padding: EdgeInsets.all(10),
             child: ChangeNotifierProvider.value(
@@ -119,32 +99,46 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     ),
   );
 
+  KeyEventResult _processKeyEvent(FocusNode node, KeyEvent event) {
+    if (event is KeyDownEvent && !_isModifierKeyPressed()) {
+      final letter = event.character?.toUpperCase();
+      if (letter is String && RegExp(r'^[a-zA-Z]$').hasMatch(letter)) {
+        onLetter(letter);
+      } else if (event.logicalKey == LogicalKeyboardKey.backspace) {
+        onBackspace();
+      } else if (event.logicalKey == LogicalKeyboardKey.enter) {
+        onSubmit();
+      } else {
+        return KeyEventResult.ignored;
+      }
+      return KeyEventResult.handled;
+    }
+
+    return KeyEventResult.ignored;
+  }
+
+  bool _isModifierKeyPressed() =>
+      HardwareKeyboard.instance.isControlPressed ||
+      HardwareKeyboard.instance.isShiftPressed ||
+      HardwareKeyboard.instance.isAltPressed ||
+      HardwareKeyboard.instance.isMetaPressed;
+
   @override
   void onLetter(String letter) {
-    if (boardState.isGameInProgress && !isProcessingGuess) boardState.addLetter(letter);
+    if (shouldAcceptInput) boardState.addLetter(letter);
   }
 
   @override
   void onBackspace() {
-    if (boardState.isGameInProgress && !isProcessingGuess) boardState.removeLetter();
-  }
-
-  String? errorForHardModeCheckResult(HardModeCheckResult r) {
-    if (r == HardModeCheckResult.ok) {
-      return null;
-    } else if (r.place != null) {
-      return "Letter ${r.place! + 1} must be ${r.letter}";
-    } else {
-      return "Guess must contain ${r.letter}";
-    }
+    if (shouldAcceptInput) boardState.removeLetter();
   }
 
   @override
   void onSubmit() {
-    if (isProcessingGuess) return;
+    if (!shouldAcceptInput) return;
 
     if (settings.isHardMode.value) {
-      final err = errorForHardModeCheckResult(boardState.checkHardMode());
+      final err = _errorForHardModeCheckResult(boardState.checkHardMode());
       if (err != null) {
         messenger.showSnackBar(err);
         return;
@@ -169,6 +163,16 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     });
   }
 
+  String? _errorForHardModeCheckResult(HardModeCheckResult r) {
+    if (r == HardModeCheckResult.ok) {
+      return null;
+    } else if (r.place != null) {
+      return "Letter ${r.place! + 1} must be ${r.letter}";
+    } else {
+      return "Guess must contain ${r.letter}";
+    }
+  }
+
   Future<void> _onPlayerWon(int numGuesses) async {
     final solveCounts = List<int>.from(settings.solveCounts.value);
     solveCounts[numGuesses - 1] += 1;
@@ -181,14 +185,14 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
       settings.maxStreak.value = settings.currentStreak.value;
     }
 
-    context.go('/fosterdle/stats', extra: StatsPageContext(numGuesses, boardState.word));
+    context.go('/fosterdle/stats', extra: StatsPageWinLoseData(numGuesses, boardState.word));
   }
 
   Future<void> _onPlayerLost(String word) async {
     settings.numPlayed.value += 1;
     settings.currentStreak.value = 0;
 
-    context.go('/fosterdle/stats', extra: StatsPageContext(-1, boardState.word));
+    context.go('/fosterdle/stats', extra: StatsPageWinLoseData(-1, boardState.word));
   }
 
   void showStats() => context.go('/fosterdle/stats');
@@ -196,6 +200,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
   Future maybeApplyBoardState(List<void> value) async {
     if (DateUtils.isSameDay(settings.gameStateDate.value, DateTime.now())) {
       await Future.delayed(Duration(milliseconds: 50));
+
       final numGuesses = await boardState.applyGameState(
         settings.gameStateGuesses.value,
         settings.gameStateIsCompleted.value,
@@ -203,7 +208,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
       await Future.delayed(Duration(milliseconds: 750));
 
       if (!boardState.isGameInProgress && mounted) {
-        context.go('/fosterdle/stats', extra: StatsPageContext(numGuesses, boardState.word));
+        context.go('/fosterdle/stats', extra: StatsPageWinLoseData(numGuesses, boardState.word));
       }
     }
   }
