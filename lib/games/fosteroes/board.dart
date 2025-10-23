@@ -143,8 +143,6 @@ class ContourPainter extends CustomPainter {
   final double gridSize, outset;
   final Paint? fillPaint, strokePaint;
 
-  // TODO: Add border radius
-
   final double cornerRadius;
 
   ContourPainter(
