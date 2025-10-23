@@ -64,6 +64,7 @@ class _BoardState extends State<Board> {
                       ..style = PaintingStyle.stroke
                       ..strokeWidth = 1,
                     outset: 5,
+                    cornerRadius: 10,
                   ),
                 ),
                 for (final d in widget.dominoes)
@@ -79,9 +80,9 @@ class _BoardState extends State<Board> {
 
 class LineSegment {
   final Offset p1, p2;
-  const LineSegment(this.p1, this.p2);
+  final double direction;
 
-  bool get isHorizontal => p1.dx == p2.dx;
+  LineSegment(this.p1, this.p2) : direction = (p2 - p1).direction;
 
   @override
   String toString() => "$p1 -> $p2";
@@ -89,7 +90,7 @@ class LineSegment {
 
 class Region {
   final List<Offset> cells;
-  late final List<Offset> contour;
+  late final List<LineSegment> contour;
 
   late final double width, height;
 
@@ -105,72 +106,119 @@ class Region {
       if (!cells.contains(cell.translate(-1, 0))) lines.add(LineSegment(bottom, cell));
     }
 
-    // Now connect the lines. Pick one to start. Find the one that connects to it. If it's the same
-    // direction, extend the previous one, otherwise append it. Continue until all have been
-    // visited.
+    contour = <LineSegment>[];
 
-    final start = lines.removeAt(0);
-    contour = [start.p1, start.p2];
-    var lastDir = start.p2 - start.p1;
-
-    while (lines.isNotEmpty) {
-      final next = lines.firstWhere((ln) => ln.p1 == contour.last);
-      var dir = next.p2 - next.p1;
-      if (dir == lastDir) {
-        contour[contour.length - 1] = next.p2;
-      } else {
-        contour.add(next.p2);
+    // Now connect the lines. Find a corner to start.
+    for (int i = 1; i < lines.length; ++i) {
+      if (lines[i - 1].direction != lines[i].direction) {
+        contour.add(lines[i]);
+        lines.removeAt(i);
+        break;
       }
-      lines.remove(next);
-      lastDir = dir;
     }
 
-    final xs = contour.map((p) => p.dx), ys = contour.map((p) => p.dy);
-    width = xs.reduce(max) - xs.reduce(min);
-    height = ys.reduce(max) - ys.reduce(min);
+    // From the last line segment, find the one that connects to it.
+    // If it's the same  direction, extend the previous one, otherwise append it. Continue until
+    // all have been visited.
+
+    while (lines.isNotEmpty) {
+      final cur = contour.last;
+      final next = lines.firstWhere((ln) => ln.p1 == cur.p2);
+      if (next.direction == cur.direction) {
+        contour.last = LineSegment(cur.p1, next.p2);
+      } else {
+        contour.add(next);
+      }
+      lines.remove(next);
+    }
+
+    final xall = contour.map((ls) => ls.p1.dx), yall = contour.map((ls) => ls.p1.dy);
+    width = xall.reduce(max) - xall.reduce(min);
+    height = yall.reduce(max) - yall.reduce(min);
   }
 }
 
 class ContourPainter extends CustomPainter {
-  final List<Offset> contour;
+  final List<LineSegment> contour;
   final double gridSize, outset;
   final Paint? fillPaint, strokePaint;
 
   // TODO: Add border radius
 
-  ContourPainter(this.contour, this.gridSize, {this.outset = 0, this.fillPaint, this.strokePaint});
+  final double cornerRadius;
+
+  ContourPainter(
+    this.contour,
+    this.gridSize, {
+    this.outset = 0,
+    this.cornerRadius = 0,
+    this.fillPaint,
+    this.strokePaint,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final dirs = [
-      for (int i = 1; i < contour.length; ++i) (contour[i] - contour[i - 1]).direction,
-      (contour.first - contour.last).direction,
-    ];
+    final scaled = contour.map((ls) {
+      final offset = Offset.fromDirection(ls.direction - pi / 2, outset);
+      return LineSegment(
+        ls.p1.scale(gridSize, gridSize).translate(offset.dx, offset.dy),
+        ls.p2.scale(gridSize, gridSize).translate(offset.dx, offset.dy),
+      );
+    }).toList();
 
-    final pts = contour.map((p) => p.scale(gridSize, gridSize)).toList();
-
-    for (int i = 0; i < dirs.length - 1; ++i) {
-      var offset = Offset.fromDirection(dirs[i] - pi / 2, outset);
-      pts[i] = pts[i].translate(offset.dx, offset.dy);
-      pts[i + 1] = pts[i + 1].translate(offset.dx, offset.dy);
+    // Returns whether the angle between line segments ls1 and ls2 is clockwise or counter-clockwise
+    bool isCCW(int i1, int i2) {
+      var d = scaled[i2].direction - scaled[i1].direction;
+      if (d > pi / 2) d -= pi * 2;
+      if (d < -pi / 2) d += pi * 2;
+      return d < 0;
     }
 
-    var offset = Offset.fromDirection(dirs.last - pi / 2, outset);
-    pts.last = pts.last.translate(offset.dx, offset.dy);
+    // Backs up end of the first line and pushes forward beginning of the second line
+    void fixConcaveCorner(int i1, int i2) {
+      var off = Offset.fromDirection(scaled[i1].direction, cornerRadius);
+      var p = scaled[i1].p2.translate(-off.dx, -off.dy);
+      scaled[i1] = LineSegment(scaled[i1].p1, p);
+      off = Offset.fromDirection(scaled[i2].direction, cornerRadius);
+      p = scaled[i2].p1.translate(off.dx, off.dy);
+      scaled[i2] = LineSegment(p, scaled[i2].p2);
+    }
+
+    if (cornerRadius > 0) {
+      for (int i = 1; i < scaled.length; ++i) {
+        if (isCCW(i - 1, i)) {
+          fixConcaveCorner(i - 1, i);
+        }
+      }
+
+      if (isCCW(scaled.length - 1, 0)) {
+        fixConcaveCorner(scaled.length - 1, 0);
+      }
+    }
 
     final path = Path();
-    path.moveTo(pts.first.dx, pts.first.dy);
+    path.moveTo(scaled.first.p1.dx, scaled.first.p1.dy);
+    path.lineTo(scaled.first.p2.dx, scaled.first.p2.dy);
 
-    for (int i = 1; i < pts.length; ++i) {
-      path.lineTo(pts[i].dx, pts[i].dy);
+    for (int i = 1; i < scaled.length; ++i) {
+      path.arcToPoint(scaled[i].p1, radius: Radius.circular(cornerRadius / 2), clockwise: !isCCW(i - 1, i));
+      path.lineTo(scaled[i].p2.dx, scaled[i].p2.dy);
     }
+
+    path.arcToPoint(
+      scaled.first.p1,
+      radius: Radius.circular(cornerRadius / 2),
+      clockwise: !isCCW(scaled.length - 1, 0),
+    );
+    path.lineTo(scaled.first.p2.dx, scaled.first.p2.dy);
 
     if (fillPaint != null) {
       canvas.drawPath(path, fillPaint!);
     }
 
     if (strokePaint != null) {
-      canvas.drawPath(dashPath(path, dashArray: CircularIntervalList([5, 5])), strokePaint!);
+      canvas.drawPath(path, strokePaint!);
+      //dashPath(path, dashArray: CircularIntervalList([3, 3])), strokePaint!);
     }
   }
 
