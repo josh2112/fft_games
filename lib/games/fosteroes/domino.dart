@@ -35,11 +35,11 @@ class Domino extends StatelessWidget {
 }
 
 class _HalfDomino extends StatelessWidget {
-  static final width = 51.0, height = 50.0;
-  static final hInset = 14.0;
-  static final vInset = 15.0;
+  static const width = 51.0, height = 50.0;
+  static const hInset = 14.0;
+  static const vInset = 15.0;
 
-  static final pipSize = 8.0;
+  static const pipSize = 8.0;
   static final pipRadius = pipSize / 2;
 
   static final double col1 = hInset - pipRadius, col2 = width / 2 - pipRadius, col3 = width - hInset - pipRadius;
