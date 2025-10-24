@@ -50,7 +50,9 @@ class _BoardState extends State<Board> {
               child: FittedBox(
                 fit: BoxFit.contain,
                 child: Padding(
-                  padding: EdgeInsets.all(5), // <- This should be >= the outset of the playing field
+                  padding: EdgeInsets.all(
+                    5,
+                  ), // <- This should be >= the outset of the playing field
                   child: SizedBox(
                     width: puzzle.field.width * cellSize,
                     height: puzzle.field.height * cellSize,
@@ -74,8 +76,13 @@ class _BoardState extends State<Board> {
                             ),
                           ),
                         for (final d in widget.dominoes)
-                          Positioned(left: d.position.dx * cellSize, top: d.position.dy * cellSize, child: Domino(d)),
-                        for (final r in puzzle.constraints) CustomPaint(painter: RegionPainter(r, cellSize)),
+                          Positioned(
+                            left: d.position.dx * cellSize,
+                            top: d.position.dy * cellSize,
+                            child: Domino(d),
+                          ),
+                        for (final r in puzzle.constraints)
+                          CustomPaint(painter: RegionPainter(r, cellSize)),
                         for (final r in puzzle.constraints) ConstraintLabel(r, cellSize),
                       ],
                     ),

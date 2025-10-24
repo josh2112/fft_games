@@ -53,7 +53,9 @@ class ConstraintLabelClip extends CustomClipper<Path> {
 
   @override
   Path getClip(Size size) {
-    return path.transform(Float64List.fromList([size.width, 0, 0, 0, 0, size.width, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]));
+    return path.transform(
+      Float64List.fromList([size.width, 0, 0, 0, 0, size.width, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]),
+    );
   }
 
   @override

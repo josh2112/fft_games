@@ -22,7 +22,10 @@ class RegionPainter extends CustomPainter {
     }
 
     // Direction of the line segment starting at this point, e.g. lineDirs[1] = pts[1] => pts[2]
-    final lineDirs = [for (int i = 0; i < pts.length; ++i) (pts[(i + 1) % pts.length] - pts[i]).direction];
+
+    final lineDirs = [
+      for (int i = 0; i < pts.length; ++i) (pts[(i + 1) % pts.length] - pts[i]).direction,
+    ];
 
     final outset = _region is Field ? 5.0 : -2.0;
     final cornerRadius = _region is Field ? 5.0 : 3.0;

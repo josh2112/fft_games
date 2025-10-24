@@ -1,4 +1,3 @@
-
 abstract class Constraint {
   const Constraint();
 }
