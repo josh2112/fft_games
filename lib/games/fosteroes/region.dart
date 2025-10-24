@@ -1,5 +1,8 @@
 import 'dart:math';
 
+import 'package:fft_games/games/fosteroes/puzzle.dart';
+
+import 'constraint.dart';
 import 'package:flutter/painting.dart';
 
 class LineSegment {
@@ -13,19 +16,14 @@ class LineSegment {
   String toString() => "$p1 -> $p2";
 }
 
-enum RegionRole { field, constraint }
-
-class Region {
+abstract class Region {
   final List<Offset> cells;
-  final Color fill;
-  final Color? stroke;
-  final RegionRole role;
 
   late final List<Offset> contour;
 
   late final double width, height;
 
-  Region(this.role, this.cells, double cellSize, this.fill, {this.stroke}) {
+  Region(this.cells) {
     final lines = <LineSegment>[];
     for (final cell in cells) {
       final right = cell.translate(1, 0), bottom = cell.translate(0, 1);
@@ -59,12 +57,19 @@ class Region {
 
     contour.removeLast();
 
-    for (int i = 0; i < contour.length; ++i) {
-      contour[i] = contour[i].scale(cellSize, cellSize);
-    }
-
     final xs = contour.map((p) => p.dx), ys = contour.map((p) => p.dy);
     width = xs.reduce(max) - xs.reduce(min);
     height = ys.reduce(max) - ys.reduce(min);
   }
+}
+
+class Field extends Region {
+  Field(super.cells);
+}
+
+class ConstraintArea extends Region {
+  final ConstraintAreaPalette palette;
+  final Constraint constraint;
+
+  ConstraintArea(super.cells, this.constraint, this.palette);
 }
