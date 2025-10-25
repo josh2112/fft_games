@@ -1,33 +1,60 @@
-import 'package:fft_games/games/fosteroes/board.dart';
 import 'package:flutter/material.dart';
 
-class Domino extends StatelessWidget {
-  final DominoState domino;
+import 'board_state.dart';
 
-  const Domino(this.domino, {super.key});
+class Domino extends StatefulWidget {
+  final DominoState state;
+
+  const Domino(this.state, {super.key});
+
+  @override
+  State<Domino> createState() => _DominoState();
+}
+
+class _DominoState extends State<Domino> {
+  @override
+  Widget build(BuildContext context) {
+    /*AnimatedRotation(
+          turns: widget.state.rotation / 4.0,
+          duration: Duration(milliseconds: 200),
+          child: 
+          
+          
+    GestureDetector(
+        onTap: () => setState(() => widget.state.rotation += 1),
+
+        child: */
+
+    return Draggable(
+      feedback: DominoImpl(widget.state.side1, widget.state.side2),
+      child: DominoImpl(widget.state.side1, widget.state.side2),
+    );
+  }
+}
+
+class DominoImpl extends StatelessWidget {
+  final int side1, side2;
+
+  const DominoImpl(this.side1, this.side2, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
+    final colors = ColorScheme.of(context);
     return Container(
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(5),
-        border: BoxBorder.all(color: colors.inverseSurface, width: 1),
-        boxShadow: [BoxShadow(color: Colors.grey, offset: Offset(0, 2), blurRadius: 2)],
+        borderRadius: BorderRadius.circular(8),
+        border: BoxBorder.all(color: colors.inverseSurface, width: 1.5),
       ),
-      child: RotatedBox(
-        quarterTurns: domino.rotation,
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _HalfDomino(domino.side1, colors.inverseSurface),
-              VerticalDivider(thickness: 1, indent: 5, width: 0, endIndent: 5),
-              _HalfDomino(domino.side2, colors.inverseSurface),
-            ],
-          ),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _HalfDomino(side1, colors.inverseSurface),
+            VerticalDivider(thickness: 1, indent: 5, width: 0, endIndent: 5),
+            _HalfDomino(side2, colors.inverseSurface),
+          ],
         ),
       ),
     );
@@ -42,9 +69,12 @@ class _HalfDomino extends StatelessWidget {
   static const pipSize = 8.0;
   static final pipRadius = pipSize / 2;
 
-  static final double col1 = hInset - pipRadius, col2 = width / 2 - pipRadius, col3 = width - hInset - pipRadius;
-  static final double row1 = vInset - pipRadius, row2 = height / 2 - pipRadius, row3 = height - vInset - pipRadius;
-  //static const double
+  static final double col1 = hInset - pipRadius,
+      col2 = width / 2 - pipRadius,
+      col3 = width - hInset - pipRadius;
+  static final double row1 = vInset - pipRadius,
+      row2 = height / 2 - pipRadius,
+      row3 = height - vInset - pipRadius;
 
   final int pips;
   final Color color;
@@ -58,7 +88,10 @@ class _HalfDomino extends StatelessWidget {
     child: Stack(
       children: switch (pips) {
         1 => [Positioned(left: col2, top: row2, child: pip())],
-        2 => [Positioned(left: col1, top: row1, child: pip()), Positioned(left: row3, top: row3, child: pip())],
+        2 => [
+          Positioned(left: col1, top: row1, child: pip()),
+          Positioned(left: row3, top: row3, child: pip()),
+        ],
         3 => [
           Positioned(left: col1, top: row1, child: pip()),
           Positioned(left: col2, top: row2, child: pip()),

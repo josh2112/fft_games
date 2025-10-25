@@ -35,7 +35,7 @@ flutter:
         - pubspec.yaml
         - assets/fosterdle/allowed.txt
         - assets/fosterdle/wod.txt
-        - assets/fosteroes/puzzle1.json
+        - assets/fosteroes/testpuzzles/
 
     fonts:
         - family: FacultyGlyphic

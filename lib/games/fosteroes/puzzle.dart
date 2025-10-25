@@ -4,12 +4,16 @@ import 'package:fft_games/games/fosteroes/constraint.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'board_state.dart';
 import 'region.dart';
 
 class ConstraintAreaPalette {
   final Color label, fill, stroke;
 
-  ConstraintAreaPalette(MaterialColor color) : label = color, fill = color[200]!.withAlpha(96), stroke = color[800]!;
+  ConstraintAreaPalette(MaterialColor color)
+    : label = color,
+      fill = color[200]!.withAlpha(96),
+      stroke = color[800]!;
 }
 
 class Palette {
@@ -23,6 +27,7 @@ class Palette {
 class Puzzle {
   final Field field;
   final List<ConstraintArea> constraints;
+  final List<DominoState> dominoes;
 
   static Future<Puzzle> fromJsonFile(String path) async {
     List<Offset> parseOffsets(List<dynamic> list) {
@@ -37,7 +42,7 @@ class Puzzle {
       _ => EqualConstraint(),
     };
 
-    final def = jsonDecode(await rootBundle.loadString('assets/fosteroes/puzzle1.json'));
+    final def = jsonDecode(await rootBundle.loadString(path));
     final field = Field(parseOffsets(def["field"]));
 
     final pals = Palette().constraintAreaPalette;
@@ -47,8 +52,13 @@ class Puzzle {
       for (final c in def["constraints"])
         ConstraintArea(parseOffsets(c["cells"]), parseConstraint(c), pals[i++ % pals.length]),
     ];
-    return Puzzle._(field, constraints);
+
+    i = 0;
+    final hand = [
+      for (final d in parseOffsets(def["hand"])) DominoState(d.dx.toInt(), d.dy.toInt()),
+    ];
+    return Puzzle._(field, constraints, hand);
   }
 
-  Puzzle._(this.field, this.constraints);
+  Puzzle._(this.field, this.constraints, this.dominoes);
 }
