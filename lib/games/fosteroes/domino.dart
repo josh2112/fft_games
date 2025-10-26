@@ -27,7 +27,8 @@ class _DraggableDominoState extends State<DraggableDomino> {
 
     return Draggable<DominoState>(
       feedback: Domino(widget.state), // TODO: Scale child to size of domino on board!
-      childWhenDragging: DominoPlaceholder(),
+      childWhenDragging: SizedBox(),
+      //childWhenDragging: DominoPlaceholder(),
       data: widget.state,
       child: Domino(widget.state),
     );

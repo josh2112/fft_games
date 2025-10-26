@@ -10,9 +10,7 @@ class RegionPainter extends CustomPainter {
   const RegionPainter(this._region, this.cellSize);
 
   @override
-  bool? hitTest(Offset position) {
-    return false;
-  }
+  bool? hitTest(Offset position) => false;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -32,8 +30,8 @@ class RegionPainter extends CustomPainter {
       for (int i = 0; i < pts.length; ++i) (pts[(i + 1) % pts.length] - pts[i]).direction,
     ];
 
-    final outset = _region is Field ? 5.0 : -2.0;
-    final cornerRadius = _region is Field ? 5.0 : 3.0;
+    final outset = _region is FieldRegion ? 5.0 : -2.0;
+    final cornerRadius = _region is FieldRegion ? 5.0 : 3.0;
 
     for (int i = 0; i < pts.length; ++i) {
       int i2 = (i + 1) % pts.length;
@@ -65,7 +63,7 @@ class RegionPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = _region is ConstraintArea ? _region.palette.fill : Colors.brown[200]!
+        ..color = _region is HighlightRegion ? _region.palette.fill : Colors.brown[200]!
         ..style = PaintingStyle.fill,
     );
 
@@ -75,14 +73,14 @@ class RegionPainter extends CustomPainter {
     canvas.drawPath(
       path,
       Paint()
-        ..color = _region is ConstraintArea ? _region.palette.fill : Colors.brown[200]!
+        ..color = _region is HighlightRegion ? _region.palette.fill : Colors.brown[200]!
         ..strokeWidth = 2
         ..style = PaintingStyle.stroke,
     );
 
-    if (_region is ConstraintArea) {
+    if (_region is HighlightRegion) {
       canvas.drawPath(
-        dashPath(path, dashArray: CircularIntervalList([8, 8])),
+        path, //dashPath(path, dashArray: CircularIntervalList([5, 2])),
         Paint()
           ..color = _region.palette.stroke
           ..strokeWidth = 2

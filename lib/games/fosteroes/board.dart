@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 
 import 'board_state.dart';
 import 'constraint_label.dart';
 import 'domino.dart';
 import 'puzzle.dart';
+import 'region.dart';
 import 'region_painter.dart';
 
 import 'package:flutter/material.dart';
@@ -19,6 +21,8 @@ class Board extends StatefulWidget {
 
 class _BoardState extends State<Board> {
   final _dragTargetKey = GlobalKey();
+
+  final ValueNotifier<HighlightRegion?> highlightArea = ValueNotifier(null);
 
   @override
   Widget build(BuildContext context) {
@@ -51,12 +55,31 @@ class _BoardState extends State<Board> {
                     ),
                   ),
                 ),
-              for (final dOnBoard in boardState.onBoard.entries)
-                Positioned(
-                  left: dOnBoard.value.dx * Board.cellSize,
-                  top: dOnBoard.value.dy * Board.cellSize,
-                  child: DraggableDomino(dOnBoard.key),
+              Positioned(
+                child: ListenableBuilder(
+                  listenable: boardState.onBoard,
+                  builder: (context, child) => Stack(
+                    children: [
+                      for (final dOnBoard in boardState.onBoard.dominoes.entries)
+                        Positioned(
+                          left: dOnBoard.value.dx * Board.cellSize,
+                          top: dOnBoard.value.dy * Board.cellSize,
+                          child: DraggableDomino(dOnBoard.key),
+                        ),
+                    ],
+                  ),
                 ),
+              ),
+              Positioned(
+                child: ValueListenableBuilder(
+                  valueListenable: highlightArea,
+                  builder: (context, value, child) => Stack(
+                    children: [
+                      if (value != null) CustomPaint(painter: RegionPainter(value, Board.cellSize)),
+                    ],
+                  ),
+                ),
+              ),
               for (final r in puzzle.constraints)
                 CustomPaint(painter: RegionPainter(r, Board.cellSize)),
               for (final r in puzzle.constraints) ConstraintLabel(r, Board.cellSize),
@@ -65,8 +88,9 @@ class _BoardState extends State<Board> {
         ),
       ),
       onWillAcceptWithDetails: (_) => true,
-      onMove: (details) => onDragDomino(details, puzzle),
+      onMove: (details) => onDragDomino(details, boardState),
       onAcceptWithDetails: (details) => onDropDomino(details, boardState),
+      onLeave: (_) => highlightArea.value = null,
     );
   }
 
@@ -75,19 +99,28 @@ class _BoardState extends State<Board> {
     return renderBox!.globalToLocal(globalPosition) ~/ Board.cellSize;
   }
 
-  void onDragDomino(DragTargetDetails<DominoState> details, Puzzle puzzle) {
+  void onDragDomino(DragTargetDetails<DominoState> details, BoardState boardState) {
     final cell = globalPositionToCell(details.offset);
-    if (puzzle.field.cells.contains(cell)) {
-      print(cell);
-      // TODO: Highlight the destination cells
+
+    if (boardState.puzzle.value!.field.canPlace(details.data, cell) &&
+        boardState.onBoard.canPlace(details.data, cell)) {
+      highlightArea.value = HighlightRegion([
+        cell,
+        cell.translate(1, 0),
+      ], RegionPalette(Colors.amber));
+    } else {
+      highlightArea.value = null;
     }
   }
 
   void onDropDomino(DragTargetDetails<DominoState> details, BoardState boardState) {
+    highlightArea.value = null;
+
     final cell = globalPositionToCell(details.offset);
-    if (boardState.puzzle.value!.field.cells.contains(cell)) {
+    if (boardState.puzzle.value!.field.canPlace(details.data, cell) &&
+        boardState.onBoard.canPlace(details.data, cell)) {
       boardState.inHand.remove(details.data);
-      boardState.onBoard[details.data] = cell;
+      boardState.onBoard.add(details.data, cell);
     }
     return;
   }

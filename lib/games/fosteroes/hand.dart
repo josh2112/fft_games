@@ -13,13 +13,36 @@ class Hand extends StatelessWidget {
 
     return ListenableBuilder(
       listenable: handState,
-      builder: (context, child) => Wrap(
-        spacing: 20,
-        runSpacing: 20,
-        children: [
-          for (final d in handState.positions)
-            if (d is DominoState) DraggableDomino(d) else DominoPlaceholder(),
-        ],
+      builder: (context, child) => DragTarget<DominoState>(
+        builder: (context, candidateData, rejectedData) => Container(
+          decoration: BoxDecoration(
+            color: candidateData.isNotEmpty
+                ? Colors.amber.withValues(alpha: 0.2)
+                : Colors.transparent,
+            border: Border.all(
+              color: candidateData.isNotEmpty ? Colors.amber : Colors.transparent,
+              width: 2,
+            ),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Wrap(
+              spacing: 25,
+              runSpacing: 25,
+              children: [
+                for (final d in handState.positions)
+                  Stack(children: [DominoPlaceholder(), if (d is DominoState) DraggableDomino(d)]),
+              ],
+            ),
+          ),
+        ),
+        onWillAcceptWithDetails: (_) => true,
+        onAcceptWithDetails: (details) {
+          if (handState.tryPutBack(details.data)) {
+            context.read<BoardState>().onBoard.remove(details.data);
+          }
+        },
       ),
     );
   }

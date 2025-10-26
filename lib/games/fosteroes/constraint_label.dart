@@ -10,7 +10,7 @@ class ConstraintLabel extends StatelessWidget {
   static const double size = 36;
   static const Offset offset = Offset(17, 16.2);
 
-  final ConstraintArea region;
+  final ConstraintRegion region;
   final double cellSize;
 
   const ConstraintLabel(this.region, this.cellSize, {super.key});

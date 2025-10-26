@@ -7,26 +7,26 @@ import 'package:flutter/services.dart';
 import 'board_state.dart';
 import 'region.dart';
 
-class ConstraintAreaPalette {
+class RegionPalette {
   final Color label, fill, stroke;
 
-  ConstraintAreaPalette(MaterialColor color)
+  RegionPalette(MaterialColor color)
     : label = color,
       fill = color[200]!.withAlpha(96),
       stroke = color[800]!;
 }
 
 class Palette {
-  final List<ConstraintAreaPalette> constraintAreaPalette = [
-    ConstraintAreaPalette(Colors.green),
-    ConstraintAreaPalette(Colors.blue),
-    ConstraintAreaPalette(Colors.red),
+  final List<RegionPalette> constraintAreaPalette = [
+    RegionPalette(Colors.green),
+    RegionPalette(Colors.blue),
+    RegionPalette(Colors.red),
   ];
 }
 
 class Puzzle {
-  final Field field;
-  final List<ConstraintArea> constraints;
+  final FieldRegion field;
+  final List<ConstraintRegion> constraints;
   final List<DominoState> dominoes;
 
   static Future<Puzzle> fromJsonFile(String path) async {
@@ -43,14 +43,14 @@ class Puzzle {
     };
 
     final def = jsonDecode(await rootBundle.loadString(path));
-    final field = Field(parseOffsets(def["field"]));
+    final field = FieldRegion(parseOffsets(def["field"]));
 
     final pals = Palette().constraintAreaPalette;
     int i = 0;
 
     final constraints = [
       for (final c in def["constraints"])
-        ConstraintArea(parseOffsets(c["cells"]), parseConstraint(c), pals[i++ % pals.length]),
+        ConstraintRegion(parseOffsets(c["cells"]), parseConstraint(c), pals[i++ % pals.length]),
     ];
 
     i = 0;

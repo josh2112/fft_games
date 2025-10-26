@@ -1,9 +1,10 @@
 import 'dart:math';
 
+import 'package:fft_games/games/fosteroes/board_state.dart';
 import 'package:fft_games/games/fosteroes/puzzle.dart';
+import 'package:flutter/material.dart';
 
 import 'constraint.dart';
-import 'package:flutter/painting.dart';
 
 class LineSegment {
   final Offset p1, p2;
@@ -63,13 +64,21 @@ abstract class Region {
   }
 }
 
-class Field extends Region {
-  Field(super.cells);
+class FieldRegion extends Region {
+  FieldRegion(super.cells);
+
+  bool canPlace(DominoState domino, Offset cell) =>
+      domino.area(cell).every((c) => cells.contains(c));
 }
 
-class ConstraintArea extends Region {
-  final ConstraintAreaPalette palette;
+class HighlightRegion extends Region {
+  final RegionPalette palette;
+
+  HighlightRegion(super.cells, this.palette);
+}
+
+class ConstraintRegion extends HighlightRegion {
   final Constraint constraint;
 
-  ConstraintArea(super.cells, this.constraint, this.palette);
+  ConstraintRegion(super.cells, this.constraint, super.palette);
 }
