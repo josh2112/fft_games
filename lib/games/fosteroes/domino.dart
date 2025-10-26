@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 
 import 'board_state.dart';
 
-class Domino extends StatefulWidget {
+class DraggableDomino extends StatefulWidget {
   final DominoState state;
 
-  const Domino(this.state, {super.key});
+  const DraggableDomino(this.state, {super.key});
 
   @override
-  State<Domino> createState() => _DominoState();
+  State<DraggableDomino> createState() => _DraggableDominoState();
 }
 
-class _DominoState extends State<Domino> {
+class _DraggableDominoState extends State<DraggableDomino> {
   @override
   Widget build(BuildContext context) {
     /*AnimatedRotation(
@@ -25,17 +25,19 @@ class _DominoState extends State<Domino> {
 
         child: */
 
-    return Draggable(
-      feedback: DominoImpl(widget.state.side1, widget.state.side2),
-      child: DominoImpl(widget.state.side1, widget.state.side2),
+    return Draggable<DominoState>(
+      feedback: Domino(widget.state), // TODO: Scale child to size of domino on board!
+      childWhenDragging: DominoPlaceholder(),
+      data: widget.state,
+      child: Domino(widget.state),
     );
   }
 }
 
-class DominoImpl extends StatelessWidget {
-  final int side1, side2;
+class Domino extends StatelessWidget {
+  final DominoState state;
 
-  const DominoImpl(this.side1, this.side2, {super.key});
+  const Domino(this.state, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -51,14 +53,27 @@ class DominoImpl extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            _HalfDomino(side1, colors.inverseSurface),
+            _HalfDomino(state.side1, colors.inverseSurface),
             VerticalDivider(thickness: 1, indent: 5, width: 0, endIndent: 5),
-            _HalfDomino(side2, colors.inverseSurface),
+            _HalfDomino(state.side2, colors.inverseSurface),
           ],
         ),
       ),
     );
   }
+}
+
+class DominoPlaceholder extends StatelessWidget {
+  static final color = Colors.grey.withValues(alpha: 0.5);
+
+  const DominoPlaceholder({super.key});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
+    width: _HalfDomino.width * 2 + 3,
+    height: _HalfDomino.height + 3,
+  );
 }
 
 class _HalfDomino extends StatelessWidget {

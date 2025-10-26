@@ -10,6 +10,11 @@ class RegionPainter extends CustomPainter {
   const RegionPainter(this._region, this.cellSize);
 
   @override
+  bool? hitTest(Offset position) {
+    return false;
+  }
+
+  @override
   void paint(Canvas canvas, Size size) {
     final pts = [for (final pt in _region.contour) pt.scale(cellSize, cellSize)];
 

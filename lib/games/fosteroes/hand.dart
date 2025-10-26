@@ -4,22 +4,23 @@ import 'package:provider/provider.dart';
 
 import 'board_state.dart';
 
-class Hand extends StatefulWidget {
+class Hand extends StatelessWidget {
   const Hand({super.key});
 
   @override
-  State<Hand> createState() => _HandState();
-}
-
-class _HandState extends State<Hand> {
-  @override
   Widget build(BuildContext context) {
-    final boardState = context.watch<BoardState>();
+    final handState = context.watch<BoardState>().inHand;
 
-    return Wrap(
-      spacing: 20,
-      runSpacing: 20,
-      children: [for (final d in boardState.hand) Domino(d)],
+    return ListenableBuilder(
+      listenable: handState,
+      builder: (context, child) => Wrap(
+        spacing: 20,
+        runSpacing: 20,
+        children: [
+          for (final d in handState.positions)
+            if (d is DominoState) DraggableDomino(d) else DominoPlaceholder(),
+        ],
+      ),
     );
   }
 }
