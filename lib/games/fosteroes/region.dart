@@ -58,6 +58,12 @@ abstract class Region {
 
     contour.removeLast();
 
+    // Ensure that if we started in the middle of the line, we collapse it
+    if ((contour[1] - contour[0]).direction == (contour[0] - contour.last).direction) {
+      contour[0] = contour.last;
+      contour.removeLast();
+    }
+
     final xs = contour.map((p) => p.dx), ys = contour.map((p) => p.dy);
     width = xs.reduce(max) - xs.reduce(min);
     height = ys.reduce(max) - ys.reduce(min);
@@ -67,8 +73,7 @@ abstract class Region {
 class FieldRegion extends Region {
   FieldRegion(super.cells);
 
-  bool canPlace(DominoState domino, Offset cell) =>
-      domino.area(cell).every((c) => cells.contains(c));
+  bool canPlace(DominoState domino, Offset cell) => domino.area(cell).every((c) => cells.contains(c));
 }
 
 class HighlightRegion extends Region {

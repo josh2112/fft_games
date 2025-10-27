@@ -1,3 +1,4 @@
+import 'package:defer_pointer/defer_pointer.dart';
 import 'package:fft_games/games/fosteroes/board.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -34,17 +35,19 @@ class _PlayPageState extends State<PlayPage> {
                   constraints: BoxConstraints(maxWidth: 600),
                   child: Padding(
                     padding: EdgeInsets.all(20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      spacing: 10,
-                      children: [
-                        Expanded(
-                          child: FittedBox(fit: BoxFit.contain, child: Board()),
-                        ),
-                        Divider(),
-                        Hand(),
-                      ],
+                    child: DeferredPointerHandler(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        spacing: 10,
+                        children: [
+                          Expanded(
+                            child: FittedBox(fit: BoxFit.contain, child: Board()),
+                          ),
+                          Divider(),
+                          Hand(),
+                        ],
+                      ),
                     ),
                   ),
                 ),

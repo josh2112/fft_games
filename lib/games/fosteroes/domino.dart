@@ -1,44 +1,60 @@
+import 'package:defer_pointer/defer_pointer.dart';
 import 'package:flutter/material.dart';
 
 import 'board_state.dart';
 
-class DraggableDomino extends StatefulWidget {
-  final DominoState state;
+/*
+TODO: How is rotation going to work?
+ - In hand - rotate about center
+ - On board - rotate about tapped end
+ - When dragging from hand to board or vice versa, need to do some kind of translation
 
-  const DraggableDomino(this.state, {super.key});
+ The deferred pointer thing works for rotation, but throws some error on dragging. Going to have to explore a different
+ solution.
+
+ Maybe use a RotatedBox, since that rotates BEFORE layout (which will fix hit testing), then when tapped for rotation,
+ we can animate from [previous position] to zero
+*/
+
+class Domino extends StatefulWidget {
+  final DominoState state;
+  final bool isBeingDragged;
+
+  const Domino(this.state, {this.isBeingDragged = false, super.key});
 
   @override
-  State<DraggableDomino> createState() => _DraggableDominoState();
+  State<Domino> createState() => _DominoState();
 }
 
-class _DraggableDominoState extends State<DraggableDomino> {
+// TODO: While being dragged, scale child to size of domino on board!
+
+class _DominoState extends State<Domino> {
   @override
   Widget build(BuildContext context) {
-    /*AnimatedRotation(
-          turns: widget.state.rotation / 4.0,
-          duration: Duration(milliseconds: 200),
-          child: 
-          
-          
-    GestureDetector(
-        onTap: () => setState(() => widget.state.rotation += 1),
-
-        child: */
-
-    return Draggable<DominoState>(
-      feedback: Domino(widget.state), // TODO: Scale child to size of domino on board!
-      childWhenDragging: SizedBox(),
-      //childWhenDragging: DominoPlaceholder(),
-      data: widget.state,
-      child: Domino(widget.state),
+    final meat = GestureDetector(
+      onTap: () => setState(() => widget.state.quarterTurns += 1),
+      behavior: HitTestBehavior.opaque,
+      child: Draggable<DominoState>(
+        feedback: Opacity(opacity: 0.8, child: Domino(widget.state, isBeingDragged: true)),
+        childWhenDragging: SizedBox(),
+        hitTestBehavior: HitTestBehavior.opaque,
+        data: widget.state,
+        child: _Domino(widget.state),
+      ),
+    );
+    return AnimatedRotation(
+      turns: widget.state.quarterTurns / 4.0,
+      duration: Duration(milliseconds: 200),
+      alignment: FractionalOffset(0.25, 0.5),
+      child: widget.isBeingDragged ? meat : DeferPointer(child: meat),
     );
   }
 }
 
-class Domino extends StatelessWidget {
+class _Domino extends StatelessWidget {
   final DominoState state;
 
-  const Domino(this.state, {super.key});
+  const _Domino(this.state);
 
   @override
   Widget build(BuildContext context) {
@@ -85,12 +101,8 @@ class _HalfDomino extends StatelessWidget {
   static const pipSize = 8.0;
   static final pipRadius = pipSize / 2;
 
-  static final double col1 = hInset - pipRadius,
-      col2 = width / 2 - pipRadius,
-      col3 = width - hInset - pipRadius;
-  static final double row1 = vInset - pipRadius,
-      row2 = height / 2 - pipRadius,
-      row3 = height - vInset - pipRadius;
+  static final double col1 = hInset - pipRadius, col2 = width / 2 - pipRadius, col3 = width - hInset - pipRadius;
+  static final double row1 = vInset - pipRadius, row2 = height / 2 - pipRadius, row3 = height - vInset - pipRadius;
 
   final int pips;
   final Color color;
@@ -104,10 +116,7 @@ class _HalfDomino extends StatelessWidget {
     child: Stack(
       children: switch (pips) {
         1 => [Positioned(left: col2, top: row2, child: pip())],
-        2 => [
-          Positioned(left: col1, top: row1, child: pip()),
-          Positioned(left: row3, top: row3, child: pip()),
-        ],
+        2 => [Positioned(left: col1, top: row1, child: pip()), Positioned(left: row3, top: row3, child: pip())],
         3 => [
           Positioned(left: col1, top: row1, child: pip()),
           Positioned(left: col2, top: row2, child: pip()),

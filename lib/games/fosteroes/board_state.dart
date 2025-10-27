@@ -12,11 +12,11 @@ class DominoState {
 
   DominoState(this.side1, this.side2);
 
-  List<Offset> area(Offset baseCell) => switch (quarterTurns % 4) {
-    0 => [baseCell, baseCell.translate(1, 0)],
-    1 => [baseCell, baseCell.translate(0, 1)],
-    2 => [baseCell, baseCell.translate(-1, 0)],
-    _ => [baseCell, baseCell.translate(0, -1)],
+  Set<Offset> area(Offset baseCell) => switch (quarterTurns % 4) {
+    0 => {baseCell, baseCell.translate(1, 0)},
+    1 => {baseCell, baseCell.translate(0, 1)},
+    2 => {baseCell, baseCell.translate(-1, 0)},
+    _ => {baseCell, baseCell.translate(0, -1)},
   };
 }
 
@@ -67,10 +67,9 @@ class BoardDominoes extends ChangeNotifier {
   }
 
   bool canPlace(DominoState domino, Offset cell) {
-    var allCells = dominoes.entries.map((e) => e.key.area(e.value)).flattened.toList();
     var dominoCells = domino.area(cell);
-    final x = 1;
-    return !domino.area(cell).any((c) => allCells.contains(c));
+    var allCells = dominoes.entries.map((e) => e.key.area(e.value)).flattened.toSet().difference(dominoCells);
+    return !dominoCells.any((c) => allCells.contains(c));
   }
 }
 

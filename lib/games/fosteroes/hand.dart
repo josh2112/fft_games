@@ -16,13 +16,8 @@ class Hand extends StatelessWidget {
       builder: (context, child) => DragTarget<DominoState>(
         builder: (context, candidateData, rejectedData) => Container(
           decoration: BoxDecoration(
-            color: candidateData.isNotEmpty
-                ? Colors.amber.withValues(alpha: 0.2)
-                : Colors.transparent,
-            border: Border.all(
-              color: candidateData.isNotEmpty ? Colors.amber : Colors.transparent,
-              width: 2,
-            ),
+            color: candidateData.isNotEmpty ? Colors.amber.withValues(alpha: 0.2) : Colors.transparent,
+            border: Border.all(color: candidateData.isNotEmpty ? Colors.amber : Colors.transparent, width: 2),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Padding(
@@ -32,7 +27,7 @@ class Hand extends StatelessWidget {
               runSpacing: 25,
               children: [
                 for (final d in handState.positions)
-                  Stack(children: [DominoPlaceholder(), if (d is DominoState) DraggableDomino(d)]),
+                  Stack(clipBehavior: Clip.none, children: [DominoPlaceholder(), if (d is DominoState) Domino(d)]),
               ],
             ),
           ),

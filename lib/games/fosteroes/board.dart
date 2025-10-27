@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'board_state.dart';
@@ -7,8 +7,6 @@ import 'domino.dart';
 import 'puzzle.dart';
 import 'region.dart';
 import 'region_painter.dart';
-
-import 'package:flutter/material.dart';
 
 class Board extends StatefulWidget {
   static const cellSize = 53.0;
@@ -64,7 +62,7 @@ class _BoardState extends State<Board> {
                         Positioned(
                           left: dOnBoard.value.dx * Board.cellSize,
                           top: dOnBoard.value.dy * Board.cellSize,
-                          child: DraggableDomino(dOnBoard.key),
+                          child: Domino(dOnBoard.key),
                         ),
                     ],
                   ),
@@ -73,15 +71,11 @@ class _BoardState extends State<Board> {
               Positioned(
                 child: ValueListenableBuilder(
                   valueListenable: highlightArea,
-                  builder: (context, value, child) => Stack(
-                    children: [
-                      if (value != null) CustomPaint(painter: RegionPainter(value, Board.cellSize)),
-                    ],
-                  ),
+                  builder: (context, value, child) =>
+                      Stack(children: [if (value != null) CustomPaint(painter: RegionPainter(value, Board.cellSize))]),
                 ),
               ),
-              for (final r in puzzle.constraints)
-                CustomPaint(painter: RegionPainter(r, Board.cellSize)),
+              for (final r in puzzle.constraints) CustomPaint(painter: RegionPainter(r, Board.cellSize)),
               for (final r in puzzle.constraints) ConstraintLabel(r, Board.cellSize),
             ],
           ),
@@ -100,14 +94,11 @@ class _BoardState extends State<Board> {
   }
 
   void onDragDomino(DragTargetDetails<DominoState> details, BoardState boardState) {
-    final cell = globalPositionToCell(details.offset);
+    final baseCell = globalPositionToCell(details.offset);
 
-    if (boardState.puzzle.value!.field.canPlace(details.data, cell) &&
-        boardState.onBoard.canPlace(details.data, cell)) {
-      highlightArea.value = HighlightRegion([
-        cell,
-        cell.translate(1, 0),
-      ], RegionPalette(Colors.amber));
+    if (boardState.puzzle.value!.field.canPlace(details.data, baseCell) &&
+        boardState.onBoard.canPlace(details.data, baseCell)) {
+      highlightArea.value = HighlightRegion(details.data.area(baseCell).toList(), RegionPalette(Colors.amber));
     } else {
       highlightArea.value = null;
     }

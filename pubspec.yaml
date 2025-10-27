@@ -21,6 +21,7 @@ dependencies:
     material_symbols_icons: ^4.2874.0
     path_drawing: ^1.0.1
     svg_path_parser: ^1.1.2
+    defer_pointer: ^0.0.2
 
 dev_dependencies:
     flutter_test:

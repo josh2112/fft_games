@@ -1,7 +1,8 @@
 import 'dart:math';
+
 import 'package:fft_games/games/fosteroes/region.dart';
 import 'package:flutter/material.dart';
-import 'package:path_drawing/path_drawing.dart';
+//import 'package:path_drawing/path_drawing.dart';
 
 class RegionPainter extends CustomPainter {
   final Region _region;
@@ -26,9 +27,7 @@ class RegionPainter extends CustomPainter {
 
     // Direction of the line segment starting at this point, e.g. lineDirs[1] = pts[1] => pts[2]
 
-    final lineDirs = [
-      for (int i = 0; i < pts.length; ++i) (pts[(i + 1) % pts.length] - pts[i]).direction,
-    ];
+    final lineDirs = [for (int i = 0; i < pts.length; ++i) (pts[(i + 1) % pts.length] - pts[i]).direction];
 
     final outset = _region is FieldRegion ? 5.0 : -2.0;
     final cornerRadius = _region is FieldRegion ? 5.0 : 3.0;
