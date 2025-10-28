@@ -1,24 +1,11 @@
 import 'dart:ui';
 
 import 'package:collection/collection.dart';
+import 'package:fft_games/games/fosteroes/domino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 
 import 'puzzle.dart';
-
-class DominoState {
-  final int side1, side2;
-  int quarterTurns = 0;
-
-  DominoState(this.side1, this.side2);
-
-  Set<Offset> area(Offset baseCell) => switch (quarterTurns % 4) {
-    0 => {baseCell, baseCell.translate(1, 0)},
-    1 => {baseCell, baseCell.translate(0, 1)},
-    2 => {baseCell, baseCell.translate(-1, 0)},
-    _ => {baseCell, baseCell.translate(0, -1)},
-  };
-}
 
 class HandDominoes extends ChangeNotifier {
   var _positions = <DominoState?>[];
@@ -41,6 +28,7 @@ class HandDominoes extends ChangeNotifier {
   bool tryPutBack(DominoState domino) {
     if (_positions.contains(domino)) return false;
     _positions[_positions.indexWhere((ds) => ds == null)] = domino;
+    domino.location = DominoLocation.hand;
     notifyListeners();
     return true;
   }
@@ -66,10 +54,9 @@ class BoardDominoes extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool canPlace(DominoState domino, Offset cell) {
-    var dominoCells = domino.area(cell);
-    var allCells = dominoes.entries.map((e) => e.key.area(e.value)).flattened.toSet().difference(dominoCells);
-    return !dominoCells.any((c) => allCells.contains(c));
+  bool canPlace(Set<Offset> domino) {
+    var allCells = dominoes.entries.map((e) => e.key.area(e.value)).flattened.toSet().difference(domino);
+    return !domino.any((c) => allCells.contains(c));
   }
 }
 

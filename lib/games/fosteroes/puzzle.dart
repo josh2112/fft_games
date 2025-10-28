@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'board_state.dart';
+import 'domino.dart';
 import 'region.dart';
 
 class RegionPalette {

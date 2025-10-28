@@ -88,17 +88,20 @@ class _BoardState extends State<Board> {
     );
   }
 
-  Offset globalPositionToCell(Offset globalPosition) {
+  Offset _globalPositionToCell(Offset globalPosition) {
     final renderBox = _dragTargetKey.currentContext?.findRenderObject() as RenderBox?;
-    return renderBox!.globalToLocal(globalPosition) ~/ Board.cellSize;
+    final pos = renderBox!.globalToLocal(globalPosition).translate(Board.cellSize / 2, Board.cellSize / 2);
+    return pos ~/ Board.cellSize;
   }
 
   void onDragDomino(DragTargetDetails<DominoState> details, BoardState boardState) {
-    final baseCell = globalPositionToCell(details.offset);
+    final baseCell = _globalPositionToCell(details.offset);
+    final domino = details.data;
 
-    if (boardState.puzzle.value!.field.canPlace(details.data, baseCell) &&
-        boardState.onBoard.canPlace(details.data, baseCell)) {
-      highlightArea.value = HighlightRegion(details.data.area(baseCell).toList(), RegionPalette(Colors.amber));
+    final cells = {baseCell, domino.isVertical ? baseCell.translate(0, 1) : baseCell.translate(1, 0)};
+
+    if (boardState.puzzle.value!.field.canPlace(cells) && boardState.onBoard.canPlace(cells)) {
+      highlightArea.value = HighlightRegion(cells.toList(), RegionPalette(Colors.amber));
     } else {
       highlightArea.value = null;
     }
@@ -107,12 +110,15 @@ class _BoardState extends State<Board> {
   void onDropDomino(DragTargetDetails<DominoState> details, BoardState boardState) {
     highlightArea.value = null;
 
-    final cell = globalPositionToCell(details.offset);
-    if (boardState.puzzle.value!.field.canPlace(details.data, cell) &&
-        boardState.onBoard.canPlace(details.data, cell)) {
-      boardState.inHand.remove(details.data);
-      boardState.onBoard.add(details.data, cell);
+    final baseCell = _globalPositionToCell(details.offset);
+    final domino = details.data;
+
+    final cells = {baseCell, domino.isVertical ? baseCell.translate(0, 1) : baseCell.translate(1, 0)};
+
+    if (boardState.puzzle.value!.field.canPlace(cells) && boardState.onBoard.canPlace(cells)) {
+      boardState.inHand.remove(domino);
+      domino.location = DominoLocation.board;
+      boardState.onBoard.add(domino, baseCell);
     }
-    return;
   }
 }

@@ -1,20 +1,25 @@
 import 'package:defer_pointer/defer_pointer.dart';
 import 'package:flutter/material.dart';
 
-import 'board_state.dart';
+enum DominoLocation { hand, board }
 
-/*
-TODO: How is rotation going to work?
- - In hand - rotate about center
- - On board - rotate about tapped end
- - When dragging from hand to board or vice versa, need to do some kind of translation
+class DominoState {
+  final int side1, side2;
+  int quarterTurns = 0;
 
- The deferred pointer thing works for rotation, but throws some error on dragging. Going to have to explore a different
- solution.
+  bool get isVertical => quarterTurns % 2 == 1;
 
- Maybe use a RotatedBox, since that rotates BEFORE layout (which will fix hit testing), then when tapped for rotation,
- we can animate from [previous position] to zero
-*/
+  DominoLocation location = DominoLocation.hand;
+
+  DominoState(this.side1, this.side2);
+
+  Set<Offset> area(Offset baseCell) => switch (quarterTurns % 4) {
+    0 => {baseCell, baseCell.translate(1, 0)},
+    1 => {baseCell, baseCell.translate(0, 1)},
+    2 => {baseCell, baseCell.translate(-1, 0)},
+    _ => {baseCell, baseCell.translate(0, -1)},
+  };
+}
 
 class Domino extends StatefulWidget {
   final DominoState state;
@@ -35,20 +40,31 @@ class _DominoState extends State<Domino> {
       onTap: () => setState(() => widget.state.quarterTurns += 1),
       behavior: HitTestBehavior.opaque,
       child: Draggable<DominoState>(
-        feedback: Opacity(opacity: 0.8, child: Domino(widget.state, isBeingDragged: true)),
+        feedback: RotatedBox(
+          quarterTurns: widget.state.quarterTurns,
+          child: Opacity(opacity: 0.8, child: _Domino(widget.state)),
+        ),
         childWhenDragging: SizedBox(),
         hitTestBehavior: HitTestBehavior.opaque,
         data: widget.state,
+        dragAnchorStrategy: centeredDragAnchorStrategy,
         child: _Domino(widget.state),
       ),
     );
+
     return AnimatedRotation(
       turns: widget.state.quarterTurns / 4.0,
       duration: Duration(milliseconds: 200),
-      alignment: FractionalOffset(0.25, 0.5),
+      alignment: widget.state.location == DominoLocation.hand ? Alignment.center : FractionalOffset(0.25, 0.5),
       child: widget.isBeingDragged ? meat : DeferPointer(child: meat),
     );
   }
+
+  // Returns an offset to the center of the domino, regardless of orientation.
+  Offset centeredDragAnchorStrategy(Draggable<Object> d, BuildContext context, Offset point) =>
+      (d.data as DominoState).isVertical
+      ? Offset(_HalfDomino.height / 2, _HalfDomino.width)
+      : Offset(_HalfDomino.width, _HalfDomino.height / 2);
 }
 
 class _Domino extends StatelessWidget {
@@ -78,19 +94,6 @@ class _Domino extends StatelessWidget {
       ),
     );
   }
-}
-
-class DominoPlaceholder extends StatelessWidget {
-  static final color = Colors.grey.withValues(alpha: 0.5);
-
-  const DominoPlaceholder({super.key});
-
-  @override
-  Widget build(BuildContext context) => Container(
-    decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
-    width: _HalfDomino.width * 2 + 3,
-    height: _HalfDomino.height + 3,
-  );
 }
 
 class _HalfDomino extends StatelessWidget {
@@ -152,5 +155,18 @@ class _HalfDomino extends StatelessWidget {
     width: pipSize,
     height: pipSize,
     decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+  );
+}
+
+class DominoPlaceholder extends StatelessWidget {
+  static final color = Colors.grey.withValues(alpha: 0.5);
+
+  const DominoPlaceholder({super.key});
+
+  @override
+  Widget build(BuildContext context) => Container(
+    decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
+    width: _HalfDomino.width * 2 + 3,
+    height: _HalfDomino.height + 3,
   );
 }

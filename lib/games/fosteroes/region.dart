@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:fft_games/games/fosteroes/board_state.dart';
 import 'package:fft_games/games/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
 
@@ -73,7 +72,7 @@ abstract class Region {
 class FieldRegion extends Region {
   FieldRegion(super.cells);
 
-  bool canPlace(DominoState domino, Offset cell) => domino.area(cell).every((c) => cells.contains(c));
+  bool canPlace(Set<Offset> domino) => domino.every((c) => cells.contains(c));
 }
 
 class HighlightRegion extends Region {
