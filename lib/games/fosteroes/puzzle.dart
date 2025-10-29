@@ -4,17 +4,13 @@ import 'package:fft_games/games/fosteroes/constraint.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'board_state.dart';
 import 'domino.dart';
 import 'region.dart';
 
 class RegionPalette {
   final Color label, fill, stroke;
 
-  RegionPalette(MaterialColor color)
-    : label = color,
-      fill = color[200]!.withAlpha(96),
-      stroke = color[800]!;
+  RegionPalette(MaterialColor color) : label = color, fill = color[200]!.withAlpha(96), stroke = color[800]!;
 }
 
 class Palette {
@@ -55,9 +51,7 @@ class Puzzle {
     ];
 
     i = 0;
-    final hand = [
-      for (final d in parseOffsets(def["hand"])) DominoState(d.dx.toInt(), d.dy.toInt()),
-    ];
+    final hand = [for (final d in parseOffsets(def["hand"])) DominoState(d.dx.toInt(), d.dy.toInt())];
     return Puzzle._(field, constraints, hand);
   }
 

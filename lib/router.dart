@@ -11,8 +11,6 @@ import 'package:provider/provider.dart';
 import 'games/fosterdle/fosterdle.dart' as fosterdle;
 import 'games/fosteroes/fosteroes.dart' as fosteroes;
 import 'main_menu/main_menu_page.dart';
-//import 'settings/settings_screen.dart';
-//import 'win_game/win_game_screen.dart';
 
 /// The router describes the game's navigational hierarchy, from the main
 /// screen through settings screens all the way to each individual level.
@@ -60,4 +58,5 @@ final router = GoRouter(
       ],
     ),
   ],
+  //initialLocation: '/' # Go directly to a page (for testing)
 );

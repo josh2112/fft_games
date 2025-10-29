@@ -185,31 +185,38 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
       settings.maxStreak.value = settings.currentStreak.value;
     }
 
-    context.go('/fosterdle/stats', extra: StatsPageWinLoseData(numGuesses, boardState.word));
+    showStats(winLoseData: StatsPageWinLoseData(numGuesses, boardState.word));
   }
 
   Future<void> _onPlayerLost(String word) async {
     settings.numPlayed.value += 1;
     settings.currentStreak.value = 0;
 
-    context.go('/fosterdle/stats', extra: StatsPageWinLoseData(-1, boardState.word));
+    showStats(winLoseData: StatsPageWinLoseData(-1, boardState.word));
   }
 
-  void showStats() => context.go('/fosterdle/stats');
-
   Future maybeApplyBoardState(List<void> value) async {
+    // This page is loaded even when navigating to the stats page directly (probably because all Fosterdle routes are in
+    // a shell route). If this is not our final destination, we want to skip all the animation delays.
+    bool isNavigatingToChildPage = GoRouter.of(context).state.path != "fosterdle";
+
     if (DateUtils.isSameDay(settings.gameStateDate.value, DateTime.now())) {
-      await Future.delayed(Duration(milliseconds: 50));
+      if (!isNavigatingToChildPage) await Future.delayed(Duration(milliseconds: 50));
 
       final numGuesses = await boardState.applyGameState(
         settings.gameStateGuesses.value,
         settings.gameStateIsCompleted.value,
       );
-      await Future.delayed(Duration(milliseconds: 750));
 
-      if (!boardState.isGameInProgress && mounted) {
-        context.go('/fosterdle/stats', extra: StatsPageWinLoseData(numGuesses, boardState.word));
+      if (!isNavigatingToChildPage) {
+        await Future.delayed(Duration(milliseconds: 750));
+
+        if (!boardState.isGameInProgress && mounted) {
+          showStats(winLoseData: StatsPageWinLoseData(numGuesses, boardState.word));
+        }
       }
     }
   }
+
+  void showStats({StatsPageWinLoseData? winLoseData}) => context.go('/fosterdle/stats', extra: winLoseData);
 }

@@ -1,7 +1,9 @@
 import 'dart:math';
 
+import 'package:confetti/confetti.dart';
 import 'package:fft_games/games/fosterdle/palette.dart';
 import 'package:fft_games/games/fosterdle/settings.dart';
+import 'package:fft_games/utils/confetti_star_path.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -10,60 +12,106 @@ class StatsPageWinLoseData {
   final String word;
   final int numGuesses;
 
+  bool get didWin => numGuesses >= 1 && numGuesses <= 6;
+
   const StatsPageWinLoseData(this.numGuesses, this.word);
 }
 
-class StatsPage extends StatelessWidget {
+class StatsPage extends StatefulWidget {
   final StatsPageWinLoseData? winLoseData;
 
   const StatsPage({super.key, this.winLoseData});
 
   @override
+  State<StatsPage> createState() => _StatsPageState();
+}
+
+class _StatsPageState extends State<StatsPage> {
+  late ConfettiController? _confettiController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    final confettiDurationMsec = (true == widget.winLoseData?.didWin) ? 2000 / widget.winLoseData!.numGuesses : 0;
+
+    if (confettiDurationMsec > 0) {
+      _confettiController = ConfettiController(duration: Duration(milliseconds: confettiDurationMsec.toInt()));
+      _confettiController!.play();
+    } else {
+      _confettiController = null;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final String? message = switch (winLoseData?.numGuesses) {
+    final String? message = switch (widget.winLoseData?.numGuesses) {
       null => null,
-      < 0 => "The word was ${winLoseData!.word}. Better luck tomorrow!",
-      _ => 'You won!',
+      1 => 'Incredible! 😃',
+      2 => 'Great! ☺️',
+      3 => 'Well done! 😬',
+      4 => 'Ok! 😐',
+      5 => 'Whew! 🥴',
+      6 => 'What a squeaker! 😰',
+      _ => "The word was ${widget.winLoseData!.word}. Better luck tomorrow!",
     };
 
     final settings = context.watch<SettingsController>();
 
     return Scaffold(
       appBar: AppBar(title: Text('Fosterdle Stats'), centerTitle: true),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
+      body: Stack(
         children: [
-          const Spacer(),
-          if (message != null) Text(message, style: TextTheme.of(context).displaySmall, textAlign: TextAlign.center),
-          if (message != null) const Spacer(),
-          subtitle(context, "STATISTICS"),
-          Row(
+          if (_confettiController != null)
+            Align(
+              alignment: FractionalOffset(0.5, 0.1),
+              child: ConfettiWidget(
+                confettiController: _confettiController!,
+                blastDirectionality: BlastDirectionality.explosive,
+                emissionFrequency: 0.1,
+                createParticlePath: drawStar,
+              ),
+            ),
+          Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 5,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              StatsWidget("Played", settings.numPlayed.value.toString()),
-              StatsWidget("Win %", (settings.numWon.value / max(settings.numPlayed.value, 1) * 100).round().toString()),
-              StatsWidget("Current Streak", settings.currentStreak.value.toString()),
-              StatsWidget("Max Streak", settings.maxStreak.value.toString()),
+              const Spacer(),
+              if (message != null)
+                Text(message, style: TextTheme.of(context).displaySmall, textAlign: TextAlign.center),
+              if (message != null) const Spacer(),
+              subtitle(context, "STATISTICS"),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 5,
+                children: [
+                  StatsWidget("Played", settings.numPlayed.value.toString()),
+                  StatsWidget(
+                    "Win %",
+                    (settings.numWon.value / max(settings.numPlayed.value, 1) * 100).round().toString(),
+                  ),
+                  StatsWidget("Current Streak", settings.currentStreak.value.toString()),
+                  StatsWidget("Max Streak", settings.maxStreak.value.toString()),
+                ],
+              ),
+              const Spacer(),
+              subtitle(context, "GUESS DISTRIBUTION"),
+              SolveCountsGraph(settings.solveCounts.value, widget.winLoseData),
+              const Spacer(flex: 3),
+              ElevatedButton(
+                onPressed: () {
+                  if (widget.winLoseData != null) {
+                    context.go('/');
+                  } else {
+                    context.pop();
+                  }
+                },
+                child: Text(widget.winLoseData != null ? "Home" : 'Back'),
+              ),
+              const Spacer(),
             ],
           ),
-          const Spacer(),
-          subtitle(context, "GUESS DISTRIBUTION"),
-          SolveCountsGraph(settings.solveCounts.value, winLoseData),
-          const Spacer(flex: 3),
-          ElevatedButton(
-            onPressed: () {
-              if (winLoseData != null) {
-                context.go('/');
-              } else {
-                context.pop();
-              }
-            },
-            child: Text(winLoseData != null ? "Home" : 'Back'),
-          ),
-          const Spacer(),
         ],
       ),
     );
