@@ -3,29 +3,33 @@ import 'package:flutter/material.dart';
 
 enum DominoLocation { hand, board }
 
+enum DominoDirection { right, down, left, up }
+
 class DominoState {
   final int side1, side2;
-  int quarterTurns = 0;
 
-  bool get isVertical => quarterTurns % 2 == 1;
+  final ValueNotifier<int> quarterTurns = ValueNotifier(0);
+
+  DominoDirection get direction => DominoDirection.values[quarterTurns.value % 4];
+
+  bool get isVertical => quarterTurns.value % 2 == 1;
 
   DominoLocation location = DominoLocation.hand;
 
   DominoState(this.side1, this.side2);
 
-  Set<Offset> area(Offset baseCell) => switch (quarterTurns % 4) {
-    0 => {baseCell, baseCell.translate(1, 0)},
-    1 => {baseCell, baseCell.translate(0, 1)},
-    2 => {baseCell, baseCell.translate(-1, 0)},
+  Set<Offset> area(Offset baseCell) => switch (direction) {
+    DominoDirection.right => {baseCell, baseCell.translate(1, 0)},
+    DominoDirection.down => {baseCell, baseCell.translate(0, 1)},
+    DominoDirection.left => {baseCell, baseCell.translate(-1, 0)},
     _ => {baseCell, baseCell.translate(0, -1)},
   };
 }
 
 class Domino extends StatefulWidget {
   final DominoState state;
-  final bool isBeingDragged;
 
-  const Domino(this.state, {this.isBeingDragged = false, super.key});
+  Domino(this.state) : super(key: ValueKey(state));
 
   @override
   State<Domino> createState() => _DominoState();
@@ -36,27 +40,27 @@ class Domino extends StatefulWidget {
 class _DominoState extends State<Domino> {
   @override
   Widget build(BuildContext context) {
-    final meat = GestureDetector(
-      onTap: () => setState(() => widget.state.quarterTurns += 1),
-      behavior: HitTestBehavior.opaque,
-      child: Draggable<DominoState>(
-        feedback: RotatedBox(
-          quarterTurns: widget.state.quarterTurns,
-          child: Opacity(opacity: 0.8, child: _Domino(widget.state)),
-        ),
-        childWhenDragging: SizedBox(),
-        hitTestBehavior: HitTestBehavior.opaque,
-        data: widget.state,
-        dragAnchorStrategy: centeredDragAnchorStrategy,
-        child: _Domino(widget.state),
-      ),
-    );
-
     return AnimatedRotation(
-      turns: widget.state.quarterTurns / 4.0,
+      turns: widget.state.quarterTurns.value / 4.0,
       duration: Duration(milliseconds: 200),
       alignment: widget.state.location == DominoLocation.hand ? Alignment.center : FractionalOffset(0.25, 0.5),
-      child: widget.isBeingDragged ? meat : DeferPointer(child: meat),
+      child: DeferPointer(
+        child: GestureDetector(
+          onTap: onRotateDomino,
+          behavior: HitTestBehavior.opaque,
+          child: Draggable<DominoState>(
+            feedback: RotatedBox(
+              quarterTurns: widget.state.quarterTurns.value,
+              child: Opacity(opacity: 0.8, child: _Domino(widget.state)),
+            ),
+            childWhenDragging: SizedBox(),
+            hitTestBehavior: HitTestBehavior.opaque,
+            data: widget.state,
+            dragAnchorStrategy: centeredDragAnchorStrategy,
+            child: _Domino(widget.state),
+          ),
+        ),
+      ),
     );
   }
 
@@ -65,6 +69,10 @@ class _DominoState extends State<Domino> {
       (d.data as DominoState).isVertical
       ? Offset(_HalfDomino.height / 2, _HalfDomino.width)
       : Offset(_HalfDomino.width, _HalfDomino.height / 2);
+
+  void onRotateDomino() {
+    setState(() => widget.state.quarterTurns.value += 1);
+  }
 }
 
 class _Domino extends StatelessWidget {

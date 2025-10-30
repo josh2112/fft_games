@@ -77,13 +77,26 @@ class _BoardState extends State<Board> {
               ),
               for (final r in puzzle.constraints) CustomPaint(painter: RegionPainter(r, Board.cellSize)),
               for (final r in puzzle.constraints) ConstraintLabel(r, Board.cellSize),
+              ListenableBuilder(
+                listenable: boardState.floatingDomino,
+                builder: (context, child) {
+                  final floating = boardState.floatingDomino.value;
+                  return floating != null
+                      ? Positioned(
+                          left: floating.$2.dx * Board.cellSize,
+                          top: floating.$2.dy * Board.cellSize,
+                          child: Opacity(opacity: 0.8, child: Domino(floating.$1)),
+                        )
+                      : SizedBox();
+                },
+              ),
             ],
           ),
         ),
       ),
       onWillAcceptWithDetails: (_) => true,
-      onMove: (details) => onDragDomino(details, boardState),
-      onAcceptWithDetails: (details) => onDropDomino(details, boardState),
+      onMove: (details) => onDominoDragged(details, boardState),
+      onAcceptWithDetails: (details) => onDominoDropped(details, boardState),
       onLeave: (_) => highlightArea.value = null,
     );
   }
@@ -94,7 +107,12 @@ class _BoardState extends State<Board> {
     return pos ~/ Board.cellSize;
   }
 
-  void onDragDomino(DragTargetDetails<DominoState> details, BoardState boardState) {
+  void onDominoDragged(DragTargetDetails<DominoState> details, BoardState boardState) {
+    if (boardState.floatingDomino.value != null) {
+      print("");
+      // TODO: Send floating domino back to original location - when we make it, we need to remember where it was
+    }
+
     final baseCell = _globalPositionToCell(details.offset);
     final domino = details.data;
 
@@ -107,10 +125,10 @@ class _BoardState extends State<Board> {
     }
   }
 
-  void onDropDomino(DragTargetDetails<DominoState> details, BoardState boardState) {
+  void onDominoDropped(DragTargetDetails<DominoState> details, BoardState boardState) {
     highlightArea.value = null;
 
-    final baseCell = _globalPositionToCell(details.offset);
+    var baseCell = _globalPositionToCell(details.offset);
     final domino = details.data;
 
     final cells = {baseCell, domino.isVertical ? baseCell.translate(0, 1) : baseCell.translate(1, 0)};
@@ -118,6 +136,14 @@ class _BoardState extends State<Board> {
     if (boardState.puzzle.value!.field.canPlace(cells) && boardState.onBoard.canPlace(cells)) {
       boardState.inHand.remove(domino);
       domino.location = DominoLocation.board;
+      if (domino.direction == DominoDirection.left) {
+        baseCell = baseCell.translate(1, 0);
+      } else if (domino.direction == DominoDirection.up) {
+        baseCell = baseCell.translate(0, 1);
+      }
+
+      boardState.floatingDomino.value = null;
+
       boardState.onBoard.add(domino, baseCell);
     }
   }

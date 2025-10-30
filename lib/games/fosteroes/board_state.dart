@@ -10,7 +10,11 @@ import 'puzzle.dart';
 class HandDominoes extends ChangeNotifier {
   var _positions = <DominoState?>[];
 
-  List<DominoState?> get positions => _positions;
+  late final UnmodifiableListView<DominoState?> positions;
+
+  HandDominoes() {
+    positions = UnmodifiableListView(_positions);
+  }
 
   void set(List<DominoState> initialSet) {
     _positions = List<DominoState?>.from(initialSet, growable: false);
@@ -29,6 +33,7 @@ class HandDominoes extends ChangeNotifier {
     if (_positions.contains(domino)) return false;
     _positions[_positions.indexWhere((ds) => ds == null)] = domino;
     domino.location = DominoLocation.hand;
+    domino.quarterTurns.value = 0;
     notifyListeners();
     return true;
   }
@@ -37,7 +42,11 @@ class HandDominoes extends ChangeNotifier {
 class BoardDominoes extends ChangeNotifier {
   final _dominoes = <DominoState, Offset>{};
 
-  Map<DominoState, Offset> get dominoes => _dominoes;
+  late final UnmodifiableMapView<DominoState, Offset> dominoes;
+
+  BoardDominoes() {
+    dominoes = UnmodifiableMapView(_dominoes);
+  }
 
   void clear() {
     _dominoes.clear();
@@ -55,7 +64,7 @@ class BoardDominoes extends ChangeNotifier {
   }
 
   bool canPlace(Set<Offset> domino) {
-    var allCells = dominoes.entries.map((e) => e.key.area(e.value)).flattened.toSet().difference(domino);
+    var allCells = _dominoes.entries.map((e) => e.key.area(e.value)).flattened.toSet().difference(domino);
     return !domino.any((c) => allCells.contains(c));
   }
 }
@@ -66,6 +75,8 @@ class BoardState {
   final inHand = HandDominoes();
   final onBoard = BoardDominoes();
 
+  final ValueNotifier<(DominoState, Offset)?> floatingDomino = ValueNotifier(null);
+
   BoardState() {
     loadPuzzle('assets/fosteroes/testpuzzles/puzzle2.json');
   }
@@ -75,5 +86,31 @@ class BoardState {
     inHand.set(puzz.dominoes);
     onBoard.clear();
     puzzle.value = puzz;
+
+    for (final d in puzz.dominoes) {
+      d.quarterTurns.addListener(() => onDominoRotated(d));
+    }
+  }
+
+  void onDominoRotated(DominoState d) {
+    if (d.location == DominoLocation.board && floatingDomino.value?.$1 != d) {
+      final offset = onBoard.dominoes[d]!;
+      onBoard.remove(d);
+      floatingDomino.value = (d, offset);
+    } else if (floatingDomino.value?.$1 == d) {
+      final turns = d.quarterTurns;
+      Future.delayed(Duration(milliseconds: 500), () {
+        // Unless we've been clicked again, try to snap this domino back to the board
+        if (turns == d.quarterTurns) {
+          final baseCell = floatingDomino.value!.$2;
+          final cells = d.area(baseCell);
+
+          if (puzzle.value!.field.canPlace(cells) && onBoard.canPlace(cells)) {
+            floatingDomino.value = null;
+            onBoard.add(d, baseCell);
+          }
+        }
+      });
+    }
   }
 }
