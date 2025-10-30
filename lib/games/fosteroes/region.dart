@@ -85,4 +85,11 @@ class ConstraintRegion extends HighlightRegion {
   final Constraint constraint;
 
   ConstraintRegion(super.cells, this.constraint, super.palette);
+
+  bool check(Map<Offset, int> cellContents) {
+    final values = cellContents.entries.where((e) => cells.contains(e.key)).map((e) => e.value).toList();
+    switch (constraint) {
+      // value, equal, notequal, greaterthan, lessthan, sum
+    }
+  }
 }

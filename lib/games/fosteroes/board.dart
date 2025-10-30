@@ -83,9 +83,9 @@ class _BoardState extends State<Board> {
                   final floating = boardState.floatingDomino.value;
                   return floating != null
                       ? Positioned(
-                          left: floating.$2.dx * Board.cellSize,
-                          top: floating.$2.dy * Board.cellSize,
-                          child: Opacity(opacity: 0.8, child: Domino(floating.$1)),
+                          left: floating.baseCell.dx * Board.cellSize,
+                          top: floating.baseCell.dy * Board.cellSize,
+                          child: Opacity(opacity: 0.8, child: Domino(floating.domino)),
                         )
                       : SizedBox();
                 },
@@ -94,7 +94,10 @@ class _BoardState extends State<Board> {
           ),
         ),
       ),
-      onWillAcceptWithDetails: (_) => true,
+      onWillAcceptWithDetails: (details) {
+        details.data.location = DominoLocation.dragging;
+        return true;
+      },
       onMove: (details) => onDominoDragged(details, boardState),
       onAcceptWithDetails: (details) => onDominoDropped(details, boardState),
       onLeave: (_) => highlightArea.value = null,
@@ -102,15 +105,16 @@ class _BoardState extends State<Board> {
   }
 
   Offset _globalPositionToCell(Offset globalPosition) {
-    final renderBox = _dragTargetKey.currentContext?.findRenderObject() as RenderBox?;
-    final pos = renderBox!.globalToLocal(globalPosition).translate(Board.cellSize / 2, Board.cellSize / 2);
-    return pos ~/ Board.cellSize;
+    final renderBox = _dragTargetKey.currentContext?.findRenderObject() as RenderBox;
+    final pos = renderBox.globalToLocal(globalPosition) ~/ Board.cellSize;
+    return pos;
   }
 
   void onDominoDragged(DragTargetDetails<DominoState> details, BoardState boardState) {
-    if (boardState.floatingDomino.value != null) {
-      print("");
-      // TODO: Send floating domino back to original location - when we make it, we need to remember where it was
+    // If there is a separate floating domino, put it back
+    final floatingDomino = boardState.floatingDomino.value?.domino;
+    if (floatingDomino != null && details.data != floatingDomino) {
+      boardState.unfloatDomino(isReturning: !boardState.canSnapFloatingDomino());
     }
 
     final baseCell = _globalPositionToCell(details.offset);
@@ -142,9 +146,26 @@ class _BoardState extends State<Board> {
         baseCell = baseCell.translate(0, 1);
       }
 
-      boardState.floatingDomino.value = null;
+      if (boardState.floatingDomino.value?.domino == domino) {
+        boardState.floatingDomino.value!.baseCell = baseCell;
+        boardState.unfloatDomino();
+      }
 
       boardState.onBoard.add(domino, baseCell);
+
+      checkConstraints(boardState);
+    } else {
+      if (boardState.floatingDomino.value?.domino == domino) {
+        domino.location = DominoLocation.floating;
+      }
+    }
+  }
+
+  void checkConstraints(BoardState boardState) {
+    final cellContents = boardState.onBoard.cellContents();
+
+    for (final c in boardState.puzzle.value!.constraints) {
+      c.check(cellContents);
     }
   }
 }

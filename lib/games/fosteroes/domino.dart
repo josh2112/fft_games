@@ -1,7 +1,7 @@
 import 'package:defer_pointer/defer_pointer.dart';
 import 'package:flutter/material.dart';
 
-enum DominoLocation { hand, board }
+enum DominoLocation { hand, board, floating, dragging }
 
 enum DominoDirection { right, down, left, up }
 
@@ -18,12 +18,15 @@ class DominoState {
 
   DominoState(this.side1, this.side2);
 
-  Set<Offset> area(Offset baseCell) => switch (direction) {
-    DominoDirection.right => {baseCell, baseCell.translate(1, 0)},
-    DominoDirection.down => {baseCell, baseCell.translate(0, 1)},
-    DominoDirection.left => {baseCell, baseCell.translate(-1, 0)},
-    _ => {baseCell, baseCell.translate(0, -1)},
+  List<Offset> area(Offset baseCell) => switch (direction) {
+    DominoDirection.right => [baseCell, baseCell.translate(1, 0)],
+    DominoDirection.down => [baseCell, baseCell.translate(0, 1)],
+    DominoDirection.left => [baseCell, baseCell.translate(-1, 0)],
+    _ => [baseCell, baseCell.translate(0, -1)],
   };
+
+  @override
+  String toString() => "Domino $side1/$side2 ${direction.name}";
 }
 
 class Domino extends StatefulWidget {
