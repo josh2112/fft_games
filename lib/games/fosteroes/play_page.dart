@@ -30,6 +30,31 @@ class _PlayPageState extends State<PlayPage> {
       leading: BackButton(onPressed: () => context.pop()),
       title: Text('Fosteroes'),
       centerTitle: true,
+      actions: [
+        IconButton(
+          icon: Icon(Icons.info),
+          onPressed: () => {
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text('Hey!'),
+                content: SingleChildScrollView(
+                  child: ListBody(
+                    children: [
+                      Text("You are playing a beta version of Fosteroes.\n"),
+                      Text("Coming soon:"),
+                      Text("• Daily puzzles"),
+                      Text("• Stats tracking"),
+                      Text("• ...more?"),
+                    ],
+                  ),
+                ),
+                actions: [TextButton(onPressed: () => context.pop(), child: const Text('OK'))],
+              ),
+            ),
+          },
+        ),
+      ],
     ),
     body: Provider.value(
       value: boardState,

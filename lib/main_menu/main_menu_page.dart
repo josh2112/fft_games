@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
+
 import '../utils/dialog_or_bottom_sheet.dart';
 import 'settings_dialog.dart';
 
@@ -52,14 +52,16 @@ class _MainMenuPageState extends State<MainMenuPage> {
                         label: Text('Fosterdle'),
                         icon: Icon(Icons.grid_on),
                       ),
-                      if (kDebugMode)
-                        FilledButton.icon(
+                      Badge(
+                        label: Text("Beta"),
+                        child: FilledButton.icon(
                           onPressed: () {
                             context.go('/fosteroes');
                           },
                           label: Text('Fosteroes'),
                           icon: Icon(Symbols.background_dot_large),
                         ),
+                      ),
                     ],
                   ),
                 ),
