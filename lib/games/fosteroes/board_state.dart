@@ -10,7 +10,9 @@ import 'puzzle.dart';
 class HandDominoes extends ChangeNotifier {
   var _positions = <DominoState?>[];
 
-  get positions => UnmodifiableListView<DominoState?>(_positions);
+  UnmodifiableListView<DominoState?> get positions => UnmodifiableListView<DominoState?>(_positions);
+
+  bool get isEmpty => positions.every((p) => p == null);
 
   void set(List<DominoState> initialSet) {
     _positions = List<DominoState?>.from(initialSet, growable: false);
@@ -38,6 +40,8 @@ class HandDominoes extends ChangeNotifier {
 class BoardDominoes extends ChangeNotifier {
   final _dominoes = <DominoState, Offset>{};
 
+  final Map<DominoState, int> _rotateFrom = {};
+
   late final UnmodifiableMapView<DominoState, Offset> dominoes;
 
   BoardDominoes() {
@@ -46,21 +50,32 @@ class BoardDominoes extends ChangeNotifier {
 
   void clear() {
     _dominoes.clear();
+    _rotateFrom.clear();
     notifyListeners();
   }
 
-  void add(DominoState domino, Offset position) {
+  void add(DominoState domino, Offset position, {int? rotateFrom}) {
     _dominoes[domino] = position;
+    if (rotateFrom != null) {
+      _rotateFrom[domino] = rotateFrom;
+    }
     notifyListeners();
   }
 
   void remove(DominoState domino) {
     _dominoes.remove(domino);
+    _rotateFrom.remove(domino);
     notifyListeners();
   }
 
+  int? getRotateFrom(DominoState domino) => _rotateFrom.remove(domino);
+
   bool canPlace(Set<Offset> domino) {
-    var allCells = dominoes.entries.map((e) => e.key.area(e.value)).flattened.toSet().difference(domino);
+    var allCells = dominoes.entries
+        .where((e) => e.key.location == DominoLocation.board)
+        .map((e) => e.key.area(e.value))
+        .flattened;
+
     return !domino.any((c) => allCells.contains(c));
   }
 
@@ -84,6 +99,8 @@ class FloatingDomino {
 }
 
 class BoardState {
+  final VoidCallback onWon;
+
   final ValueNotifier<Puzzle?> puzzle = ValueNotifier(null);
 
   final inHand = HandDominoes();
@@ -91,7 +108,7 @@ class BoardState {
 
   final ValueNotifier<FloatingDomino?> floatingDomino = ValueNotifier(null);
 
-  BoardState() {
+  BoardState(this.onWon) {
     loadPuzzle('assets/fosteroes/testpuzzles/puzzle3.json');
   }
 
@@ -108,7 +125,6 @@ class BoardState {
 
   // Removes this domino from the board and makes it float
   void floatDomino(DominoState d) {
-    print("Trying to float $d");
     final baseCell = onBoard.dominoes[d];
     if (baseCell == null) {
       return;
@@ -116,31 +132,28 @@ class BoardState {
     onBoard.remove(d);
     d.location = DominoLocation.floating;
     floatingDomino.value = FloatingDomino(d, baseCell, d.quarterTurns.value - 1);
-    print("Floated $d");
   }
 
   bool canSnapFloatingDomino() {
     final float = floatingDomino.value;
     if (float != null) {
-      final cells = float.domino.area(float.baseCell);
-      return puzzle.value!.field.canPlace(cells.toSet()) && onBoard.canPlace(cells.toSet());
+      final cells = float.domino.area(float.baseCell).toSet();
+      return puzzle.value!.field.canPlace(cells) && onBoard.canPlace(cells);
     }
     return false;
   }
 
   // Snaps the floating domino back to the board in its original or new position
   void unfloatDomino({bool isReturning = false}) {
-    print("Trying to unfloat ${floatingDomino.value?.domino}");
     if (floatingDomino.value != null) {
       final float = floatingDomino.value!;
+      final rotateFrom = float.domino.quarterTurns.value;
       if (isReturning) {
-        print(" - returning ${float.domino}");
         float.domino.quarterTurns.value = float.originalTurns;
       }
       float.domino.location = DominoLocation.board;
       floatingDomino.value = null;
-      onBoard.add(float.domino, float.baseCell);
-      print("Unfloated ${float.domino}");
+      onBoard.add(float.domino, float.baseCell, rotateFrom: rotateFrom);
     }
   }
 
@@ -165,6 +178,18 @@ class BoardState {
           }
         }
       });
+    }
+  }
+
+  void maybeCheckConstraints() {
+    if (!inHand.isEmpty || floatingDomino.value != null) {
+      return;
+    }
+
+    final cellContents = onBoard.cellContents();
+
+    if (puzzle.value!.constraints.every((c) => c.check(cellContents))) {
+      onWon();
     }
   }
 }

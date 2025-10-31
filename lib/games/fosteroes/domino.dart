@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:defer_pointer/defer_pointer.dart';
 import 'package:flutter/material.dart';
 
@@ -26,13 +28,14 @@ class DominoState {
   };
 
   @override
-  String toString() => "Domino $side1/$side2 ${direction.name}";
+  String toString() => "Domino $side1/$side2 ${direction.name}, ${location.name}";
 }
 
 class Domino extends StatefulWidget {
   final DominoState state;
+  final int? rotateFrom;
 
-  Domino(this.state) : super(key: ValueKey(state));
+  Domino(this.state, {this.rotateFrom}) : super(key: ValueKey(state));
 
   @override
   State<Domino> createState() => _DominoState();
@@ -41,10 +44,25 @@ class Domino extends StatefulWidget {
 // TODO: While being dragged, scale child to size of domino on board!
 
 class _DominoState extends State<Domino> {
+  int? initialRotation;
+
+  @override
+  initState() {
+    super.initState();
+    initialRotation = widget.rotateFrom;
+
+    // If given an initial rotation, use it initially, then immediately rebuild with the current rotation.
+    if (initialRotation != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() => initialRotation = null);
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedRotation(
-      turns: widget.state.quarterTurns.value / 4.0,
+      turns: (initialRotation ?? widget.state.quarterTurns.value) / 4.0,
       duration: Duration(milliseconds: 200),
       alignment: widget.state.location == DominoLocation.hand ? Alignment.center : FractionalOffset(0.25, 0.5),
       child: DeferPointer(
@@ -68,10 +86,24 @@ class _DominoState extends State<Domino> {
   }
 
   // Returns an offset to the center of the domino, regardless of orientation.
-  Offset centeredDragAnchorStrategy(Draggable<Object> d, BuildContext context, Offset point) =>
-      (d.data as DominoState).isVertical
-      ? Offset(_HalfDomino.height / 2, _HalfDomino.width)
-      : Offset(_HalfDomino.width, _HalfDomino.height / 2);
+  Offset centeredDragAnchorStrategy(Draggable<Object> d, BuildContext context, Offset point) {
+    final RenderBox renderObject = context.findRenderObject()! as RenderBox;
+    final local = renderObject.globalToLocal(point);
+
+    final xform = Matrix4.identity()
+      ..translateByDouble(_HalfDomino.width, _HalfDomino.height / 2, 0, 1)
+      ..rotateZ((d.data as DominoState).quarterTurns.value * pi / 2)
+      ..translateByDouble(-_HalfDomino.width, -_HalfDomino.height / 2, 0, 1);
+
+    var xformed = MatrixUtils.transformPoint(xform, local);
+
+    if ((d.data as DominoState).isVertical) {
+      // TODO: Big hack -- figure out what the correct formula is!
+      xformed += Offset(-25, 25);
+    }
+
+    return xformed;
+  }
 
   void onRotateDomino() {
     setState(() => widget.state.quarterTurns.value += 1);

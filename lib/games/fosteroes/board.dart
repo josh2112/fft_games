@@ -62,7 +62,7 @@ class _BoardState extends State<Board> {
                         Positioned(
                           left: dOnBoard.value.dx * Board.cellSize,
                           top: dOnBoard.value.dy * Board.cellSize,
-                          child: Domino(dOnBoard.key),
+                          child: Domino(dOnBoard.key, rotateFrom: boardState.onBoard.getRotateFrom(dOnBoard.key)),
                         ),
                     ],
                   ),
@@ -85,7 +85,10 @@ class _BoardState extends State<Board> {
                       ? Positioned(
                           left: floating.baseCell.dx * Board.cellSize,
                           top: floating.baseCell.dy * Board.cellSize,
-                          child: Opacity(opacity: 0.8, child: Domino(floating.domino)),
+                          child: Opacity(
+                            opacity: 0.8,
+                            child: Domino(floating.domino, rotateFrom: floating.originalTurns),
+                          ),
                         )
                       : SizedBox();
                 },
@@ -153,19 +156,11 @@ class _BoardState extends State<Board> {
 
       boardState.onBoard.add(domino, baseCell);
 
-      checkConstraints(boardState);
+      boardState.maybeCheckConstraints();
     } else {
       if (boardState.floatingDomino.value?.domino == domino) {
         domino.location = DominoLocation.floating;
       }
-    }
-  }
-
-  void checkConstraints(BoardState boardState) {
-    final cellContents = boardState.onBoard.cellContents();
-
-    for (final c in boardState.puzzle.value!.constraints) {
-      c.check(cellContents);
     }
   }
 }

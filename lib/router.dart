@@ -2,7 +2,6 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
-import 'package:fft_games/games/fosterdle/stats_page.dart';
 import 'package:fft_games/settings/persistence/settings_persistence.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -44,7 +43,7 @@ final router = GoRouter(
                   path: 'stats',
                   builder: (context, state) => fosterdle.StatsPage(
                     key: Key('fosterdle stats'),
-                    winLoseData: state.extra as StatsPageWinLoseData?,
+                    winLoseData: state.extra as fosterdle.StatsPageWinLoseData?,
                   ),
                 ),
               ],
@@ -52,6 +51,15 @@ final router = GoRouter(
             GoRoute(
               path: 'fosteroes',
               builder: (context, state) => const fosteroes.PlayPage(key: Key('fosteroes')),
+              routes: [
+                GoRoute(
+                  path: 'stats',
+                  builder: (context, state) => fosteroes.StatsPage(
+                    key: Key('fosteroes stats'),
+                    winLoseData: state.extra as fosteroes.StatsPageWinLoseData?,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

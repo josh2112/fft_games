@@ -1,21 +1,13 @@
-import 'dart:math';
-
 import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
 
 import '../../utils/confetti_star_path.dart';
-import 'palette.dart';
-import 'settings.dart';
 
 class StatsPageWinLoseData {
-  final String word;
-  final int numGuesses;
+  //final Duration? time;
 
-  bool get didWin => numGuesses >= 1 && numGuesses <= 6;
-
-  const StatsPageWinLoseData(this.numGuesses, this.word);
+  //const StatsPageWinLoseData(this.time);
 }
 
 class StatsPage extends StatefulWidget {
@@ -34,7 +26,8 @@ class _StatsPageState extends State<StatsPage> {
   void initState() {
     super.initState();
 
-    final confettiDurationMsec = (true == widget.winLoseData?.didWin) ? 2000 / widget.winLoseData!.numGuesses : 0;
+    final confettiDurationMsec = 2000;
+    // (true == widget.winLoseData?.didWin) ? 2000 / widget.winLoseData!.numGuesses : 0;
 
     if (confettiDurationMsec > 0) {
       _confettiController = ConfettiController(duration: Duration(milliseconds: confettiDurationMsec.toInt()));
@@ -46,21 +39,8 @@ class _StatsPageState extends State<StatsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final String? message = switch (widget.winLoseData?.numGuesses) {
-      null => null,
-      1 => 'Incredible! 😃',
-      2 => 'Great! ☺️',
-      3 => 'Well done! 😬',
-      4 => 'Ok! 😐',
-      5 => 'Whew! 🥴',
-      6 => 'What a squeaker! 😰',
-      _ => "The word was ${widget.winLoseData!.word}. Better luck tomorrow!",
-    };
-
-    final settings = context.watch<SettingsController>();
-
     return Scaffold(
-      appBar: AppBar(title: Text('Fosterdle Stats'), centerTitle: true),
+      appBar: AppBar(title: Text('Fosteroes Stats'), centerTitle: true),
       body: Stack(
         children: [
           if (_confettiController != null)
@@ -78,11 +58,11 @@ class _StatsPageState extends State<StatsPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Spacer(),
-              if (message != null)
-                Text(message, style: TextTheme.of(context).displaySmall, textAlign: TextAlign.center),
-              if (message != null) const Spacer(),
-              subtitle(context, "STATISTICS"),
-              Row(
+              if (widget.winLoseData != null)
+                Text("You got it!", style: TextTheme.of(context).displaySmall, textAlign: TextAlign.center),
+              if (widget.winLoseData != null) const Spacer(),
+              subtitle(context, "STATISTICS (coming soon)"),
+              /*Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 spacing: 5,
@@ -94,11 +74,13 @@ class _StatsPageState extends State<StatsPage> {
                   ),
                   StatsWidget("Current Streak", settings.currentStreak.value.toString()),
                   StatsWidget("Max Streak", settings.maxStreak.value.toString()),
+                  
                 ],
               ),
               const Spacer(),
               subtitle(context, "GUESS DISTRIBUTION"),
               SolveCountsGraph(settings.solveCounts.value, widget.winLoseData),
+              */
               const Spacer(flex: 3),
               ElevatedButton(
                 onPressed: () {
@@ -123,7 +105,7 @@ class _StatsPageState extends State<StatsPage> {
     child: Text(text, style: TextTheme.of(context).titleMedium),
   );
 }
-
+/*
 class StatsWidget extends StatelessWidget {
   final String label, value;
   const StatsWidget(this.label, this.value, {super.key});
@@ -188,3 +170,4 @@ class SolveCountsGraph extends StatelessWidget {
     );
   }
 }
+*/

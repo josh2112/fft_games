@@ -1,11 +1,12 @@
 import 'package:defer_pointer/defer_pointer.dart';
-import 'package:fft_games/games/fosteroes/board.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import 'board.dart';
 import 'board_state.dart';
 import 'hand.dart';
+import 'stats_page.dart';
 
 class PlayPage extends StatefulWidget {
   const PlayPage({super.key});
@@ -15,7 +16,13 @@ class PlayPage extends StatefulWidget {
 }
 
 class _PlayPageState extends State<PlayPage> {
-  late final BoardState boardState = BoardState();
+  late final BoardState boardState;
+
+  @override
+  void initState() {
+    super.initState();
+    boardState = BoardState(_onPlayerWon);
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -55,4 +62,6 @@ class _PlayPageState extends State<PlayPage> {
       ),
     ),
   );
+
+  void _onPlayerWon() => context.go('/fosteroes/stats', extra: StatsPageWinLoseData());
 }

@@ -1,5 +1,9 @@
+import 'package:collection/collection.dart';
+
 abstract class Constraint {
   const Constraint();
+
+  bool check(List<int> values);
 }
 
 abstract class ValueConstraint extends Constraint {
@@ -13,11 +17,17 @@ abstract class EqualityConstraint extends Constraint {}
 class EqualConstraint extends EqualityConstraint {
   @override
   String toString() => "=";
+
+  @override
+  bool check(List<int> values) => values.toSet().length == 1;
 }
 
 class NotEqualConstraint extends EqualityConstraint {
   @override
   String toString() => "!=";
+
+  @override
+  bool check(List<int> values) => values.toSet().length == values.length;
 }
 
 class GreaterThanConstraint extends ValueConstraint {
@@ -25,6 +35,9 @@ class GreaterThanConstraint extends ValueConstraint {
 
   @override
   String toString() => ">$value";
+
+  @override
+  bool check(List<int> values) => values.sum > value;
 }
 
 class LessThanConstraint extends ValueConstraint {
@@ -32,6 +45,9 @@ class LessThanConstraint extends ValueConstraint {
 
   @override
   String toString() => "<$value";
+
+  @override
+  bool check(List<int> values) => values.sum < value;
 }
 
 class SumConstraint extends ValueConstraint {
@@ -39,4 +55,7 @@ class SumConstraint extends ValueConstraint {
 
   @override
   String toString() => "$value";
+
+  @override
+  bool check(List<int> values) => values.sum == value;
 }
