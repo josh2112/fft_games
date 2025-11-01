@@ -11,8 +11,6 @@ import 'games/fosterdle/fosterdle.dart' as fosterdle;
 import 'games/fosteroes/fosteroes.dart' as fosteroes;
 import 'main_menu/main_menu_page.dart';
 
-/// The router describes the game's navigational hierarchy, from the main
-/// screen through settings screens all the way to each individual level.
 final router = GoRouter(
   routes: [
     GoRoute(
@@ -48,6 +46,18 @@ final router = GoRouter(
                 ),
               ],
             ),
+          ],
+        ),
+        ShellRoute(
+          builder: (context, state, child) {
+            return MultiProvider(
+              providers: [
+                Provider(create: (context) => fosteroes.SettingsController(store: context.read<SettingsPersistence>())),
+              ],
+              child: child,
+            );
+          },
+          routes: [
             GoRoute(
               path: 'fosteroes',
               builder: (context, state) => const fosteroes.PlayPage(key: Key('fosteroes')),

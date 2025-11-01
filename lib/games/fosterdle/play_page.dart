@@ -45,7 +45,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
         settings.gameStateDate.isLoaded,
         settings.gameStateGuesses.isLoaded,
         settings.gameStateIsCompleted.isLoaded,
-      ]).then(maybeApplyBoardState),
+      ]).then(_maybeApplyBoardState),
     );
   }
 
@@ -195,7 +195,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     showStats(winLoseData: StatsPageWinLoseData(-1, boardState.word));
   }
 
-  Future maybeApplyBoardState(List<void> value) async {
+  Future _maybeApplyBoardState(List<void> _) async {
     // This page is loaded even when navigating to the stats page directly (probably because all Fosterdle routes are in
     // a shell route). If this is not our final destination, we want to skip all the animation delays.
     bool isNavigatingToChildPage = GoRouter.of(context).state.path != "fosterdle";

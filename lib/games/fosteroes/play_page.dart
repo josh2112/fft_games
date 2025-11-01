@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:defer_pointer/defer_pointer.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -5,7 +7,9 @@ import 'package:provider/provider.dart';
 
 import 'board.dart';
 import 'board_state.dart';
+import 'domino.dart';
 import 'hand.dart';
+import 'settings.dart';
 import 'stats_page.dart';
 
 class PlayPage extends StatefulWidget {
@@ -16,12 +20,39 @@ class PlayPage extends StatefulWidget {
 }
 
 class _PlayPageState extends State<PlayPage> {
+  late final SettingsController settings;
   late final BoardState boardState;
 
   @override
   void initState() {
     super.initState();
+    settings = context.read<SettingsController>();
     boardState = BoardState(_onPlayerWon);
+
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => Future.wait([
+        boardState.isLoaded,
+        settings.gameStateDate.isLoaded,
+        settings.gameState.isLoaded,
+        settings.gameStateIsCompleted.isLoaded,
+      ]).then(_maybeApplyBoardState),
+    );
+
+    boardState.onBoard.addListener(() {
+      settings.gameState.value = boardState.onBoard.dominoes.entries
+          .map(
+            (e) => SavedDominoPlacement(
+              e.value.dx.toInt(),
+              e.value.dy.toInt(),
+              e.key.side1,
+              e.key.side2,
+              e.key.quarterTurns.value,
+            ),
+          )
+          .toList();
+      settings.gameStateDate.value = DateUtils.dateOnly(DateTime.now());
+      settings.gameStateIsCompleted.value = false;
+    });
   }
 
   @override
@@ -88,5 +119,38 @@ class _PlayPageState extends State<PlayPage> {
     ),
   );
 
-  void _onPlayerWon() => context.go('/fosteroes/stats', extra: StatsPageWinLoseData());
+  void _onPlayerWon() {
+    settings.gameStateIsCompleted.value = true;
+    settings.numWon.value += 1;
+    settings.currentStreak.value += 1;
+    if (settings.currentStreak.value > settings.maxStreak.value) {
+      settings.maxStreak.value = settings.currentStreak.value;
+    }
+
+    context.go('/fosteroes/stats', extra: StatsPageWinLoseData());
+  }
+
+  Future _maybeApplyBoardState(List<void> _) async {
+    final today = DateUtils.dateOnly(DateTime.now());
+
+    if (settings.gameStateDate.value != today) {
+      // If the last saved-game state is for a different day, reset everything
+      settings.numPlayed.value += 1;
+      settings.gameStateDate.value = today;
+      settings.gameStateIsCompleted.value = true;
+    } else {
+      // Apply saved state
+      for (final sdp in settings.gameState.value) {
+        final domino = boardState.inHand.positions.firstWhere(
+          (ds) => ds?.side1 == sdp.side1 && ds?.side2 == sdp.side2,
+        )!;
+        boardState.inHand.remove(domino);
+        domino.location = DominoLocation.board;
+        domino.quarterTurns.value = sdp.quarterTurns;
+        boardState.onBoard.add(domino, Offset(sdp.x.toDouble(), sdp.y.toDouble()));
+      }
+
+      boardState.maybeCheckConstraints();
+    }
+  }
 }

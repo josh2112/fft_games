@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:collection/collection.dart';
@@ -99,6 +100,10 @@ class FloatingDomino {
 }
 
 class BoardState {
+  final _loadCompleter = Completer<void>();
+
+  Future<void> get isLoaded => _loadCompleter.future;
+
   final VoidCallback onWon;
 
   final ValueNotifier<Puzzle?> puzzle = ValueNotifier(null);
@@ -109,18 +114,20 @@ class BoardState {
   final ValueNotifier<FloatingDomino?> floatingDomino = ValueNotifier(null);
 
   BoardState(this.onWon) {
-    loadPuzzle('assets/fosteroes/testpuzzles/puzzle3.json');
-  }
+    final puzzlePath = 'assets/fosteroes/testpuzzles/puzzle3.json';
 
-  Future loadPuzzle(String path) async {
-    final puzz = await Puzzle.fromJsonFile(path);
-    inHand.set(puzz.dominoes);
-    onBoard.clear();
-    puzzle.value = puzz;
+    Future<void> init() async {
+      final puzz = await Puzzle.fromJsonFile(puzzlePath);
+      inHand.set(puzz.dominoes);
+      onBoard.clear();
+      puzzle.value = puzz;
 
-    for (final d in puzz.dominoes) {
-      d.quarterTurns.addListener(() => onDominoRotated(d));
+      for (final d in puzz.dominoes) {
+        d.quarterTurns.addListener(() => onDominoRotated(d));
+      }
     }
+
+    _loadCompleter.complete(init());
   }
 
   // Removes this domino from the board and makes it float
