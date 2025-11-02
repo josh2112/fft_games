@@ -28,6 +28,7 @@ class SettingsController {
   late final Setting<DateTime> gameStateDate;
   late final Setting<bool> gameStateIsCompleted;
   late final Setting<List<SavedDominoPlacement>> gameState;
+  late final Setting<int> gameStateElapsedTime;
 
   SettingsController({SettingsPersistence? store}) : _store = store ?? SharedPrefsPersistence() {
     gameStateDate = Setting.serialized(
@@ -45,9 +46,9 @@ class SettingsController {
       _store,
       SettingSerializer<List<SavedDominoPlacement>>(
         (List<SavedDominoPlacement> placements) => jsonEncode(
-          placements.map(
-            (p) => {"x": p.x, "y": p.y, "side1": p.side1, "side2": p.side2, "quarterTurns": p.quarterTurns},
-          ).toList(),
+          placements
+              .map((p) => {"x": p.x, "y": p.y, "side1": p.side1, "side2": p.side2, "quarterTurns": p.quarterTurns})
+              .toList(),
         ),
         (String str) => [
           for (final p in jsonDecode(str))
@@ -57,6 +58,8 @@ class SettingsController {
       [],
       log: _log,
     );
+
+    gameStateElapsedTime = Setting("$_prefix.gameState.elapsedTime", _store, 0, log: _log);
 
     numPlayed = Setting("$_prefix.numPlayed", _store, 0, log: _log);
     numWon = Setting("$_prefix.numWon", _store, 0, log: _log);

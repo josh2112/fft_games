@@ -1,8 +1,14 @@
+import 'dart:math';
+
 import 'package:confetti/confetti.dart';
+import 'package:fft_games/utils/stats_widget.dart';
+import 'package:fft_games/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
 import '../../utils/confetti_star_path.dart';
+import 'settings.dart';
 
 class StatsPageWinLoseData {
   //final Duration? time;
@@ -39,6 +45,8 @@ class _StatsPageState extends State<StatsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsController>();
+
     return Scaffold(
       appBar: AppBar(title: Text('Fosteroes Stats'), centerTitle: true),
       body: Stack(
@@ -59,10 +67,14 @@ class _StatsPageState extends State<StatsPage> {
             children: [
               const Spacer(),
               if (widget.winLoseData != null)
-                Text("You got it!", style: TextTheme.of(context).displaySmall, textAlign: TextAlign.center),
+                Text(
+                  "You solved it in ${Duration(seconds: settings.gameStateElapsedTime.value).formatHHMMSS()}!",
+                  style: TextTheme.of(context).displaySmall,
+                  textAlign: TextAlign.center,
+                ),
               if (widget.winLoseData != null) const Spacer(),
               subtitle(context, "STATISTICS (coming soon)"),
-              /*Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 spacing: 5,
@@ -74,11 +86,10 @@ class _StatsPageState extends State<StatsPage> {
                   ),
                   StatsWidget("Current Streak", settings.currentStreak.value.toString()),
                   StatsWidget("Max Streak", settings.maxStreak.value.toString()),
-                  
                 ],
               ),
               const Spacer(),
-              subtitle(context, "GUESS DISTRIBUTION"),
+              /*subtitle(context, "GUESS DISTRIBUTION"),
               SolveCountsGraph(settings.solveCounts.value, widget.winLoseData),
               */
               const Spacer(flex: 3),

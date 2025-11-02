@@ -1,10 +1,9 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:collection/collection.dart';
 import 'package:fft_games/games/fosteroes/domino.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/rendering.dart';
+import 'package:fft_games/games/fosteroes/settings.dart';
+import 'package:flutter/material.dart';
 
 import 'puzzle.dart';
 
@@ -106,12 +105,17 @@ class BoardState {
 
   final VoidCallback onWon;
 
-  final ValueNotifier<Puzzle?> puzzle = ValueNotifier(null);
+  final puzzle = ValueNotifier<Puzzle?>(null);
 
   final inHand = HandDominoes();
   final onBoard = BoardDominoes();
 
-  final ValueNotifier<FloatingDomino?> floatingDomino = ValueNotifier(null);
+  final floatingDomino = ValueNotifier<FloatingDomino?>(null);
+
+  final elapsedTimeSecs = ValueNotifier<int>(0);
+
+  final isInProgress = ValueNotifier(true);
+  bool isPaused = false;
 
   BoardState(this.onWon) {
     final puzzlePath = 'assets/fosteroes/testpuzzles/puzzle3.json';
@@ -125,6 +129,12 @@ class BoardState {
       for (final d in puzz.dominoes) {
         d.quarterTurns.addListener(() => onDominoRotated(d));
       }
+
+      Timer.periodic(Duration(seconds: 1), (_) {
+        if (isInProgress.value && !isPaused) {
+          elapsedTimeSecs.value += 1;
+        }
+      });
     }
 
     _loadCompleter.complete(init());
@@ -196,7 +206,22 @@ class BoardState {
     final cellContents = onBoard.cellContents();
 
     if (puzzle.value!.constraints.every((c) => c.check(cellContents))) {
+      isInProgress.value = false;
       onWon();
+    }
+  }
+
+  Future applyGameState(List<SavedDominoPlacement> state, int elapsedTime, bool isCompleted) async {
+    elapsedTimeSecs.value = elapsedTime;
+    isInProgress.value = !isCompleted;
+
+    for (final sdp in state) {
+      final domino = inHand.positions.firstWhere((ds) => ds?.side1 == sdp.side1 && ds?.side2 == sdp.side2)!;
+      inHand.remove(domino);
+      domino.location = DominoLocation.board;
+      domino.quarterTurns.value = sdp.quarterTurns;
+      onBoard.add(domino, Offset(sdp.x.toDouble(), sdp.y.toDouble()));
+      await Future.delayed(Duration(milliseconds: 150));
     }
   }
 }
