@@ -5,6 +5,8 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../utils/dialog_or_bottom_sheet.dart';
 import 'settings_dialog.dart';
 
+const String version = "1.1";
+
 class MainMenuPage extends StatefulWidget {
   const MainMenuPage({super.key});
 
@@ -13,18 +15,7 @@ class MainMenuPage extends StatefulWidget {
 }
 
 class _MainMenuPageState extends State<MainMenuPage> {
-  String _version = "";
-
   static const isRunningWithWasm = bool.fromEnvironment('dart.tool.dart2wasm');
-
-  @override
-  void initState() {
-    super.initState();
-
-    DefaultAssetBundle.of(
-      context,
-    ).loadString("pubspec.yaml").then((f) => setState(() => _version = f.split("version: ")[1].split("\n")[0]));
-  }
 
   // , icon:
   @override
@@ -78,7 +69,7 @@ class _MainMenuPageState extends State<MainMenuPage> {
                 padding: EdgeInsets.only(top: 20),
                 child: Opacity(
                   opacity: 0.5,
-                  child: Text("Version $_version\t${(isRunningWithWasm ? 'WASM enabled' : '')}"),
+                  child: Text("Version $version\n${(isRunningWithWasm ? 'WASM enabled' : '')}"),
                 ),
               ),
             ],

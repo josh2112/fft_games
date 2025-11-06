@@ -7,7 +7,6 @@ import 'package:fft_games/games/fosteroes/settings.dart';
 import 'package:flutter/material.dart';
 
 import 'puzzle.dart';
-import 'puzzle_from_json.dart';
 import 'region.dart';
 
 class HandDominoes extends ChangeNotifier {
