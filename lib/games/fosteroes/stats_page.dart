@@ -68,12 +68,12 @@ class _StatsPageState extends State<StatsPage> {
               const Spacer(),
               if (widget.winLoseData != null)
                 Text(
-                  "You solved it in ${Duration(seconds: settings.gameStateElapsedTime.value).formatHHMMSS()}!",
+                  "You solved it!\n${Duration(seconds: settings.gameStateElapsedTime.value).formatHHMMSS()}",
                   style: TextTheme.of(context).displaySmall,
                   textAlign: TextAlign.center,
                 ),
               if (widget.winLoseData != null) const Spacer(),
-              subtitle(context, "STATISTICS (coming soon)"),
+              subtitle(context, "STATISTICS"),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.start,

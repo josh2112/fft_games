@@ -6,15 +6,15 @@ abstract class Constraint {
   bool check(List<int> values);
 }
 
-abstract class ValueConstraint extends Constraint {
+abstract class ValueConstraintBase extends Constraint {
   final int value;
 
-  const ValueConstraint(this.value);
+  const ValueConstraintBase(this.value);
 }
 
-abstract class EqualityConstraint extends Constraint {}
+abstract class EqualityConstraintBase extends Constraint {}
 
-class EqualConstraint extends EqualityConstraint {
+class EqualConstraint extends EqualityConstraintBase {
   @override
   String toString() => "=";
 
@@ -22,7 +22,7 @@ class EqualConstraint extends EqualityConstraint {
   bool check(List<int> values) => values.toSet().length == 1;
 }
 
-class NotEqualConstraint extends EqualityConstraint {
+class NotEqualConstraint extends EqualityConstraintBase {
   @override
   String toString() => "!=";
 
@@ -30,7 +30,7 @@ class NotEqualConstraint extends EqualityConstraint {
   bool check(List<int> values) => values.toSet().length == values.length;
 }
 
-class GreaterThanConstraint extends ValueConstraint {
+class GreaterThanConstraint extends ValueConstraintBase {
   const GreaterThanConstraint(super.value);
 
   @override
@@ -40,7 +40,7 @@ class GreaterThanConstraint extends ValueConstraint {
   bool check(List<int> values) => values.sum > value;
 }
 
-class LessThanConstraint extends ValueConstraint {
+class LessThanConstraint extends ValueConstraintBase {
   const LessThanConstraint(super.value);
 
   @override
@@ -50,7 +50,7 @@ class LessThanConstraint extends ValueConstraint {
   bool check(List<int> values) => values.sum < value;
 }
 
-class SumConstraint extends ValueConstraint {
+class SumConstraint extends ValueConstraintBase {
   const SumConstraint(super.value);
 
   @override

@@ -6,6 +6,8 @@ import 'package:fft_games/games/fosteroes/settings.dart';
 import 'package:flutter/material.dart';
 
 import 'puzzle.dart';
+import 'puzzle_from_json.dart';
+import 'region.dart';
 
 class HandDominoes extends ChangeNotifier {
   var _positions = <DominoState?>[];
@@ -38,11 +40,12 @@ class HandDominoes extends ChangeNotifier {
 }
 
 class BoardDominoes extends ChangeNotifier {
-  final _dominoes = <DominoState, Offset>{};
+  final _dominoes = <DominoState, Cell>{};
 
   final Map<DominoState, int> _rotateFrom = {};
+  final Map<DominoState, Offset> _animateFrom = {};
 
-  late final UnmodifiableMapView<DominoState, Offset> dominoes;
+  late final UnmodifiableMapView<DominoState, Cell> dominoes;
 
   BoardDominoes() {
     dominoes = UnmodifiableMapView(_dominoes);
@@ -51,13 +54,17 @@ class BoardDominoes extends ChangeNotifier {
   void clear() {
     _dominoes.clear();
     _rotateFrom.clear();
+    _animateFrom.clear();
     notifyListeners();
   }
 
-  void add(DominoState domino, Offset position, {int? rotateFrom}) {
+  void add(DominoState domino, Cell position, {int? rotateFrom, Offset? animateFrom}) {
     _dominoes[domino] = position;
     if (rotateFrom != null) {
       _rotateFrom[domino] = rotateFrom;
+    }
+    if (animateFrom != null) {
+      _animateFrom[domino] = animateFrom;
     }
     notifyListeners();
   }
@@ -65,12 +72,15 @@ class BoardDominoes extends ChangeNotifier {
   void remove(DominoState domino) {
     _dominoes.remove(domino);
     _rotateFrom.remove(domino);
+    _animateFrom.remove(domino);
     notifyListeners();
   }
 
   int? getRotateFrom(DominoState domino) => _rotateFrom.remove(domino);
 
-  bool canPlace(Set<Offset> domino) {
+  Offset? getAnimateFrom(DominoState domino) => _animateFrom.remove(domino);
+
+  bool canPlace(Set<Cell> domino) {
     var allCells = dominoes.entries
         .where((e) => e.key.location == DominoLocation.board)
         .map((e) => e.key.area(e.value))
@@ -79,8 +89,8 @@ class BoardDominoes extends ChangeNotifier {
     return !domino.any((c) => allCells.contains(c));
   }
 
-  Map<Offset, int> cellContents() {
-    final contents = <Offset, int>{};
+  Map<Cell, int> cellContents() {
+    final contents = <Cell, int>{};
     for (final e in dominoes.entries) {
       final cells = e.key.area(e.value);
       contents[cells[0]] = e.key.side1;
@@ -92,7 +102,7 @@ class BoardDominoes extends ChangeNotifier {
 
 class FloatingDomino {
   final DominoState domino;
-  Offset baseCell;
+  Cell baseCell;
   final int originalTurns;
 
   FloatingDomino(this.domino, this.baseCell, this.originalTurns);
@@ -103,7 +113,7 @@ class BoardState {
 
   Future<void> get isLoaded => _loadCompleter.future;
 
-  final VoidCallback onWon;
+  final VoidCallback onWon, onBadSolution;
 
   final puzzle = ValueNotifier<Puzzle?>(null);
 
@@ -115,13 +125,13 @@ class BoardState {
   final elapsedTimeSecs = ValueNotifier<int>(0);
 
   final isInProgress = ValueNotifier(true);
-  bool isPaused = false;
+  final isPaused = ValueNotifier(false);
 
-  BoardState(this.onWon) {
-    final puzzlePath = 'assets/fosteroes/testpuzzles/puzzle3.json';
+  BoardState(this.onWon, this.onBadSolution) {
+    final puzzlePath = 'assets/fosteroes/testpuzzles/puzzle1.json';
 
     Future<void> init() async {
-      final puzz = await Puzzle.fromJsonFile(puzzlePath);
+      final puzz = loadPuzzleJson(puzzlePath, PuzzleDifficulty.easy);
       inHand.set(puzz.dominoes);
       onBoard.clear();
       puzzle.value = puzz;
@@ -131,7 +141,7 @@ class BoardState {
       }
 
       Timer.periodic(Duration(seconds: 1), (_) {
-        if (isInProgress.value && !isPaused) {
+        if (isInProgress.value && !isPaused.value) {
           elapsedTimeSecs.value += 1;
         }
       });
@@ -208,6 +218,8 @@ class BoardState {
     if (puzzle.value!.constraints.every((c) => c.check(cellContents))) {
       isInProgress.value = false;
       onWon();
+    } else {
+      onBadSolution();
     }
   }
 
@@ -220,8 +232,8 @@ class BoardState {
       inHand.remove(domino);
       domino.location = DominoLocation.board;
       domino.quarterTurns.value = sdp.quarterTurns;
-      onBoard.add(domino, Offset(sdp.x.toDouble(), sdp.y.toDouble()));
-      await Future.delayed(Duration(milliseconds: 150));
+      onBoard.add(domino, Cell(sdp.x, sdp.y), animateFrom: Offset(0, 5));
+      await Future.delayed(Duration(milliseconds: 200));
     }
   }
 }

@@ -1,39 +1,42 @@
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:fft_games/games/fosteroes/constraint.dart';
-import 'package:fft_games/games/fosteroes/region.dart';
 import 'package:flutter/material.dart';
 import 'package:svg_path_parser/svg_path_parser.dart';
+
+import 'constraint.dart';
+import 'region.dart';
+import 'region_painter.dart';
 
 class ConstraintLabel extends StatelessWidget {
   static const double size = 36;
   static const Offset offset = Offset(17, 16.2);
 
   final ConstraintRegion region;
+  final RegionPalette palette;
   final double cellSize;
 
-  const ConstraintLabel(this.region, this.cellSize, {super.key});
+  const ConstraintLabel(this.region, this.palette, this.cellSize, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    final y = region.contour.map((pt) => pt.dy).reduce(max);
-    final x = region.contour.where((pt) => pt.dy == y).map((pt) => pt.dx).reduce(max);
+    final y = region.cells.map((c) => c.y).reduce(max);
+    final x = region.cells.where((c) => c.y == y).map((pt) => pt.x).reduce(max);
     return Positioned(
-      left: x * cellSize - offset.dx,
-      top: y * cellSize - offset.dy,
+      left: (x + 1) * cellSize - offset.dx,
+      top: (y + 1) * cellSize - offset.dy,
       child: ClipPath(
         clipper: ConstraintLabelClip(),
         child: Container(
           width: size,
           height: size,
-          color: region.palette.stroke,
+          color: palette.stroke,
           child: Center(
             child: Text(
               region.constraint.toString(),
               style: TextStyle(
                 color: Colors.white,
-                fontSize: region.constraint is EqualityConstraint ? 16 : 12,
+                fontSize: region.constraint is EqualityConstraintBase ? 16 : 12,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -53,9 +56,7 @@ class ConstraintLabelClip extends CustomClipper<Path> {
 
   @override
   Path getClip(Size size) {
-    return path.transform(
-      Float64List.fromList([size.width, 0, 0, 0, 0, size.width, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]),
-    );
+    return path.transform(Float64List.fromList([size.width, 0, 0, 0, 0, size.width, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]));
   }
 
   @override

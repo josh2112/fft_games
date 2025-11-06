@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:defer_pointer/defer_pointer.dart';
 import 'package:fft_games/main_menu/settings_dialog.dart';
 import 'package:fft_games/utils/dialog_or_bottom_sheet.dart';
+import 'package:fft_games/utils/multi_snack_bar.dart';
 import 'package:fft_games/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -26,12 +27,15 @@ class _PlayPageState extends State<PlayPage> {
   late final BoardState boardState;
   late final AppLifecycleListener appLifecycleListener;
 
+  late final MultiSnackBarMessenger messenger;
+
   @override
   void initState() {
     super.initState();
+    messenger = MultiSnackBarMessenger();
     appLifecycleListener = AppLifecycleListener(onStateChange: onLifecycleStateChange);
     settings = context.read<SettingsController>();
-    boardState = BoardState(_onPlayerWon);
+    boardState = BoardState(_onPlayerWon, _onBadSolution);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await boardState.isLoaded;
@@ -43,15 +47,7 @@ class _PlayPageState extends State<PlayPage> {
 
       boardState.onBoard.addListener(() {
         settings.gameState.value = boardState.onBoard.dominoes.entries
-            .map(
-              (e) => SavedDominoPlacement(
-                e.value.dx.toInt(),
-                e.value.dy.toInt(),
-                e.key.side1,
-                e.key.side2,
-                e.key.quarterTurns.value,
-              ),
-            )
+            .map((e) => SavedDominoPlacement(e.value.x, e.value.y, e.key.side1, e.key.side2, e.key.quarterTurns.value))
             .toList();
         settings.gameStateDate.value = DateUtils.dateOnly(DateTime.now());
         settings.gameStateIsCompleted.value = false;
@@ -60,12 +56,29 @@ class _PlayPageState extends State<PlayPage> {
   }
 
   @override
+  void dispose() {
+    messenger.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
       leading: BackButton(onPressed: () => context.pop()),
       title: Text('Fosteroes'),
-      centerTitle: true,
+
       actions: [
+        Opacity(
+          opacity: 0.5,
+          child: Padding(
+            padding: EdgeInsetsGeometry.only(right: 5),
+            child: ValueListenableBuilder(
+              valueListenable: boardState.isPaused,
+              builder: (context, isPaused, child) => isPaused ? Icon(Icons.pause) : SizedBox(),
+            ),
+          ),
+        ),
+
         ValueListenableBuilder(
           valueListenable: boardState.elapsedTimeSecs,
           builder: (context, value, child) => Text(Duration(seconds: value).formatHHMMSS()),
@@ -96,41 +109,46 @@ class _PlayPageState extends State<PlayPage> {
         IconButton(icon: Icon(Icons.settings), onPressed: () => showDialogOrBottomSheet(context, SettingsDialog())),
       ],
     ),
-    body: Provider.value(
-      value: boardState,
-      builder: (context, child) => Center(
-        child: ValueListenableBuilder(
-          valueListenable: boardState.puzzle,
-          builder: (context, puzzle, child) => puzzle == null
-              ? CircularProgressIndicator()
-              : ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: 600),
-                  child: Padding(
-                    padding: EdgeInsets.all(20),
-                    child: ValueListenableBuilder(
-                      valueListenable: boardState.isInProgress,
-                      builder: (context, inProgress, child) => IgnorePointer(
-                        ignoring: !inProgress,
-                        child: DeferredPointerHandler(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            spacing: 10,
-                            children: [
-                              Expanded(
-                                child: FittedBox(fit: BoxFit.contain, child: Board()),
+    body: Stack(
+      children: [
+        Provider.value(
+          value: boardState,
+          builder: (context, child) => Center(
+            child: ValueListenableBuilder(
+              valueListenable: boardState.puzzle,
+              builder: (context, puzzle, child) => puzzle == null
+                  ? CircularProgressIndicator()
+                  : ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: 600),
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: ValueListenableBuilder(
+                          valueListenable: boardState.isInProgress,
+                          builder: (context, inProgress, child) => IgnorePointer(
+                            ignoring: !inProgress,
+                            child: DeferredPointerHandler(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                spacing: 10,
+                                children: [
+                                  Expanded(
+                                    child: FittedBox(fit: BoxFit.contain, child: Board()),
+                                  ),
+                                  Divider(),
+                                  Hand(),
+                                ],
                               ),
-                              Divider(),
-                              Hand(),
-                            ],
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ),
+            ),
+          ),
         ),
-      ),
+        MultiSnackBar(messenger: messenger),
+      ],
     ),
   );
 
@@ -146,6 +164,10 @@ class _PlayPageState extends State<PlayPage> {
     context.go('/fosteroes/stats', extra: StatsPageWinLoseData());
   }
 
+  void _onBadSolution() {
+    messenger.showSnackBar("So close!");
+  }
+
   Future _maybeApplyBoardState() async {
     final today = DateUtils.dateOnly(DateTime.now());
 
@@ -156,11 +178,14 @@ class _PlayPageState extends State<PlayPage> {
       settings.gameStateIsCompleted.value = true;
       settings.gameStateElapsedTime.value = 0;
     } else {
-      await boardState.applyGameState(
-        settings.gameState.value,
-        settings.gameStateElapsedTime.value,
-        settings.gameStateIsCompleted.value,
-      );
+      if (settings.gameStateElapsedTime.value > 0) {
+        messenger.showSnackBar("Continuing from earlier");
+        await boardState.applyGameState(
+          settings.gameState.value,
+          settings.gameStateElapsedTime.value,
+          settings.gameStateIsCompleted.value,
+        );
+      }
 
       if (settings.gameStateIsCompleted.value && mounted) {
         context.go('/fosteroes/stats', extra: StatsPageWinLoseData());
@@ -169,8 +194,8 @@ class _PlayPageState extends State<PlayPage> {
   }
 
   void onLifecycleStateChange(AppLifecycleState state) {
-    boardState.isPaused = state != AppLifecycleState.resumed;
-    if (boardState.isPaused) {
+    boardState.isPaused.value = state != AppLifecycleState.resumed;
+    if (boardState.isPaused.value) {
       settings.gameStateElapsedTime.value = boardState.elapsedTimeSecs.value;
     }
   }

@@ -3,11 +3,14 @@ import 'dart:math';
 import 'package:defer_pointer/defer_pointer.dart';
 import 'package:flutter/material.dart';
 
+import 'region.dart';
+
 enum DominoLocation { hand, board, floating, dragging }
 
 enum DominoDirection { right, down, left, up }
 
 class DominoState {
+  final int id;
   final int side1, side2;
 
   final ValueNotifier<int> quarterTurns = ValueNotifier(0);
@@ -18,14 +21,9 @@ class DominoState {
 
   DominoLocation location = DominoLocation.hand;
 
-  DominoState(this.side1, this.side2);
+  DominoState(this.id, this.side1, this.side2);
 
-  List<Offset> area(Offset baseCell) => switch (direction) {
-    DominoDirection.right => [baseCell, baseCell.translate(1, 0)],
-    DominoDirection.down => [baseCell, baseCell.translate(0, 1)],
-    DominoDirection.left => [baseCell, baseCell.translate(-1, 0)],
-    _ => [baseCell, baseCell.translate(0, -1)],
-  };
+  List<Cell> area(Cell baseCell) => [baseCell, baseCell.adjacent(quarterTurns.value)];
 
   @override
   String toString() => "Domino $side1/$side2 ${direction.name}, ${location.name}";
@@ -34,8 +32,9 @@ class DominoState {
 class Domino extends StatefulWidget {
   final DominoState state;
   final int? rotateFrom;
+  final Offset? translateFrom;
 
-  Domino(this.state, {this.rotateFrom}) : super(key: ValueKey(state));
+  Domino(this.state, {this.rotateFrom, this.translateFrom}) : super(key: ValueKey(state));
 
   @override
   State<Domino> createState() => _DominoState();
@@ -45,11 +44,13 @@ class Domino extends StatefulWidget {
 
 class _DominoState extends State<Domino> {
   int? initialRotation;
+  Offset? initialTranslation;
 
   @override
   initState() {
     super.initState();
     initialRotation = widget.rotateFrom;
+    initialTranslation = widget.translateFrom;
 
     // If given an initial rotation, use it initially, then immediately rebuild with the current rotation.
     if (initialRotation != null) {
@@ -57,28 +58,39 @@ class _DominoState extends State<Domino> {
         setState(() => initialRotation = null);
       });
     }
+
+    // If given an initial translation, use it initially, then immediately rebuild with no translation.
+    if (initialTranslation != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        setState(() => initialTranslation = null);
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedRotation(
-      turns: (initialRotation ?? widget.state.quarterTurns.value) / 4.0,
+    return AnimatedSlide(
+      offset: (initialTranslation ?? Offset.zero),
       duration: Duration(milliseconds: 200),
-      alignment: widget.state.location == DominoLocation.hand ? Alignment.center : FractionalOffset(0.25, 0.5),
-      child: DeferPointer(
-        child: GestureDetector(
-          onTap: onRotateDomino,
-          behavior: HitTestBehavior.opaque,
-          child: Draggable<DominoState>(
-            feedback: RotatedBox(
-              quarterTurns: widget.state.quarterTurns.value,
-              child: Opacity(opacity: 0.8, child: _Domino(widget.state)),
+      child: AnimatedRotation(
+        turns: (initialRotation ?? widget.state.quarterTurns.value) / 4.0,
+        duration: Duration(milliseconds: 200),
+        alignment: widget.state.location == DominoLocation.hand ? Alignment.center : FractionalOffset(0.25, 0.5),
+        child: DeferPointer(
+          child: GestureDetector(
+            onTap: onRotateDomino,
+            behavior: HitTestBehavior.opaque,
+            child: Draggable<DominoState>(
+              feedback: RotatedBox(
+                quarterTurns: widget.state.quarterTurns.value,
+                child: Opacity(opacity: 0.8, child: _Domino(widget.state)),
+              ),
+              childWhenDragging: SizedBox(),
+              hitTestBehavior: HitTestBehavior.opaque,
+              data: widget.state,
+              dragAnchorStrategy: centeredDragAnchorStrategy,
+              child: _Domino(widget.state),
             ),
-            childWhenDragging: SizedBox(),
-            hitTestBehavior: HitTestBehavior.opaque,
-            data: widget.state,
-            dragAnchorStrategy: centeredDragAnchorStrategy,
-            child: _Domino(widget.state),
           ),
         ),
       ),
@@ -121,7 +133,7 @@ class _Domino extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: colors.surface,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
         border: BoxBorder.all(color: colors.inverseSurface, width: 1.5),
       ),
       child: IntrinsicHeight(
@@ -130,7 +142,7 @@ class _Domino extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _HalfDomino(state.side1, colors.inverseSurface),
-            VerticalDivider(thickness: 1, indent: 5, width: 0, endIndent: 5),
+            VerticalDivider(thickness: 1, indent: 5, width: 1, endIndent: 5),
             _HalfDomino(state.side2, colors.inverseSurface),
           ],
         ),
