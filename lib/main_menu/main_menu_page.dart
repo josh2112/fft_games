@@ -69,7 +69,10 @@ class _MainMenuPageState extends State<MainMenuPage> {
                 padding: EdgeInsets.only(top: 20),
                 child: Opacity(
                   opacity: 0.5,
-                  child: Text("Version $version\n${(isRunningWithWasm ? 'WASM enabled' : '')}"),
+                  child: Text(
+                    "Version $version${(isRunningWithWasm ? '\nWASM enabled' : '')}",
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
             ],
