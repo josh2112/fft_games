@@ -59,7 +59,7 @@ extension RandomRange on Random {
 typedef MatchesSegment = bool Function(int value, Map<Cell, int> group);
 
 class PuzzleGenerator {
-  static final Random _rng = Random(0);
+  final Random _rng;
 
   final PuzzleDifficulty difficulty;
 
@@ -68,7 +68,7 @@ class PuzzleGenerator {
   late final List<Cell> field;
   late final Map<DominoState, Cell> dominoLocations;
 
-  PuzzleGenerator(this.difficulty);
+  PuzzleGenerator(this.difficulty, {int? rngSeed}) : _rng = Random(rngSeed);
 
   Puzzle generate() {
     final stats = _PuzzleDifficultyStats.byDifficulty[difficulty]!;

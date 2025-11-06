@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:collection/collection.dart';
 import 'package:fft_games/games/fosteroes/domino.dart';
+import 'package:fft_games/games/fosteroes/puzzle_gen.dart';
 import 'package:fft_games/games/fosteroes/settings.dart';
 import 'package:flutter/material.dart';
 
@@ -128,10 +129,13 @@ class BoardState {
   final isPaused = ValueNotifier(false);
 
   BoardState(this.onWon, this.onBadSolution) {
-    final puzzlePath = 'assets/fosteroes/testpuzzles/puzzle1.json';
+    //final puzzlePath = 'assets/fosteroes/testpuzzles/puzzle1.json';
 
     Future<void> init() async {
-      final puzz = loadPuzzleJson(puzzlePath, PuzzleDifficulty.easy);
+      // Hack: client-size puzzle generation, but make sure everyone gets the same daily puzzle by seeding
+      // the RNG with today's date
+      final seed = int.parse(DateTime.now().toString().split(' ').first.split('-').join());
+      final puzz = PuzzleGenerator(PuzzleDifficulty.easy, rngSeed: seed).generate();
       inHand.set(puzz.dominoes);
       onBoard.clear();
       puzzle.value = puzz;

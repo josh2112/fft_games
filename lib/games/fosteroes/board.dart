@@ -32,7 +32,7 @@ class _BoardState extends State<Board> {
         padding: EdgeInsets.only(top: 5, left: 5, right: 5, bottom: 15),
         child: SizedBox(
           width: puzzle.field.bounds.width * Board.cellSize,
-          height: puzzle.field.bounds.width * Board.cellSize,
+          height: puzzle.field.bounds.height * Board.cellSize,
           child: Stack(
             fit: StackFit.expand,
             clipBehavior: Clip.none,

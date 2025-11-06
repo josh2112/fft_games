@@ -7,6 +7,7 @@ import 'package:fft_games/utils/multi_snack_bar.dart';
 import 'package:fft_games/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'board.dart';
@@ -66,48 +67,39 @@ class _PlayPageState extends State<PlayPage> {
     appBar: AppBar(
       leading: BackButton(onPressed: () => context.pop()),
       title: Text('Fosteroes'),
-
+      centerTitle: true,
       actions: [
-        Opacity(
-          opacity: 0.5,
-          child: Padding(
-            padding: EdgeInsetsGeometry.only(right: 5),
-            child: ValueListenableBuilder(
-              valueListenable: boardState.isPaused,
-              builder: (context, isPaused, child) => isPaused ? Icon(Icons.pause) : SizedBox(),
-            ),
-          ),
-        ),
-
-        ValueListenableBuilder(
-          valueListenable: boardState.elapsedTimeSecs,
-          builder: (context, value, child) => Text(Duration(seconds: value).formatHHMMSS()),
-        ),
-        IconButton(
-          icon: Icon(Icons.info),
-          onPressed: () => {
-            showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: Text('Hey!'),
-                content: SingleChildScrollView(
-                  child: ListBody(
-                    children: [
-                      Text("You are playing a beta version of Fosteroes.\n"),
-                      Text("Coming soon:"),
-                      Text("• Daily puzzles"),
-                      Text("• Stats tracking"),
-                      Text("• ...more?"),
-                    ],
-                  ),
-                ),
-                actions: [TextButton(onPressed: () => context.pop(), child: const Text('OK'))],
-              ),
-            ),
-          },
-        ),
         IconButton(icon: Icon(Icons.settings), onPressed: () => showDialogOrBottomSheet(context, SettingsDialog())),
       ],
+      bottom: PreferredSize(
+        preferredSize: Size.fromHeight(18.0),
+        child: Padding(
+          padding: EdgeInsetsGeometry.only(left: 20, right: 10),
+          child: Row(
+            children: [
+              Text(DateFormat.yMMMMd().format(DateTime.now()), style: TextTheme.of(context).bodyMedium),
+              Spacer(),
+              Opacity(
+                opacity: 0.5,
+                child: Padding(
+                  padding: EdgeInsetsGeometry.only(right: 5),
+                  child: ValueListenableBuilder(
+                    valueListenable: boardState.isPaused,
+                    builder: (context, isPaused, child) =>
+                        isPaused && boardState.isInProgress.value ? Icon(Icons.pause) : SizedBox(),
+                  ),
+                ),
+              ),
+
+              ValueListenableBuilder(
+                valueListenable: boardState.elapsedTimeSecs,
+                builder: (context, value, child) =>
+                    Text(Duration(seconds: value).formatHHMMSS(), style: TextTheme.of(context).bodyMedium),
+              ),
+            ],
+          ),
+        ),
+      ),
     ),
     body: Stack(
       children: [

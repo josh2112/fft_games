@@ -8,6 +8,7 @@ import 'package:fft_games/utils/multi_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import 'board_state.dart';
@@ -70,6 +71,10 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
           ),
         ),
       ],
+      bottom: PreferredSize(
+        preferredSize: Size.fromHeight(18.0),
+        child: Text(DateFormat.yMMMMd().format(DateTime.now()), style: TextTheme.of(context).bodyMedium),
+      ),
     ),
     body: Stack(
       children: [

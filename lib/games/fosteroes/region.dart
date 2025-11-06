@@ -31,7 +31,7 @@ class Cell {
   int get hashCode => Object.hash(x, y);
 
   @override
-  String toString() => "($x,$y)";
+  String toString() => "$x,$y";
 
   Cell adjacent(int quarterTurns) => switch (quarterTurns % 4) {
     0 => right,
