@@ -17,7 +17,9 @@ import 'settings.dart';
 import 'stats_page.dart';
 
 class PlayPage extends StatefulWidget {
-  const PlayPage({super.key});
+  final bool autogen;
+
+  const PlayPage({this.autogen = true, super.key});
 
   @override
   State<PlayPage> createState() => _PlayPageState();
@@ -33,10 +35,11 @@ class _PlayPageState extends State<PlayPage> {
   @override
   void initState() {
     super.initState();
+
     messenger = MultiSnackBarMessenger();
     appLifecycleListener = AppLifecycleListener(onStateChange: onLifecycleStateChange);
     settings = context.read<SettingsController>();
-    boardState = BoardState(_onPlayerWon, _onBadSolution);
+    boardState = BoardState(_onPlayerWon, _onBadSolution, widget.autogen);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await boardState.isLoaded;

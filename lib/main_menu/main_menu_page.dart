@@ -36,21 +36,19 @@ class _MainMenuPageState extends State<MainMenuPage> {
                     spacing: 20,
                     children: [
                       FilledButton.icon(
-                        onPressed: () {
-                          context.go('/fosterdle');
-                        },
+                        onPressed: () => context.go('/fosterdle'),
                         label: Text('Fosterdle'),
                         icon: Icon(Icons.grid_on),
                       ),
-                      Badge(
-                        label: Text("Beta"),
-                        child: FilledButton.icon(
-                          onPressed: () {
-                            context.go('/fosteroes');
-                          },
-                          label: Text('Fosteroes'),
-                          icon: Icon(Symbols.background_dot_large),
-                        ),
+                      FilledButton.icon(
+                        onPressed: () => context.go('/fosteroes'),
+                        label: Text('Fosteroes'),
+                        icon: Icon(Symbols.background_dot_large),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () => context.go('/fosteroes?puzzle=autogen'),
+                        label: Text('Fosteroes auto-generate'),
+                        icon: Icon(Symbols.background_dot_large),
                       ),
                     ],
                   ),

@@ -127,13 +127,13 @@ class BoardState {
   final isInProgress = ValueNotifier(true);
   final isPaused = ValueNotifier(false);
 
-  BoardState(this.onWon, this.onBadSolution) {
+  BoardState(this.onWon, this.onBadSolution, bool autogen) {
     //final puzzlePath = 'assets/fosteroes/testpuzzles/puzzle1.json';
 
     Future<void> init() async {
       // Hack: client-size puzzle generation, but make sure everyone gets the same daily puzzle by seeding
       // the RNG with today's date
-      final seed = int.parse(DateTime.now().toString().split(' ').first.split('-').join());
+      final seed = autogen ? null : int.parse(DateTime.now().toString().split(' ').first.split('-').join());
       final puzz = PuzzleGenerator(PuzzleDifficulty.easy, rngSeed: seed).generate();
       inHand.set(puzz.dominoes);
       onBoard.clear();
