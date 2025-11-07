@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../utils/consts.dart';
 import '../utils/dialog_or_bottom_sheet.dart';
 import 'settings_dialog.dart';
-
-const String version = "1.1";
 
 class MainMenuPage extends StatefulWidget {
   const MainMenuPage({super.key});

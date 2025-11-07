@@ -167,7 +167,7 @@ class _PlayPageState extends State<PlayPage> {
       // If the last saved-game state is for a different day, reset everything
       settings.numPlayed.value += 1;
       settings.gameStateDate.value = today;
-      settings.gameStateIsCompleted.value = true;
+      settings.gameStateIsCompleted.value = false;
       settings.gameStateElapsedTime.value = 0;
     } else {
       if (settings.gameStateElapsedTime.value > 0) {

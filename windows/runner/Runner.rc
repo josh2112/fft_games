@@ -89,11 +89,11 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
+            VALUE "CompanyName", "com.josh2112" "\0"
             VALUE "FileDescription", "fft_games" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "fft_games" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2025 Josh2112 Apps. All rights reserved." "\0"
             VALUE "OriginalFilename", "fft_games.exe" "\0"
             VALUE "ProductName", "fft_games" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

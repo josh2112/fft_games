@@ -3,12 +3,13 @@ import 'dart:convert';
 import 'package:fft_games/games/fosterdle/board_state.dart';
 import 'package:logging/logging.dart';
 
+import '../../settings/global_settings.dart';
 import '../../settings/persistence/settings_persistence.dart';
 import '../../settings/persistence/shared_prefs_persistence.dart';
 import '../../settings/setting.dart';
 
 class SettingsController {
-  static final String _prefix = 'Fosterdle';
+  static final String _prefix = '${GlobalSettingsController.prefix}.Fosterdle';
 
   static final _log = Logger('$_prefix.SettingsController');
 

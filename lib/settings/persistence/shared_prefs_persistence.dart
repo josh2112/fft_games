@@ -5,6 +5,9 @@ class SharedPrefsPersistence extends SettingsPersistence {
   final SharedPreferencesAsync prefs = SharedPreferencesAsync();
 
   @override
+  Future<bool> containsKey(String name) => prefs.containsKey(name);
+
+  @override
   Future<bool> getBool(String name, {required bool defaultValue}) async => await prefs.getBool(name) ?? defaultValue;
 
   @override
@@ -15,11 +18,17 @@ class SharedPrefsPersistence extends SettingsPersistence {
       await prefs.getString(name) ?? defaultValue;
 
   @override
-  Future<void> setBool(String name, bool value) async => await prefs.setBool(name, value);
+  Future<Map<String, Object?>> getAll() => prefs.getAll();
 
   @override
-  Future<void> setInt(String name, int value) async => await prefs.setInt(name, value);
+  Future<void> setBool(String name, bool value) => prefs.setBool(name, value);
 
   @override
-  Future<void> setString(String name, String value) async => await prefs.setString(name, value);
+  Future<void> setInt(String name, int value) => prefs.setInt(name, value);
+
+  @override
+  Future<void> setString(String name, String value) => prefs.setString(name, value);
+
+  @override
+  Future<void> removeKey(String key) => prefs.remove(key);
 }
