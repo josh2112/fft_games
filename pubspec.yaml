@@ -2,7 +2,7 @@ name: fft_games
 description: "A suite of games similar to NYT."
 publish_to: "none"
 
-version: 1.1.0+5
+version: 1.1.2+6
 
 environment:
     sdk: ^3.9.0
