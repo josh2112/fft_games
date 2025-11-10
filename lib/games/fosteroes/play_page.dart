@@ -98,6 +98,7 @@ class _PlayPageState extends State<PlayPage> {
       title: Text('Fosteroes'),
       centerTitle: true,
       actions: [
+        TextButton(onPressed: boardState.clearBoard, child: Text("Clear")),
         IconButton(icon: Icon(Icons.settings), onPressed: () => showDialogOrBottomSheet(context, SettingsDialog())),
       ],
       bottom: PreferredSize(

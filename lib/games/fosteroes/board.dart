@@ -169,6 +169,8 @@ class _BoardState extends State<Board> {
     } else {
       if (boardState.floatingDomino.value?.domino == domino) {
         domino.location = DominoLocation.floating;
+      } else {
+        domino.location = DominoLocation.hand;
       }
     }
   }

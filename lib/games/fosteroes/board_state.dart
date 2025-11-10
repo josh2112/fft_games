@@ -171,6 +171,13 @@ class BoardState {
     }
   }
 
+  void clearBoard() {
+    for (final d in onBoard.dominoes.keys) {
+      inHand.tryPutBack(d);
+    }
+    onBoard.clear();
+  }
+
   // Removes this domino from the board and makes it float
   void floatDomino(DominoState d) {
     final baseCell = onBoard.dominoes[d];
