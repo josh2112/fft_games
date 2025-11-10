@@ -71,6 +71,8 @@ class _BoardState extends State<Board> {
                   ),
                 ),
               ),
+              for (final (i, r) in puzzle.constraints.indexed)
+                CustomPaint(painter: RegionPainter(r, paletteForRegion(r, i), Board.cellSize)),
               Positioned(
                 child: ValueListenableBuilder(
                   valueListenable: highlightArea,
@@ -82,8 +84,6 @@ class _BoardState extends State<Board> {
                   ),
                 ),
               ),
-              for (final (i, r) in puzzle.constraints.indexed)
-                CustomPaint(painter: RegionPainter(r, paletteForRegion(r, i), Board.cellSize)),
               for (final (i, r) in puzzle.constraints.indexed)
                 ConstraintLabel(r, paletteForRegion(r, i), Board.cellSize),
               ListenableBuilder(

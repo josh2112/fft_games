@@ -36,7 +36,6 @@ class GlobalSettingsController {
           store.removeKey(e.key);
         }
       }
-
       await store.setInt("$prefix.version", dbVersion);
     }
   }

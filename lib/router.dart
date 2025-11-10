@@ -61,14 +61,11 @@ final router = GoRouter(
             GoRoute(
               path: 'fosteroes',
               builder: (context, state) =>
-                  fosteroes.PlayPage(key: Key('fosteroes'), autogen: state.extra is bool ? state.extra as bool : false),
+                  fosteroes.PlayPage(key: Key('fosteroes'), params: state.extra as fosteroes.PlayPageParams?),
               routes: [
                 GoRoute(
                   path: 'stats',
-                  builder: (context, state) => fosteroes.StatsPage(
-                    key: Key('fosteroes stats'),
-                    winLoseData: state.extra as fosteroes.StatsPageWinLoseData?,
-                  ),
+                  builder: (context, state) => const fosteroes.StatsPage(key: Key('fosteroes stats')),
                 ),
               ],
             ),

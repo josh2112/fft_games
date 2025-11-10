@@ -1,9 +1,11 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:collection/collection.dart';
 import 'package:fft_games/games/fosteroes/domino.dart';
 import 'package:fft_games/games/fosteroes/puzzle_gen.dart';
 import 'package:fft_games/games/fosteroes/settings.dart';
+import 'package:fft_games/utils/utils.dart';
 import 'package:flutter/material.dart';
 
 import 'puzzle.dart';
@@ -109,13 +111,16 @@ class FloatingDomino {
 }
 
 class BoardState {
-  final _loadCompleter = Completer<void>();
-
-  Future<void> get isLoaded => _loadCompleter.future;
+  static final rng = Random();
 
   final VoidCallback onWon, onBadSolution;
 
   final puzzle = ValueNotifier<Puzzle?>(null);
+
+  final PuzzleType puzzleType;
+  final PuzzleDifficulty puzzleDifficulty;
+
+  int _puzzleSeed = 0;
 
   final inHand = HandDominoes();
   final onBoard = BoardDominoes();
@@ -127,30 +132,43 @@ class BoardState {
   final isInProgress = ValueNotifier(true);
   final isPaused = ValueNotifier(false);
 
-  BoardState(this.onWon, this.onBadSolution, bool autogen) {
+  late final Timer _timer;
+
+  BoardState(this.onWon, this.onBadSolution, this.puzzleType, this.puzzleDifficulty) {
     //final puzzlePath = 'assets/fosteroes/testpuzzles/puzzle1.json';
 
-    Future<void> init() async {
-      // Hack: client-size puzzle generation, but make sure everyone gets the same daily puzzle by seeding
-      // the RNG with today's date
-      final seed = autogen ? null : int.parse(DateTime.now().toString().split(' ').first.split('-').join());
-      final puzz = PuzzleGenerator(PuzzleDifficulty.easy, rngSeed: seed).generate();
-      inHand.set(puzz.dominoes);
-      onBoard.clear();
-      puzzle.value = puzz;
-
-      for (final d in puzz.dominoes) {
-        d.quarterTurns.addListener(() => onDominoRotated(d));
+    _timer = Timer.periodic(Duration(seconds: 1), (_) {
+      if (isInProgress.value && !isPaused.value) {
+        elapsedTimeSecs.value += 1;
       }
+    });
+  }
 
-      Timer.periodic(Duration(seconds: 1), (_) {
-        if (isInProgress.value && !isPaused.value) {
-          elapsedTimeSecs.value += 1;
-        }
-      });
+  int makePuzzle([int? seed]) {
+    // Hack: client-size puzzle generation, but make sure everyone gets the same daily puzzle by seeding
+    // the RNG with today's date
+    _puzzleSeed = puzzleType == PuzzleType.daily
+        ? int.parse(DateTime.now().toString().split(' ').first.split('-').join())
+        : (seed ?? rng.nextInt(1 << 32));
+
+    final puzz = PuzzleGenerator(puzzleDifficulty, _puzzleSeed).generate();
+    inHand.set(puzz.dominoes);
+    onBoard.clear();
+    puzzle.value = puzz;
+
+    for (final d in puzz.dominoes) {
+      d.quarterTurns.addListener(() => onDominoRotated(d));
     }
 
-    _loadCompleter.complete(init());
+    return _puzzleSeed;
+  }
+
+  void dispose() {
+    _timer.cancel();
+
+    for (final d in puzzle.value!.dominoes) {
+      d.quarterTurns.removeListener(() => onDominoRotated(d));
+    }
   }
 
   // Removes this domino from the board and makes it float
@@ -231,7 +249,7 @@ class BoardState {
     isInProgress.value = !isCompleted;
 
     for (final sdp in state) {
-      final domino = inHand.positions.firstWhere((ds) => ds?.side1 == sdp.side1 && ds?.side2 == sdp.side2)!;
+      final domino = inHand.positions.firstWhere((ds) => ds?.id == sdp.id)!;
       inHand.remove(domino);
       domino.location = DominoLocation.board;
       domino.quarterTurns.value = sdp.quarterTurns;

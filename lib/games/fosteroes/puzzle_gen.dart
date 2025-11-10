@@ -68,7 +68,7 @@ class PuzzleGenerator {
   late final List<Cell> field;
   late final Map<DominoState, Cell> dominoLocations;
 
-  PuzzleGenerator(this.difficulty, {int? rngSeed}) : _rng = Random(rngSeed);
+  PuzzleGenerator(this.difficulty, int seed) : _rng = Random(seed);
 
   Puzzle generate() {
     final stats = _PuzzleDifficultyStats.byDifficulty[difficulty]!;
@@ -168,7 +168,6 @@ class PuzzleGenerator {
     }
 
     final p = Puzzle(
-      difficulty: difficulty,
       solution: dominoLocations,
       field: FieldRegion(field),
       constraints: [

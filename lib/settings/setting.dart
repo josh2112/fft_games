@@ -30,12 +30,8 @@ class Setting<T> extends ValueNotifier<T> {
 
   Future<T> get isLoaded => _loadCompleter.future;
 
-  Setting(this.key, this.store, this.defaultValue, {this.log}) : serializer = null, super(defaultValue) {
-    _loadCompleter.complete(_load());
-  }
-
-  Setting.serialized(this.key, this.store, this.serializer, this.defaultValue, {this.log}) : super(defaultValue) {
-    _loadCompleter.complete(_load());
+  Setting(this.key, this.store, this.defaultValue, {this.serializer, this.log}) : super(defaultValue) {
+    _load().then((v) => _loadCompleter.complete(v));
   }
 
   @override

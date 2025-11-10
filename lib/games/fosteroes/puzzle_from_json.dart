@@ -58,7 +58,7 @@ Puzzle _fromJson(Map<String, dynamic> json, PuzzleDifficulty diff) {
     dominoToCell[dominoes[i]] = c1;
   }
 
-  return Puzzle(difficulty: diff, field: FieldRegion(cells), solution: dominoToCell, constraints: constraintRegions);
+  return Puzzle(field: FieldRegion(cells), solution: dominoToCell, constraints: constraintRegions);
 }
 
 Puzzle loadPuzzleJson(String path, PuzzleDifficulty diff) {

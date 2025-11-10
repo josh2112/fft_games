@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:fft_games/games/fosteroes/puzzle.dart';
+import 'package:fft_games/utils/utils.dart';
 import 'package:logging/logging.dart';
 
 import '../../settings/global_settings.dart';
@@ -8,11 +10,54 @@ import '../../settings/persistence/shared_prefs_persistence.dart';
 import '../../settings/setting.dart';
 
 class SavedDominoPlacement {
+  final int id;
   final int x, y;
-  final int side1, side2;
   final int quarterTurns;
 
-  const SavedDominoPlacement(this.x, this.y, this.side1, this.side2, this.quarterTurns);
+  const SavedDominoPlacement(this.id, this.x, this.y, this.quarterTurns);
+}
+
+// The settings for one game (combination of puzzle type and difficulty)
+class GameSettingsController {
+  late final Setting<DateTime> date;
+  late final Setting<int> elapsedTime;
+  late final Setting<int> seed;
+  late final Setting<List<SavedDominoPlacement>> state;
+  late final Setting<bool> isCompleted;
+
+  GameSettingsController(String prefix, SettingsPersistence store, {Logger? log}) {
+    date = Setting(
+      "$prefix.date",
+      store,
+      serializer: SettingSerializer.dateTime,
+      DateTime.fromMillisecondsSinceEpoch(0),
+      log: log,
+    );
+
+    isCompleted = Setting("$prefix.isCompleted", store, false, log: log);
+
+    state = Setting(
+      "$prefix.state",
+      store,
+      serializer: SettingSerializer<List<SavedDominoPlacement>>(
+        (List<SavedDominoPlacement> placements) => jsonEncode(
+          placements.map((p) => {"id": p.id, "x": p.x, "y": p.y, "quarterTurns": p.quarterTurns}).toList(),
+        ),
+        (String str) => [
+          for (final p in jsonDecode(str)) SavedDominoPlacement(p["id"], p["x"], p["y"], p["quarterTurns"]),
+        ],
+      ),
+      [],
+      log: log,
+    );
+
+    elapsedTime = Setting("$prefix.elapsedTime", store, 0, log: log);
+
+    seed = Setting("$prefix.seed", store, 0, log: log);
+  }
+
+  Future waitUntilLoaded() =>
+      Future.wait([date.isLoaded, state.isLoaded, isCompleted.isLoaded, elapsedTime.isLoaded, seed.isLoaded]);
 }
 
 class SettingsController {
@@ -20,51 +65,29 @@ class SettingsController {
 
   static final _log = Logger('$_prefix.SettingsController');
 
-  final SettingsPersistence _store;
-
+  // Total number of gamese started
   late final Setting<int> numPlayed;
+
+  // Total number of games won
   late final Setting<int> numWon;
+
+  // Number of consecutive days where at least one daily has been played and won
   late final Setting<int> currentStreak;
   late final Setting<int> maxStreak;
-  late final Setting<DateTime> gameStateDate;
-  late final Setting<bool> gameStateIsCompleted;
-  late final Setting<List<SavedDominoPlacement>> gameState;
-  late final Setting<int> gameStateElapsedTime;
 
-  SettingsController({SettingsPersistence? store}) : _store = store ?? SharedPrefsPersistence() {
-    gameStateDate = Setting.serialized(
-      "$_prefix.gameState.date",
-      _store,
-      SettingSerializer.dateTime,
-      DateTime.fromMillisecondsSinceEpoch(0),
-      log: _log,
-    );
+  late final Map<(PuzzleType, PuzzleDifficulty), GameSettingsController> gameSettings;
 
-    gameStateIsCompleted = Setting("$_prefix.gameState.isCompleted", _store, false, log: _log);
+  SettingsController({SettingsPersistence? store}) {
+    store ??= SharedPrefsPersistence();
+    numPlayed = Setting("$_prefix.numPlayed", store, 0, log: _log);
+    numWon = Setting("$_prefix.numWon", store, 0, log: _log);
+    currentStreak = Setting("$_prefix.currentStreak", store, 0, log: _log);
+    maxStreak = Setting("$_prefix.maxStreak", store, 0, log: _log);
 
-    gameState = Setting.serialized(
-      "$_prefix.gameState",
-      _store,
-      SettingSerializer<List<SavedDominoPlacement>>(
-        (List<SavedDominoPlacement> placements) => jsonEncode(
-          placements
-              .map((p) => {"x": p.x, "y": p.y, "side1": p.side1, "side2": p.side2, "quarterTurns": p.quarterTurns})
-              .toList(),
-        ),
-        (String str) => [
-          for (final p in jsonDecode(str))
-            SavedDominoPlacement(p["x"], p["y"], p["side1"], p["side2"], p["quarterTurns"]),
-        ],
-      ),
-      [],
-      log: _log,
-    );
-
-    gameStateElapsedTime = Setting("$_prefix.gameState.elapsedTime", _store, 0, log: _log);
-
-    numPlayed = Setting("$_prefix.numPlayed", _store, 0, log: _log);
-    numWon = Setting("$_prefix.numWon", _store, 0, log: _log);
-    currentStreak = Setting("$_prefix.currentStreak", _store, 0, log: _log);
-    maxStreak = Setting("$_prefix.maxStreak", _store, 0, log: _log);
+    gameSettings = {
+      for (final type in PuzzleType.values)
+        for (final diff in PuzzleDifficulty.values)
+          (type, diff): GameSettingsController("$_prefix.${type.name}.${diff.name}", store),
+    };
   }
 }

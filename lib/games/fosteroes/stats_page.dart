@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:confetti/confetti.dart';
+import 'package:fft_games/games/fosteroes/fosteroes.dart';
 import 'package:fft_games/utils/stats_widget.dart';
 import 'package:fft_games/utils/utils.dart';
 import 'package:flutter/material.dart';
@@ -8,18 +9,15 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../utils/confetti_star_path.dart';
-import 'settings.dart';
 
-class StatsPageWinLoseData {
-  //final Duration? time;
+class StatsPageParams extends PlayPageParams {
+  final Duration elapsedTime;
 
-  //const StatsPageWinLoseData(this.time);
+  StatsPageParams(super.type, super.difficulty, this.elapsedTime);
 }
 
 class StatsPage extends StatefulWidget {
-  final StatsPageWinLoseData? winLoseData;
-
-  const StatsPage({super.key, this.winLoseData});
+  const StatsPage({super.key});
 
   @override
   State<StatsPage> createState() => _StatsPageState();
@@ -27,6 +25,8 @@ class StatsPage extends StatefulWidget {
 
 class _StatsPageState extends State<StatsPage> {
   late ConfettiController? _confettiController;
+
+  StatsPageParams? _params;
 
   @override
   void initState() {
@@ -41,6 +41,15 @@ class _StatsPageState extends State<StatsPage> {
     } else {
       _confettiController = null;
     }
+  }
+
+  @override
+  void didChangeDependencies() {
+    final params = GoRouterState.of(context).extra;
+    if (params is StatsPageParams) {
+      _params = params;
+    }
+    super.didChangeDependencies();
   }
 
   @override
@@ -66,13 +75,13 @@ class _StatsPageState extends State<StatsPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const Spacer(),
-              if (widget.winLoseData != null)
+              if (_params != null)
                 Text(
-                  "You solved it!\n${Duration(seconds: settings.gameStateElapsedTime.value).formatHHMMSS()}",
+                  "You solved it!\n${_params!.elapsedTime.formatHHMMSS()}",
                   style: TextTheme.of(context).displaySmall,
                   textAlign: TextAlign.center,
                 ),
-              if (widget.winLoseData != null) const Spacer(),
+              if (_params != null) const Spacer(),
               subtitle(context, "STATISTICS"),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -95,13 +104,13 @@ class _StatsPageState extends State<StatsPage> {
               const Spacer(flex: 3),
               ElevatedButton(
                 onPressed: () {
-                  if (widget.winLoseData != null) {
+                  if (_params != null) {
                     context.go('/');
                   } else {
                     context.pop();
                   }
                 },
-                child: Text(widget.winLoseData != null ? "Home" : 'Back'),
+                child: Text(_params != null ? "Home" : 'Back'),
               ),
               const Spacer(),
             ],

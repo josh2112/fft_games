@@ -1,3 +1,5 @@
+enum PuzzleType { daily, autogen }
+
 extension DurationToString on Duration {
   String formatHHMMSS() {
     String twoDigits(int n) => n.toString().padLeft(2, "0");

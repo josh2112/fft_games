@@ -28,20 +28,20 @@ class SettingsController {
   SettingsController({SettingsPersistence? store}) : _store = store ?? SharedPrefsPersistence() {
     isHardMode = Setting("$_prefix.hardMode", _store, false, log: _log);
 
-    gameStateDate = Setting.serialized(
+    gameStateDate = Setting(
       "$_prefix.gameState.date",
       _store,
-      SettingSerializer.dateTime,
+      serializer: SettingSerializer.dateTime,
       DateTime.fromMillisecondsSinceEpoch(0),
       log: _log,
     );
 
     gameStateIsCompleted = Setting("$_prefix.gameState.isCompleted", _store, false, log: _log);
 
-    gameStateGuesses = Setting.serialized(
+    gameStateGuesses = Setting(
       "$_prefix.gameState.guesses",
       _store,
-      SettingSerializer<List<List<LetterWithState>>>(
+      serializer: SettingSerializer<List<List<LetterWithState>>>(
         (guesses) => jsonEncode(
           guesses.map((letters) => letters.map((lws) => "${lws.letter}${lws.state.index}").join()).toList(),
         ),
@@ -62,10 +62,10 @@ class SettingsController {
     currentStreak = Setting("$_prefix.currentStreak", _store, 0, log: _log);
     maxStreak = Setting("$_prefix.maxStreak", _store, 0, log: _log);
 
-    solveCounts = Setting.serialized(
+    solveCounts = Setting(
       "$_prefix.solveCounts",
       _store,
-      SettingSerializer(jsonEncode, (str) => List<int>.from(jsonDecode(str))),
+      serializer: SettingSerializer(jsonEncode, (str) => List<int>.from(jsonDecode(str))),
       [0, 0, 0, 0, 0, 0],
       log: _log,
     );

@@ -1,3 +1,5 @@
+import 'package:fft_games/games/fosteroes/fosteroes.dart' as fosteroes;
+import 'package:fft_games/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -46,7 +48,10 @@ class _MainMenuPageState extends State<MainMenuPage> {
                         icon: Icon(Symbols.background_dot_large),
                       ),
                       OutlinedButton.icon(
-                        onPressed: () => context.go('/fosteroes?puzzle=autogen'),
+                        onPressed: () => context.go(
+                          '/fosteroes',
+                          extra: fosteroes.PlayPageParams(PuzzleType.autogen, fosteroes.PuzzleDifficulty.easy),
+                        ),
                         label: Text('Fosteroes auto-generate'),
                         icon: Icon(Symbols.background_dot_large),
                       ),

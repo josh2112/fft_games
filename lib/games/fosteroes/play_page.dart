@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:defer_pointer/defer_pointer.dart';
+import 'package:fft_games/games/fosteroes/puzzle.dart';
 import 'package:fft_games/main_menu/settings_dialog.dart';
 import 'package:fft_games/utils/dialog_or_bottom_sheet.dart';
 import 'package:fft_games/utils/multi_snack_bar.dart';
@@ -16,10 +17,18 @@ import 'hand.dart';
 import 'settings.dart';
 import 'stats_page.dart';
 
-class PlayPage extends StatefulWidget {
-  final bool autogen;
+class PlayPageParams {
+  final PuzzleType type;
+  final PuzzleDifficulty difficulty;
 
-  const PlayPage({this.autogen = true, super.key});
+  PlayPageParams(this.type, this.difficulty);
+}
+
+class PlayPage extends StatefulWidget {
+  final PlayPageParams params;
+
+  PlayPage({PlayPageParams? params, super.key})
+    : params = params ?? PlayPageParams(PuzzleType.daily, PuzzleDifficulty.easy);
 
   @override
   State<PlayPage> createState() => _PlayPageState();
@@ -27,40 +36,57 @@ class PlayPage extends StatefulWidget {
 
 class _PlayPageState extends State<PlayPage> {
   late final SettingsController settings;
-  late final BoardState boardState;
   late final AppLifecycleListener appLifecycleListener;
-
   late final MultiSnackBarMessenger messenger;
+
+  late final BoardState boardState;
+  late final GameSettingsController gameSettings;
 
   @override
   void initState() {
     super.initState();
 
-    messenger = MultiSnackBarMessenger();
-    appLifecycleListener = AppLifecycleListener(onStateChange: onLifecycleStateChange);
     settings = context.read<SettingsController>();
-    boardState = BoardState(_onPlayerWon, _onBadSolution, widget.autogen);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await boardState.isLoaded;
-      await settings.gameStateDate.isLoaded;
-      await settings.gameState.isLoaded;
-      await settings.gameStateIsCompleted.isLoaded;
-      await settings.gameStateElapsedTime.isLoaded;
+    appLifecycleListener = AppLifecycleListener(
+      onStateChange: (state) => boardState.isPaused.value = state != AppLifecycleState.resumed,
+    );
+
+    messenger = MultiSnackBarMessenger();
+
+    boardState = BoardState(_onPlayerWon, _onBadSolution, widget.params.type, widget.params.difficulty);
+    boardState.isPaused.addListener(maybeUpdateElapsedTime);
+
+    gameSettings = settings.gameSettings[(boardState.puzzleType, boardState.puzzleDifficulty)]!;
+
+    gameSettings.waitUntilLoaded().then((_) async {
       await _maybeApplyBoardState();
-
       boardState.onBoard.addListener(() {
-        settings.gameState.value = boardState.onBoard.dominoes.entries
-            .map((e) => SavedDominoPlacement(e.value.x, e.value.y, e.key.side1, e.key.side2, e.key.quarterTurns.value))
+        gameSettings.state.value = boardState.onBoard.dominoes.entries
+            .map((e) => SavedDominoPlacement(e.key.id, e.value.x, e.value.y, e.key.quarterTurns.value))
             .toList();
-        settings.gameStateDate.value = DateUtils.dateOnly(DateTime.now());
-        settings.gameStateIsCompleted.value = false;
       });
     });
   }
 
+  void maybeUpdateElapsedTime() {
+    if (boardState.isPaused.value) {
+      gameSettings.elapsedTime.value = boardState.elapsedTimeSecs.value;
+    }
+  }
+
+  @override
+  void deactivate() {
+    gameSettings.elapsedTime.value = boardState.elapsedTimeSecs.value;
+    super.deactivate();
+  }
+
   @override
   void dispose() {
+    boardState.isPaused.removeListener(maybeUpdateElapsedTime);
+    boardState.dispose();
+
+    appLifecycleListener.dispose();
     messenger.dispose();
     super.dispose();
   }
@@ -80,7 +106,10 @@ class _PlayPageState extends State<PlayPage> {
           padding: EdgeInsetsGeometry.only(left: 20, right: 10),
           child: Row(
             children: [
-              Text(DateFormat.yMMMMd().format(DateTime.now()), style: TextTheme.of(context).bodyMedium),
+              Text(
+                "${boardState.puzzleType == PuzzleType.daily ? DateFormat.yMMMMd().format(DateTime.now()) : "Autogen"} - ${toBeginningOfSentenceCase(boardState.puzzleDifficulty.name)}",
+                style: TextTheme.of(context).bodyMedium,
+              ),
               Spacer(),
               Opacity(
                 opacity: 0.5,
@@ -148,50 +177,75 @@ class _PlayPageState extends State<PlayPage> {
   );
 
   void _onPlayerWon() {
-    settings.gameStateElapsedTime.value = boardState.elapsedTimeSecs.value;
-    settings.gameStateIsCompleted.value = true;
+    gameSettings.elapsedTime.value = boardState.elapsedTimeSecs.value;
+    gameSettings.isCompleted.value = true;
     settings.numWon.value += 1;
     settings.currentStreak.value += 1;
     if (settings.currentStreak.value > settings.maxStreak.value) {
       settings.maxStreak.value = settings.currentStreak.value;
     }
 
-    context.go('/fosteroes/stats', extra: StatsPageWinLoseData());
+    showStats(true);
   }
 
-  void _onBadSolution() {
-    messenger.showSnackBar("So close!");
-  }
+  void _onBadSolution() => messenger.showSnackBar("So close!");
 
   Future _maybeApplyBoardState() async {
-    final today = DateUtils.dateOnly(DateTime.now());
+    // Different algorithms depending on game type. Daily games reset only once a day, and we don't care about the
+    // seed (the date is the seed). Autogen games reset after they have been completed.
+    if (boardState.puzzleType == PuzzleType.daily) {
+      boardState.makePuzzle();
 
-    if (settings.gameStateDate.value != today) {
-      // If the last saved-game state is for a different day, reset everything
-      settings.numPlayed.value += 1;
-      settings.gameStateDate.value = today;
-      settings.gameStateIsCompleted.value = false;
-      settings.gameStateElapsedTime.value = 0;
-    } else {
-      if (settings.gameStateElapsedTime.value > 0) {
+      final today = DateUtils.dateOnly(DateTime.now());
+
+      if (gameSettings.date.value != today) {
+        // If the last saved-game state is for a different day, reset everything
+        gameSettings.date.value = today;
+        gameSettings.isCompleted.value = false;
+        gameSettings.elapsedTime.value = 0;
+        //settings.numPlayed.value += 1;
+      } else {
         messenger.showSnackBar("Continuing from earlier");
         await boardState.applyGameState(
-          settings.gameState.value,
-          settings.gameStateElapsedTime.value,
-          settings.gameStateIsCompleted.value,
+          gameSettings.state.value,
+          gameSettings.elapsedTime.value,
+          gameSettings.isCompleted.value,
         );
       }
+    } else {
+      // Autogen
 
-      if (settings.gameStateIsCompleted.value && mounted) {
-        context.go('/fosteroes/stats', extra: StatsPageWinLoseData());
+      if (gameSettings.isCompleted.value) {
+        // If the saved game has been completed, start over
+        gameSettings.isCompleted.value = false;
+        gameSettings.elapsedTime.value = 0;
+        gameSettings.seed.value = boardState.makePuzzle(null);
+        //settings.numPlayed.value += 1;
+      } else {
+        boardState.makePuzzle(gameSettings.seed.value);
+
+        messenger.showSnackBar("Continuing from earlier");
+        await boardState.applyGameState(
+          gameSettings.state.value,
+          gameSettings.elapsedTime.value,
+          gameSettings.isCompleted.value,
+        );
       }
+    }
+
+    if (gameSettings.isCompleted.value && mounted) {
+      showStats(true);
     }
   }
 
-  void onLifecycleStateChange(AppLifecycleState state) {
-    boardState.isPaused.value = state != AppLifecycleState.resumed;
-    if (boardState.isPaused.value) {
-      settings.gameStateElapsedTime.value = boardState.elapsedTimeSecs.value;
-    }
+  void showStats(bool won) {
+    context.go(
+      '/fosteroes/stats',
+      extra: StatsPageParams(
+        boardState.puzzleType,
+        boardState.puzzleDifficulty,
+        Duration(seconds: boardState.elapsedTimeSecs.value),
+      ),
+    );
   }
 }
