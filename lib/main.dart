@@ -20,15 +20,19 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  await GlobalSettingsController.migrate(SharedPrefsPersistence());
+  // Data migration
+  final prefs = SharedPrefsPersistence();
+  await GlobalSettingsController.migrate(prefs);
 
-  runApp(MyApp());
+  // Pass in initial theme to avoid flickering from default (system) to dark/light.
+  runApp(MyApp(initialThemeMode: ThemeMode.values[await GlobalSettingsController(prefs).themeMode.waitLoaded]));
 }
 
 class MyApp extends StatelessWidget {
   final settingsStore = SharedPrefsPersistence();
+  final ThemeMode initialThemeMode;
 
-  MyApp({super.key});
+  MyApp({this.initialThemeMode = ThemeMode.light, super.key});
 
   @override
   Widget build(BuildContext context) => MultiProvider(
@@ -50,7 +54,7 @@ class MyApp extends StatelessWidget {
                   systemOverlayStyle: SystemUiOverlayStyle(statusBarBrightness: Brightness.dark),
                 ),
               ),
-              themeMode: ThemeMode.values[themeMode],
+              themeMode: globalSettings.themeMode.isLoaded ? ThemeMode.values[themeMode] : initialThemeMode,
               routerConfig: router,
               debugShowCheckedModeBanner: false,
             ),

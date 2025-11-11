@@ -57,7 +57,7 @@ class GameSettingsController {
   }
 
   Future waitUntilLoaded() =>
-      Future.wait([date.isLoaded, state.isLoaded, isCompleted.isLoaded, elapsedTime.isLoaded, seed.isLoaded]);
+      Future.wait([date.waitLoaded, state.waitLoaded, isCompleted.waitLoaded, elapsedTime.waitLoaded, seed.waitLoaded]);
 }
 
 class SettingsController {

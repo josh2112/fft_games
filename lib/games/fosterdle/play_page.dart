@@ -43,9 +43,9 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => Future.wait([
         boardState.isLoaded,
-        settings.gameStateDate.isLoaded,
-        settings.gameStateGuesses.isLoaded,
-        settings.gameStateIsCompleted.isLoaded,
+        settings.gameStateDate.waitLoaded,
+        settings.gameStateGuesses.waitLoaded,
+        settings.gameStateIsCompleted.waitLoaded,
       ]).then(_maybeApplyBoardState),
     );
   }

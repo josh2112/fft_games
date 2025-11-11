@@ -16,14 +16,24 @@ class MultiSnackBarMessenger with ChangeNotifier {
     notifyListeners();
 
     Future.delayed(timeout, () {
-      item.visible = false;
-      notifyListeners();
+      if (item.visible) {
+        // Don't notify if already hidden (by _sweep)
+        item.visible = false;
+        notifyListeners();
+      }
     });
   }
 
   void _sweep() {
     _items.removeWhere((m) => !m.visible);
     notifyListeners();
+  }
+
+  void clear() {
+    for (final m in _items) {
+      m.visible = false;
+    }
+    _items.clear();
   }
 }
 
@@ -65,5 +75,11 @@ class _MultiSnackBarState extends State<MultiSnackBar> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    widget.messenger.clear();
+    super.dispose();
   }
 }

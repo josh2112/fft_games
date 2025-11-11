@@ -28,7 +28,9 @@ class Setting<T> extends ValueNotifier<T> {
   final SettingsPersistence store;
   final Logger? log;
 
-  Future<T> get isLoaded => _loadCompleter.future;
+  bool get isLoaded => _loadCompleter.isCompleted;
+
+  Future<T> get waitLoaded => _loadCompleter.future;
 
   Setting(this.key, this.store, this.defaultValue, {this.serializer, this.log}) : super(defaultValue) {
     _load().then((v) => _loadCompleter.complete(v));

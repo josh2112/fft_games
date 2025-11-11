@@ -5,6 +5,7 @@ import '../utils/consts.dart';
 import 'persistence/settings_persistence.dart';
 import 'setting.dart';
 
+/// Contains settings for all games, such as light/dark mode
 class GlobalSettingsController {
   static final _log = Logger('GlobalSettingsController');
 
