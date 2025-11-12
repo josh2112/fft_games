@@ -13,13 +13,22 @@ class DominoState {
   final int id;
   final int side1, side2;
 
+  DominoLocation _location = DominoLocation.hand, _previousLocation = DominoLocation.hand;
+
   final ValueNotifier<int> quarterTurns = ValueNotifier(0);
 
   DominoDirection get direction => DominoDirection.values[quarterTurns.value % 4];
 
   bool get isVertical => quarterTurns.value % 2 == 1;
 
-  DominoLocation location = DominoLocation.hand;
+  DominoLocation get location => _location;
+
+  DominoLocation get previousLocation => _previousLocation;
+
+  set location(DominoLocation value) {
+    _previousLocation = _location;
+    _location = value;
+  }
 
   DominoState(this.id, this.side1, this.side2);
 

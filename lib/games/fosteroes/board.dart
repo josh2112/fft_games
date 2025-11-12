@@ -129,6 +129,10 @@ class _BoardState extends State<Board> {
       boardState.unfloatDomino(isReturning: !boardState.canSnapFloatingDomino());
     }
 
+    for (final d in boardState.inHand.positions.where((d) => d?.location != DominoLocation.dragging)) {
+      d?.quarterTurns.value = 0;
+    }
+
     final baseCell = _globalPositionToCell(details.offset);
     final domino = details.data;
 
@@ -167,11 +171,7 @@ class _BoardState extends State<Board> {
 
       boardState.maybeCheckConstraints();
     } else {
-      if (boardState.floatingDomino.value?.domino == domino) {
-        domino.location = DominoLocation.floating;
-      } else {
-        domino.location = DominoLocation.hand;
-      }
+      domino.location = domino.previousLocation;
     }
   }
 }

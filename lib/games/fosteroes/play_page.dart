@@ -221,6 +221,7 @@ class _PlayPageState extends State<PlayPage> {
         gameSettings.isCompleted.value = false;
         gameSettings.elapsedTime.value = 0;
         gameSettings.seed.value = boardState.makePuzzle(null);
+        gameSettings.state.value = [];
         //settings.numPlayed.value += 1;
       } else {
         boardState.makePuzzle(gameSettings.seed.value);
