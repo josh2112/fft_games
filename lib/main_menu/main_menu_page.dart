@@ -40,15 +40,15 @@ class _MainMenuPageState extends State<MainMenuPage> {
                       'Guess the five-letter word within six tries.',
                       "assets/tile-fosterdle.png",
                       Theme.of(context).colorScheme.primary,
-                      actions: [('Daily', () => context.go('/fosterdle'))],
+                      ('Daily', () => context.go('/fosterdle')),
                     ),
                     GameCard(
                       'Fosteroes',
                       'Arrange dominoes on the board to satisfy all conditions.',
                       "assets/tile-fosteroes.png",
                       Theme.of(context).colorScheme.primary,
+                      ('Daily', () => context.go('/fosteroes')),
                       actions: [
-                        ('Daily', () => context.go('/fosteroes')),
                         (
                           'Autogen',
                           () => context.go(
@@ -87,18 +87,26 @@ class _MainMenuPageState extends State<MainMenuPage> {
   );
 }
 
+typedef GameCardAction = (String label, void Function() action);
+
 class GameCard extends StatelessWidget {
   final String title, summary, image;
   final Color color;
   late final Color textColor;
-  final List<(String, void Function())> actions;
+  final GameCardAction mainAction;
+  final List<GameCardAction>? actions;
 
-  GameCard(this.title, this.summary, this.image, this.color, {super.key, required this.actions}) {
+  GameCard(this.title, this.summary, this.image, this.color, this.mainAction, {super.key, this.actions}) {
     textColor = switch (ThemeData.estimateBrightnessForColor(color)) {
       Brightness.dark => Colors.white,
       Brightness.light => Colors.black,
     };
   }
+
+  static Color textColorFor(Color color) => switch (ThemeData.estimateBrightnessForColor(color)) {
+    Brightness.dark => Colors.white,
+    Brightness.light => Colors.black,
+  };
 
   @override
   Widget build(BuildContext context) => Column(
@@ -108,32 +116,43 @@ class GameCard extends StatelessWidget {
         elevation: 2,
         shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.all(Radius.circular(25))),
         clipBehavior: Clip.hardEdge,
-        child: SizedBox(
-          height: 140,
-          child: Row(
+        child: InkWell(
+          onTap: mainAction.$2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: Padding(
-                  padding: EdgeInsetsGeometry.symmetric(horizontal: 25, vertical: 20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(title, style: TextTheme.of(context).titleLarge!.copyWith(color: textColor)),
-                      Text(
-                        summary,
-                        textAlign: TextAlign.start,
-                        style: TextStyle(color: textColor),
+              SizedBox(
+                height: 150,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: EdgeInsetsGeometry.only(left: 25, right: 25, top: 15, bottom: 10),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(title, style: TextTheme.of(context).titleLarge!.copyWith(color: textColor)),
+                            Expanded(
+                              child: Text(
+                                summary,
+                                textAlign: TextAlign.start,
+                                style: TextStyle(color: textColor),
+                              ),
+                            ),
+                            Text("${mainAction.$1}  ›", style: TextStyle(color: textColor)),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.all(5),
-                child: ClipRSuperellipse(
-                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(5),
+                      child: ClipRSuperellipse(
+                        borderRadius: BorderRadius.all(Radius.circular(20)),
 
-                  child: Image.asset(image, fit: BoxFit.none),
+                        child: Image.asset(image, fit: BoxFit.none),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -141,18 +160,33 @@ class GameCard extends StatelessWidget {
         ),
       ),
       Padding(
-        padding: EdgeInsets.only(left: 10, top: 10, bottom: 10),
+        padding: EdgeInsets.only(left: 8, right: 8, bottom: 6),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          spacing: 10,
-          children: [
-            for (final a in actions)
-              Expanded(
-                child: OutlinedButton(onPressed: a.$2, child: Text(a.$1)),
-              ),
-          ],
+          spacing: 5,
+          children: [for (final a in actions ?? List<GameCardAction>.empty()) Expanded(child: button1(context, a))],
         ),
       ),
     ],
+  );
+
+  Widget button1(BuildContext context, (String, void Function()) a) => FilledButton(
+    onPressed: a.$2,
+    style: FilledButton.styleFrom(
+      backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      alignment: Alignment.center,
+      foregroundColor: textColorFor(Theme.of(context).colorScheme.inversePrimary),
+    ),
+    child: Text("$title ${a.$1}  ›"),
+  );
+
+  Widget button2(BuildContext context, (String, void Function()) a) => OutlinedButton(
+    onPressed: a.$2,
+    style: OutlinedButton.styleFrom(
+      foregroundColor: textColor,
+      alignment: Alignment.centerLeft,
+      side: BorderSide(color: textColor.withValues(alpha: 0.5), width: 1),
+    ),
+    child: Text(a.$1),
   );
 }

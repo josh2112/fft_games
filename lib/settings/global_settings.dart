@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
+import 'package:fft_games/games/fosteroes/settings.dart' as fosteroes;
+
 import '../utils/consts.dart';
 import 'persistence/settings_persistence.dart';
 import 'setting.dart';
@@ -35,6 +37,15 @@ class GlobalSettingsController {
             _ => throw ("Catastrophic error migrating settings"),
           };
           store.removeKey(e.key);
+        }
+      }
+      if (ver < 2) {
+        // Version 2: Reset Fosteroes stats
+        var fs = fosteroes.SettingsController(store: store);
+        var settingsToReset = [fs.numPlayed, fs.numWon, fs.currentStreak, fs.maxStreak];
+        await Future.wait(settingsToReset.map((s) => s.waitLoaded));
+        for (final s in settingsToReset) {
+          s.value = 0;
         }
       }
       await store.setInt("$prefix.version", dbVersion);

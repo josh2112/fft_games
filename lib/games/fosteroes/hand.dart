@@ -5,21 +5,27 @@ import 'package:provider/provider.dart';
 import 'board_state.dart';
 
 class Hand extends StatelessWidget {
+  static final BoxDecoration normalBox = BoxDecoration(
+    border: Border.all(color: Colors.transparent, width: 2),
+    borderRadius: BorderRadius.circular(10),
+  );
+  static final BoxDecoration highlightBox = BoxDecoration(
+    color: Colors.amber.withValues(alpha: 0.2),
+    border: Border.all(color: Colors.amber, width: 2),
+    borderRadius: BorderRadius.circular(10),
+  );
+
   const Hand({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final handState = context.watch<BoardState>().inHand;
+    final handState = context.select((BoardState bs) => bs.inHand);
 
     return ListenableBuilder(
       listenable: handState,
       builder: (context, child) => DragTarget<DominoState>(
         builder: (context, candidateData, rejectedData) => Container(
-          decoration: BoxDecoration(
-            color: candidateData.isNotEmpty ? Colors.amber.withValues(alpha: 0.2) : Colors.transparent,
-            border: Border.all(color: candidateData.isNotEmpty ? Colors.amber : Colors.transparent, width: 2),
-            borderRadius: BorderRadius.circular(10),
-          ),
+          decoration: candidateData.isNotEmpty ? highlightBox : normalBox,
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Wrap(

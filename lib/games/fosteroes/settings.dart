@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:fft_games/games/fosteroes/puzzle.dart';
 import 'package:fft_games/utils/utils.dart';
+import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
 import '../../settings/global_settings.dart';
@@ -58,6 +59,13 @@ class GameSettingsController {
 
   Future waitUntilLoaded() =>
       Future.wait([date.waitLoaded, state.waitLoaded, isCompleted.waitLoaded, elapsedTime.waitLoaded, seed.waitLoaded]);
+
+  void reset() {
+    date.value = DateUtils.dateOnly(DateTime.now());
+    isCompleted.value = false;
+    elapsedTime.value = 0;
+    state.value = [];
+  }
 }
 
 class SettingsController {
@@ -65,11 +73,17 @@ class SettingsController {
 
   static final _log = Logger('$_prefix.SettingsController');
 
-  // Total number of gamese started
+  // Whether to show the timer
+  late final Setting<bool> showTime;
+
+  // Total number of games started
   late final Setting<int> numPlayed;
 
   // Total number of games won
   late final Setting<int> numWon;
+
+  // Last date a daily game was won (for streaks)
+  late final Setting<DateTime> lastDateDailyWon;
 
   // Number of consecutive days where at least one daily has been played and won
   late final Setting<int> currentStreak;
@@ -79,10 +93,17 @@ class SettingsController {
 
   SettingsController({SettingsPersistence? store}) {
     store ??= SharedPrefsPersistence();
+    showTime = Setting("$_prefix.showTime", store, true, log: _log);
     numPlayed = Setting("$_prefix.numPlayed", store, 0, log: _log);
     numWon = Setting("$_prefix.numWon", store, 0, log: _log);
     currentStreak = Setting("$_prefix.currentStreak", store, 0, log: _log);
     maxStreak = Setting("$_prefix.maxStreak", store, 0, log: _log);
+    lastDateDailyWon = Setting(
+      "$_prefix.lastDateDailyWon",
+      store,
+      serializer: SettingSerializer.dateTime,
+      DateTime.fromMillisecondsSinceEpoch(0),
+    );
 
     gameSettings = {
       for (final type in PuzzleType.values)

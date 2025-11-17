@@ -47,12 +47,27 @@ class MyApp extends StatelessWidget {
             valueListenable: globalSettings.themeMode,
             builder: (context, themeMode, child) => MaterialApp.router(
               title: 'Foster Family Times Games',
-              theme: ThemeData.light().copyWith(textTheme: Typography().black.apply(fontFamily: 'FacultyGlyphic')),
+              theme: ThemeData.light().copyWith(
+                //primaryColor: Colors.blue,
+                textTheme: Typography().black.apply(fontFamily: 'FacultyGlyphic'),
+                /*appBarTheme: AppBarTheme(
+                  systemOverlayStyle: SystemUiOverlayStyle(
+                    statusBarColor: Colors.transparent,
+                    statusBarIconBrightness: Brightness.dark,
+                    statusBarBrightness: Brightness.light,
+                  ),
+                ),*/
+              ),
               darkTheme: ThemeData.dark().copyWith(
+                //primaryColor: Colors.blue,
                 textTheme: Typography().white.apply(fontFamily: 'FacultyGlyphic'),
-                appBarTheme: AppBarTheme(
-                  systemOverlayStyle: SystemUiOverlayStyle(statusBarBrightness: Brightness.dark),
-                ),
+                /*appBarTheme: AppBarTheme(
+                  systemOverlayStyle: SystemUiOverlayStyle(
+                    statusBarColor: Colors.transparent,
+                    statusBarIconBrightness: Brightness.light,
+                    statusBarBrightness: Brightness.dark,
+                  ),
+                ),*/
               ),
               themeMode: globalSettings.themeMode.isLoaded ? ThemeMode.values[themeMode] : initialThemeMode,
               routerConfig: router,

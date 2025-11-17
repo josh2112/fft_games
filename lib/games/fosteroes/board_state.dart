@@ -5,7 +5,6 @@ import 'package:collection/collection.dart';
 import 'package:fft_games/games/fosteroes/domino.dart';
 import 'package:fft_games/games/fosteroes/puzzle_gen.dart';
 import 'package:fft_games/games/fosteroes/settings.dart';
-import 'package:fft_games/utils/utils.dart';
 import 'package:flutter/material.dart';
 
 import 'puzzle.dart';
@@ -117,7 +116,6 @@ class BoardState {
 
   final puzzle = ValueNotifier<Puzzle?>(null);
 
-  final PuzzleType puzzleType;
   final PuzzleDifficulty puzzleDifficulty;
 
   int _puzzleSeed = 0;
@@ -134,7 +132,7 @@ class BoardState {
 
   late final Timer _timer;
 
-  BoardState(this.onWon, this.onBadSolution, this.puzzleType, this.puzzleDifficulty) {
+  BoardState(this.onWon, this.onBadSolution, this.puzzleDifficulty) {
     //final puzzlePath = 'assets/fosteroes/testpuzzles/puzzle1.json';
 
     _timer = Timer.periodic(Duration(seconds: 1), (_) {
@@ -145,11 +143,7 @@ class BoardState {
   }
 
   int makePuzzle([int? seed]) {
-    // Hack: client-size puzzle generation, but make sure everyone gets the same daily puzzle by seeding
-    // the RNG with today's date
-    _puzzleSeed = puzzleType == PuzzleType.daily
-        ? int.parse(DateTime.now().toString().split(' ').first.split('-').join())
-        : (seed ?? rng.nextInt(1 << 32));
+    _puzzleSeed = seed ?? rng.nextInt(1 << 32);
 
     final puzz = PuzzleGenerator(puzzleDifficulty, _puzzleSeed).generate();
     inHand.set(puzz.dominoes);

@@ -24,23 +24,13 @@ class StatsPage extends StatefulWidget {
 }
 
 class _StatsPageState extends State<StatsPage> {
-  late ConfettiController? _confettiController;
+  ConfettiController? _confettiController;
 
   StatsPageParams? _params;
 
   @override
   void initState() {
     super.initState();
-
-    final confettiDurationMsec = 2000;
-    // (true == widget.winLoseData?.didWin) ? 2000 / widget.winLoseData!.numGuesses : 0;
-
-    if (confettiDurationMsec > 0) {
-      _confettiController = ConfettiController(duration: Duration(milliseconds: confettiDurationMsec.toInt()));
-      _confettiController!.play();
-    } else {
-      _confettiController = null;
-    }
   }
 
   @override
@@ -49,12 +39,32 @@ class _StatsPageState extends State<StatsPage> {
     if (params is StatsPageParams) {
       _params = params;
     }
+
+    // Base the amount of confetti on the lengh of time to solve and puzzle difficulty
+    final confettiDurationMsec = _params == null
+        ? 0
+        : (2000 *
+                  (_params!.puzzleDifficulty.index + 1) /
+                  switch (_params!.elapsedTime.inSeconds) {
+                    > 15 => 1,
+                    < 30 => 2,
+                    < 60 => 3,
+                    < 120 => 4,
+                    < 300 => 5,
+                    _ => 6,
+                  })
+              .toInt();
+
+    _confettiController = _params == null
+        ? null
+        : (ConfettiController(duration: Duration(milliseconds: confettiDurationMsec))..play());
+
     super.didChangeDependencies();
   }
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.watch<SettingsController>();
+    final settings = context.select((SettingsController settings) => settings);
 
     return Scaffold(
       appBar: AppBar(title: Text('Fosteroes Stats'), centerTitle: true),

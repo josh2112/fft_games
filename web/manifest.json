@@ -6,6 +6,7 @@
     "description": "A suite of mobile games similar to those from NYT",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
+    "theme_color": "#014473",
     "icons": [
         {
             "src": "icons/Icon-192.png",
