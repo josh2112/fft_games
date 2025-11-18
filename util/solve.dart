@@ -45,6 +45,8 @@ class PlacedDominoNode {
 }
 
 void solve(Puzzle p) {
+  final sw = Stopwatch()..start();
+
   // Strategy:
   // 1) Take the next domino.
   // 2) For each rotation 0,1,2,3 (or just 0,1 if the pips are the same):
@@ -72,7 +74,10 @@ void solve(Puzzle p) {
     final d = dominoSet.difference(dominoPlacements.map((d) => d.domino).toSet()).firstOrNull;
     if (d == null) {
       if (p.constraints.every((cr) => true == cr.check(board))) {
+        print("Solved in ${sw.elapsed}");
         print(dominoPlacements);
+      } else {
+        print("No solution found! ${sw.elapsed}");
       }
       return;
     }
@@ -87,14 +92,12 @@ void solve(Puzzle p) {
         if (!boardCells.contains(c2)) continue;
 
         // Check if we will violate any constraints by placing this cell here. If not,
-        // make & enqueue a new state!")
+        // make & enqueue a new state
         board[c] = d.side1;
         board[c2] = d.side2;
         if (!p.constraints
             .where((cr) => cr.cells.contains(c) || cr.cells.contains(c2))
             .any((cr) => false == cr.check(board))) {
-          states.add(PlacedDominoNode(d, c, r, s));
-
           //print("New state: ${states.last}");
           states.add(PlacedDominoNode(d, c, r, s));
         }
