@@ -3,16 +3,14 @@ import 'dart:math';
 import 'package:defer_pointer/defer_pointer.dart';
 import 'package:flutter/material.dart';
 
+import 'domino_model.dart';
 import 'region.dart';
 
 enum DominoLocation { hand, board, floating, dragging }
 
 enum DominoDirection { right, down, left, up }
 
-class DominoState {
-  final int id;
-  final int side1, side2;
-
+class DominoState extends DominoModel {
   DominoLocation _location = DominoLocation.hand, _previousLocation = DominoLocation.hand;
 
   final ValueNotifier<int> quarterTurns = ValueNotifier(0);
@@ -30,7 +28,7 @@ class DominoState {
     _location = value;
   }
 
-  DominoState(this.id, this.side1, this.side2);
+  DominoState(super.id, super.side1, super.side2);
 
   List<Cell> area(Cell baseCell) => [baseCell, baseCell.adjacent(quarterTurns.value)];
 

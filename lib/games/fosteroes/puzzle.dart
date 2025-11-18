@@ -1,21 +1,27 @@
-import 'package:fft_games/games/fosteroes/domino.dart';
+//import 'package:fft_games/games/fosteroes/domino.dart';
 
+import 'domino_model.dart';
 import 'region.dart';
 
 enum PuzzleDifficulty { easy, medium, hard }
+
+class PlacedDomino {
+  final DominoModel domino;
+  final Cell cell;
+  final int rotation;
+
+  PlacedDomino(this.domino, this.cell, this.rotation);
+}
 
 class Puzzle {
   //static Puzzle empty = Puzzle(difficulty: PuzzleDifficulty.easy, field: FieldRegion([]), hand: [], constraints: []);
 
   final FieldRegion field;
-  final Map<DominoState, Cell> solution;
-  late final List<DominoState> dominoes;
+  final List<PlacedDomino> solution;
+  late final List<DominoModel> dominoes;
   final List<ConstraintRegion> constraints;
 
   Puzzle({required this.field, required this.solution, required this.constraints}) {
-    dominoes = [...solution.keys];
-    for (final d in dominoes) {
-      d.quarterTurns.value = 0;
-    }
+    dominoes = solution.map((pd) => pd.domino).toList();
   }
 }

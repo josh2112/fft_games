@@ -5,7 +5,6 @@ import 'package:fft_games/settings/persistence/settings_persistence.dart';
 import 'package:fft_games/settings/persistence/shared_prefs_persistence.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 

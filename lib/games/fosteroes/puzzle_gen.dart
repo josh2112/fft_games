@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:collection/collection.dart';
 
 import 'constraint.dart';
-import 'domino.dart';
+import 'domino_model.dart';
 import 'puzzle.dart';
 import 'region.dart';
 
@@ -66,7 +66,7 @@ class PuzzleGenerator {
   final filledCells = <Cell>{};
   final borderCells = <Cell>{};
   late final List<Cell> field;
-  late final Map<DominoState, Cell> dominoLocations;
+  late final List<PlacedDomino> dominoLocations;
 
   PuzzleGenerator(this.difficulty, int seed) : _rng = Random(seed);
 
@@ -76,9 +76,9 @@ class PuzzleGenerator {
     // Generate some random dominoes (number depends on difficulty)
     final dominoes = Iterable.generate(
       _rng.nextIntInclusive(stats.minSize, stats.maxSize),
-      (i) => DominoState(i, _rng.nextInt(7), _rng.nextInt(7)),
+      (i) => DominoModel(i, _rng.nextInt(7), _rng.nextInt(7)),
     );
-    final locations = <DominoState, Cell>{};
+    final locations = <PlacedDomino>[];
 
     // Place dominoes in a non-overlapping, contiguous group
     for (final d in dominoes) {
@@ -90,13 +90,14 @@ class PuzzleGenerator {
         // Find an adjacent free cell and orient the domino properly
         for (final c2 in c1.borderCells().shuffled(_rng)) {
           if (!filledCells.contains(c2)) {
-            locations[d] = c1;
-            d.quarterTurns.value = switch ((c2 - c1)) {
-              Cell(x: 1, y: 0) => 0,
-              Cell(x: 0, y: 1) => 1,
-              Cell(x: -1, y: 0) => 2,
-              _ => 3,
-            };
+            locations.add(
+              PlacedDomino(d, c1, switch ((c2 - c1)) {
+                Cell(x: 1, y: 0) => 0,
+                Cell(x: 0, y: 1) => 1,
+                Cell(x: -1, y: 0) => 2,
+                _ => 3,
+              }),
+            );
 
             // Update filled cells
             filledCells.addAll([c1, c2]);
@@ -116,11 +117,11 @@ class PuzzleGenerator {
     // Normalize cell values
     final offset = Cell(filledCells.map((c) => c.x).min, filledCells.map((c) => c.y).min);
 
-    dominoLocations = {for (final e in locations.entries) e.key: e.value - offset};
+    dominoLocations = [for (final pd in locations) PlacedDomino(pd.domino, pd.cell - offset, pd.rotation)];
     field = filledCells.map((c) => c - offset).toList();
 
-    final pipLocations = dominoLocations.entries.map(
-      (e) => {e.value: e.key.side1, e.value.adjacent(e.key.quarterTurns.value): e.key.side2},
+    final pipLocations = dominoLocations.map(
+      (dcr) => {dcr.cell: dcr.domino.side1, dcr.cell.adjacent(dcr.rotation): dcr.domino.side2},
     );
 
     // All cells mapped to their pip values

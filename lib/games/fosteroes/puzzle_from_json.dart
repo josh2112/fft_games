@@ -45,20 +45,21 @@ Puzzle _fromJson(Map<String, dynamic> json, PuzzleDifficulty diff) {
 
   final solution = json["solution"];
 
-  final dominoToCell = <DominoState, Cell>{};
+  final placedDominoes = <PlacedDomino>[];
 
   for (int i = 0; i < solution.length; ++i) {
     var c1 = _cellFromCoord(solution[i][0]), c2 = _cellFromCoord(solution[i][1]);
-    dominoes[i].quarterTurns.value = switch ((c2 - c1)) {
-      Cell(x: 1, y: 0) => 0,
-      Cell(x: 0, y: 1) => 1,
-      Cell(x: -1, y: 0) => 2,
-      _ => 3,
-    };
-    dominoToCell[dominoes[i]] = c1;
+    placedDominoes.add(
+      PlacedDomino(dominoes[i], c1, switch ((c2 - c1)) {
+        Cell(x: 1, y: 0) => 0,
+        Cell(x: 0, y: 1) => 1,
+        Cell(x: -1, y: 0) => 2,
+        _ => 3,
+      }),
+    );
   }
 
-  return Puzzle(field: FieldRegion(cells), solution: dominoToCell, constraints: constraintRegions);
+  return Puzzle(field: FieldRegion(cells), solution: placedDominoes, constraints: constraintRegions);
 }
 
 Puzzle loadPuzzleJson(String path, PuzzleDifficulty diff) {

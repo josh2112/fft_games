@@ -120,6 +120,8 @@ class BoardState {
 
   int _puzzleSeed = 0;
 
+  var _allDominoes = <DominoState>[];
+
   final inHand = HandDominoes();
   final onBoard = BoardDominoes();
 
@@ -146,11 +148,12 @@ class BoardState {
     _puzzleSeed = seed ?? rng.nextInt(1 << 32);
 
     final puzz = PuzzleGenerator(puzzleDifficulty, _puzzleSeed).generate();
-    inHand.set(puzz.dominoes);
+    _allDominoes = puzz.dominoes.map((d) => DominoState(d.id, d.side1, d.side2)).toList();
+    inHand.set(_allDominoes);
     onBoard.clear();
     puzzle.value = puzz;
 
-    for (final d in puzz.dominoes) {
+    for (final d in _allDominoes) {
       d.quarterTurns.addListener(() => onDominoRotated(d));
     }
 
@@ -160,7 +163,7 @@ class BoardState {
   void dispose() {
     _timer.cancel();
 
-    for (final d in puzzle.value!.dominoes) {
+    for (final d in _allDominoes) {
       d.quarterTurns.removeListener(() => onDominoRotated(d));
     }
   }
@@ -237,7 +240,7 @@ class BoardState {
 
     final cellContents = onBoard.cellContents();
 
-    if (puzzle.value!.constraints.every((c) => c.check(cellContents))) {
+    if (puzzle.value!.constraints.every((c) => true == c.check(cellContents))) {
       isInProgress.value = false;
       onWon();
     } else {

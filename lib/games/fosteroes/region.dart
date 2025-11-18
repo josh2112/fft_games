@@ -202,9 +202,10 @@ class ConstraintRegion extends Region {
 
   ConstraintRegion(super.cells, this.constraint);
 
-  bool check(Map<Cell, int> cellContents) {
+  /// Returns whether or not the constraint is satisfied, or null if not yet filled.
+  bool? check(Map<Cell, int> cellContents) {
     final values = cellContents.entries.where((e) => cells.contains(e.key)).map((e) => e.value).toList();
-    return values.length != cells.length ? false : constraint.check(values);
+    return values.length != cells.length ? null : constraint.check(values);
   }
 }
 
