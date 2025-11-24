@@ -73,11 +73,16 @@ class PuzzleGenerator {
   Puzzle generate() {
     final stats = _PuzzleDifficultyStats.byDifficulty[difficulty]!;
 
-    // Generate some random dominoes (number depends on difficulty)
-    final dominoes = Iterable.generate(
-      _rng.nextIntInclusive(stats.minSize, stats.maxSize),
-      (i) => DominoModel(i, _rng.nextInt(7), _rng.nextInt(7)),
-    );
+    final dominoes = <DominoModel>{};
+    final numDominoes = _rng.nextIntInclusive(stats.minSize, stats.maxSize);
+    while (dominoes.length < numDominoes) {
+      final domino = DominoModel(dominoes.length, _rng.nextInt(7), _rng.nextInt(7));
+      final sortedSides = [domino.side1, domino.side2]..sort();
+      if (dominoes.none((d) => ([d.side1, d.side2]..sort()).equals(sortedSides))) {
+        dominoes.add(domino);
+      }
+    }
+
     final locations = <PlacedDomino>[];
 
     // Place dominoes in a non-overlapping, contiguous group
