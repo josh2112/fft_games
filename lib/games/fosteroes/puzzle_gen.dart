@@ -168,6 +168,8 @@ class PuzzleGenerator {
       g?.remove(g.keys.last);
     }
 
+    int gtLtValue(int sum, int dir) => max(0, sum + dir.sign * _rng.nextIntInclusive(1, 3));
+
     final p = Puzzle(
       solution: dominoLocations,
       field: FieldRegion(field),
@@ -175,7 +177,16 @@ class PuzzleGenerator {
         for (final g in equalGroups.where((g) => g.isNotEmpty)) ConstraintRegion(g.keys.toList(), EqualConstraint()),
         if (nonEqualGroup.isNotEmpty) ConstraintRegion(nonEqualGroup.keys.toList(), NotEqualConstraint()),
         for (final g in sumGroups.where((g) => g.isNotEmpty))
-          ConstraintRegion(g.keys.toList(), SumConstraint(g.values.sum)),
+          ConstraintRegion(
+            g.keys.toList(),
+            _rng.nextDouble() > stats.gtltFrequency
+                ? SumConstraint(g.values.sum)
+                // gtLtFrequency percent chance of turning this sum constraint into a GT or LT constraint
+                // Example: Sum of 5 could become > 2,3,4 or < 6,7,8
+                : (_rng.nextBool()
+                      ? GreaterThanConstraint(gtLtValue(g.values.sum, -1))
+                      : LessThanConstraint(gtLtValue(g.values.sum, 1))),
+          ),
       ],
     );
 

@@ -24,7 +24,7 @@ class EqualConstraint extends EqualityConstraintBase {
 
 class NotEqualConstraint extends EqualityConstraintBase {
   @override
-  String toString() => "!=";
+  String toString() => "≠";
 
   @override
   bool check(List<int> values) => values.toSet().length == values.length;

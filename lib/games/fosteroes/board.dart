@@ -84,8 +84,24 @@ class _BoardState extends State<Board> {
                   ),
                 ),
               ),
-              for (final (i, r) in puzzle.constraints.indexed)
-                ConstraintLabel(r, paletteForRegion(r, i), Board.cellSize),
+              Positioned(
+                child: ValueListenableBuilder(
+                  valueListenable: boardState.violatedConstraintRegions,
+                  builder: (context, violatedConstraintRegions, child) => Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      for (final (i, r) in puzzle.constraints.indexed)
+                        ConstraintLabel(
+                          r,
+                          paletteForRegion(r, i),
+                          Board.cellSize,
+                          violatedConstraintRegions.contains(r),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
               ListenableBuilder(
                 listenable: boardState.floatingDomino,
                 builder: (context, child) {
@@ -168,7 +184,6 @@ class _BoardState extends State<Board> {
       }
 
       boardState.onBoard.add(domino, baseCell);
-
       boardState.maybeCheckConstraints();
     } else {
       domino.location = domino.previousLocation;
