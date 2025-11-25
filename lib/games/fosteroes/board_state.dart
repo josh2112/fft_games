@@ -127,6 +127,8 @@ class BoardState {
 
   final floatingDomino = ValueNotifier<FloatingDomino?>(null);
 
+  final violatedConstraintRegions = ValueNotifier(<ConstraintRegion>[]);
+
   final elapsedTimeSecs = ValueNotifier<int>(0);
 
   final isInProgress = ValueNotifier(true);
@@ -153,6 +155,8 @@ class BoardState {
     onBoard.clear();
     puzzle.value = puzz;
 
+    violatedConstraintRegions.value = [];
+
     for (final d in _allDominoes) {
       d.quarterTurns.addListener(() => onDominoRotated(d));
     }
@@ -173,6 +177,7 @@ class BoardState {
       inHand.tryPutBack(d);
     }
     onBoard.clear();
+    violatedConstraintRegions.value = [];
   }
 
   // Removes this domino from the board and makes it float
@@ -235,12 +240,15 @@ class BoardState {
 
   void maybeCheckConstraints() {
     if (!inHand.isEmpty || floatingDomino.value != null) {
+      violatedConstraintRegions.value = [];
       return;
     }
 
     final cellContents = onBoard.cellContents();
 
-    if (puzzle.value!.constraints.every((c) => true == c.check(cellContents))) {
+    violatedConstraintRegions.value = puzzle.value!.constraints.where((cr) => false == cr.check(cellContents)).toList();
+
+    if (puzzle.value!.constraints.every((cr) => true == cr.check(cellContents))) {
       isInProgress.value = false;
       onWon();
     } else {

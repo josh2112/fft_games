@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:typed_data';
 
+import 'package:fft_games/utils/pop_in_out_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:svg_path_parser/svg_path_parser.dart';
 
@@ -15,8 +16,9 @@ class ConstraintLabel extends StatelessWidget {
   final ConstraintRegion region;
   final RegionPalette palette;
   final double cellSize;
+  final bool isViolated;
 
-  const ConstraintLabel(this.region, this.palette, this.cellSize, {super.key});
+  const ConstraintLabel(this.region, this.palette, this.cellSize, this.isViolated, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -25,23 +27,46 @@ class ConstraintLabel extends StatelessWidget {
     return Positioned(
       left: (x + 1) * cellSize - offset.dx,
       top: (y + 1) * cellSize - offset.dy,
-      child: ClipPath(
-        clipper: ConstraintLabelClip(),
-        child: Container(
-          width: size,
-          height: size,
-          color: palette.stroke,
-          child: Center(
-            child: Text(
-              region.constraint.toString(),
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: region.constraint is EqualityConstraintBase ? 16 : 12,
-                fontWeight: FontWeight.bold,
+      child: Stack(
+        children: [
+          ClipPath(
+            clipper: ConstraintLabelClip(),
+            child: Container(
+              width: size,
+              height: size,
+              color: palette.stroke,
+              child: Center(
+                child: Text(
+                  region.constraint.toString(),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: region.constraint is EqualityConstraintBase ? 16 : 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+          if (isViolated)
+            Positioned(
+              top: 5,
+              left: 5,
+              child: PopInOutWidget(
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle, // Makes the container circular
+                    color: Colors.red,
+                    border: Border.all(
+                      color: Colors.white, // Border color
+                      width: 1.0, // Border width
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
