@@ -6,7 +6,14 @@ import 'package:fft_games/games/fosteroes/puzzle.dart';
 import 'package:fft_games/games/fosteroes/puzzle_gen.dart' show PuzzleGenerator;
 import 'package:fft_games/games/fosteroes/region.dart';
 
-// TODO: Needs work; works great on small puzzle but out-of-memory on regular-sized.
+// TODO: Needs work; works great on small puzzle but slow and never finds solution on medium-sized.
+// Problems to solve:
+// 1) Should we make a graph out of the board? We would no longer have to worry about direction or rotating dominoes.
+// 2) How to prevent 1-sized 'holes' that can never be filled? Always choose the 'corneriest' corner for the next
+//    placement -- find cells with fewest number of adjacents and choose one of them (this is another benefit to having
+//    the board in graph form).
+// 3) Better pruning: In addition to checking the constraint on which we're placing a tile, check if the remaining
+//    dominoes can satisfy the remaining constraints.
 
 /*
   3
