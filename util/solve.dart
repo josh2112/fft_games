@@ -1,9 +1,10 @@
 import 'dart:collection';
 
+import 'package:collection/collection.dart';
 import 'package:fft_games/games/fosteroes/constraint.dart';
 import 'package:fft_games/games/fosteroes/domino_model.dart';
 import 'package:fft_games/games/fosteroes/puzzle.dart';
-import 'package:fft_games/games/fosteroes/puzzle_gen.dart' show PuzzleGenerator;
+import 'package:fft_games/games/fosteroes/puzzle_gen.dart';
 import 'package:fft_games/games/fosteroes/region.dart';
 
 // TODO: Needs work; works great on small puzzle but slow and never finds solution on medium-sized.
@@ -29,88 +30,65 @@ final puzz1 = Puzzle(
   ],
 );
 
-class PlacedDominoNode {
-  final DominoModel domino;
-  final Cell cell;
-  final int rotation;
-  final PlacedDominoNode? prev;
+class SolveState {
+  // Filled cells
+  final Map<int, int> filled;
+  // Unfilled edges
+  final List<(int, int)> edges;
+  // Remaining dominoes
+  final Set<DominoModel> dominoes;
 
-  PlacedDominoNode(this.domino, this.cell, this.rotation, this.prev);
-
-  @override
-  String toString() => "$domino at $cell r $rotation";
-
-  static List<PlacedDominoNode> flattened(PlacedDominoNode? node) {
-    final list = <PlacedDominoNode>[];
-    var cur = node;
-    while (cur != null) {
-      list.add(cur);
-      cur = cur.prev;
-    }
-    return list;
-  }
+  SolveState(this.filled, this.edges, this.dominoes);
 }
 
 void solve(Puzzle p) {
   final sw = Stopwatch()..start();
 
-  // Strategy:
-  // 1) Take the next domino.
-  // 2) For each rotation 0,1,2,3 (or just 0,1 if the pips are the same):
-  //    a) Find each cell pair where it'll fit. For each of those:
-  //       i) Check for violated constraints. If none, enqueue a new state.
+  final cellToIndex = {for (final (i, c) in p.field.cells.indexed) c: i};
+  final indexToCell = {for (final e in cellToIndex.entries) e.value: e.key};
 
-  final boardCells = p.field.cells.toSet();
-  final dominoSet = {...p.dominoes};
+  // Constraints in terms of cell indices
+  final constraints = {for (final cr in p.constraints) cr.cells.map((c) => cellToIndex[c]!).toList(): cr.constraint};
 
-  final states = Queue<PlacedDominoNode?>()..add(null);
+  // Build edge list. Only look right and down so we don't duplicate edges.
+  final allEdges = <(int, int)>[];
+  for (final c in p.field.cells) {
+    for (final c2 in [c.right, c.down]) {
+      if (p.field.cells.contains(c2)) {
+        allEdges.add((cellToIndex[c]!, cellToIndex[c2]!));
+      }
+    }
+  }
+
+  final allDominoes = {...p.dominoes};
+
+  final states = Queue<SolveState>.from([SolveState({}, allEdges, allDominoes)]);
 
   while (states.isNotEmpty) {
-    final s = states.removeFirst();
+    final state = states.removeFirst();
 
-    final dominoPlacements = PlacedDominoNode.flattened(s);
-
-    // Build a map of filled cells and their contents
-    final board = <Cell, int>{};
-    for (final dp in dominoPlacements) {
-      board[dp.cell] = dp.domino.side1;
-      board[dp.cell.adjacent(dp.rotation)] = dp.domino.side2;
+    // Find the "corneriest" corners - cells with fewest number of adjacents - and choose first.
+    final cellCounts = <int, int>{};
+    for (final (c1, c2) in state.edges) {
+      cellCounts[c1] = (cellCounts[c1] ?? 0) + 1;
+      cellCounts[c2] = (cellCounts[c2] ?? 0) + 1;
     }
+    final corneriestCell = cellCounts.entries.reduce((a, b) => a.value <= b.value ? a : b).key;
 
-    // Find first unplaced domino
-    final d = dominoSet.difference(dominoPlacements.map((d) => d.domino).toSet()).firstOrNull;
-    if (d == null) {
-      if (p.constraints.every((cr) => true == cr.check(board))) {
-        print("Solved in ${sw.elapsed}");
-        print(dominoPlacements);
-      } else {
-        print("No solution found! ${sw.elapsed}");
-      }
-      return;
-    }
-
-    final numRotations = d.side1 == d.side2 ? 2 : 4;
-
-    for (var r = 0; r < numRotations; r++) {
-      final offset = Cell.origin.adjacent(r);
-
-      for (final Cell c in boardCells.difference(board.keys.toSet())) {
-        final c2 = c + offset;
-        if (!boardCells.contains(c2)) continue;
-
-        // Check if we will violate any constraints by placing this cell here. If not,
-        // make & enqueue a new state
-        board[c] = d.side1;
-        board[c2] = d.side2;
-        if (!p.constraints
-            .where((cr) => cr.cells.contains(c) || cr.cells.contains(c2))
-            .any((cr) => false == cr.check(board))) {
-          //print("New state: ${states.last}");
-          states.add(PlacedDominoNode(d, c, r, s));
+    // For each of this cell's edges, try each remaining domino, forward and reverse.
+    for (final edge in state.edges.where((e) => e.$1 == corneriestCell || e.$2 == corneriestCell)) {
+      final affectedConstraintKeys = constraints.keys.firstWhereOrNull(
+        (cells) => cells.contains(edge.$1) || cells.contains(edge.$2),
+      );
+      final otherConstrainKeys = constraints.keys.where((k) => k != affectedConstraintKeys);
+      for (final domino in state.dominoes) {
+        for (final d in [domino, DominoModel(domino.id, domino.side2, domino.side1)]) {
+          // TODO: If we place [d] across [edge], will we break any constraint involving the edge? And can the remaining
+          // dominos satisfy the remaining constraints?
+          if( affectedConstraintKeys != null ) {
+            constraints[affectedConstraintKeys].check(values)
+          }
         }
-
-        board.remove(c);
-        board.remove(c2);
       }
     }
   }
@@ -120,6 +98,6 @@ Puzzle puzzleFromDate(DateTime dt) =>
     PuzzleGenerator(PuzzleDifficulty.easy, int.parse(dt.toString().split(' ').first.split('-').join())).generate();
 
 void main() {
-  //solve(puzz1);
-  solve(puzzleFromDate(DateTime(2025, 11, 18)));
+  solve(puzz1);
+  //solve(puzzleFromDate(DateTime(2025, 11, 18)));
 }

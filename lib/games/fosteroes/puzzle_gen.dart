@@ -50,13 +50,13 @@ class _PuzzleDifficultyStats {
   });
 }
 
-extension RandomRange on Random {
+extension _RandomRange on Random {
   int nextIntInclusive(int min, int max) => nextInt(max - min + 1) + min;
 
   T next<T>(Iterable<T> list, T def) => list.isEmpty ? def : list.elementAt(nextInt(list.length));
 }
 
-typedef MatchesSegment = bool Function(int value, Map<Cell, int> group);
+typedef _MatchesSegment = bool Function(int value, Map<Cell, int> group);
 
 class PuzzleGenerator {
   final Random _rng;
@@ -198,7 +198,7 @@ class PuzzleGenerator {
     return p;
   }
 
-  Iterable<Map<Cell, int>> _segment(Map<Cell, int> valueByCell, MatchesSegment matches) sync* {
+  Iterable<Map<Cell, int>> _segment(Map<Cell, int> valueByCell, _MatchesSegment matches) sync* {
     void recurse(Cell c, Map<Cell, int> group) {
       group[c] = valueByCell.remove(c)!;
       for (final b in c.borderCells().where((b) => valueByCell.containsKey(b))) {

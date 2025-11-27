@@ -14,8 +14,6 @@ class PlacedDomino {
 }
 
 class Puzzle {
-  //static Puzzle empty = Puzzle(difficulty: PuzzleDifficulty.easy, field: FieldRegion([]), hand: [], constraints: []);
-
   final FieldRegion field;
   final List<PlacedDomino> solution;
   late final List<DominoModel> dominoes;

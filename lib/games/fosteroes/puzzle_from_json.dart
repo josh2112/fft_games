@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:collection/collection.dart';
 
 import 'constraint.dart';
-import 'domino.dart';
+import 'domino_model.dart';
 import 'puzzle.dart';
 import 'region.dart';
 
@@ -41,7 +41,7 @@ Puzzle _fromJson(Map<String, dynamic> json, PuzzleDifficulty diff) {
 
   final dominoesJson = json["dominoes"] as List<dynamic>;
 
-  final dominoes = [for (final (i, ab) in dominoesJson.indexed) DominoState(i, ab[0], ab[1])];
+  final dominoes = [for (final (i, ab) in dominoesJson.indexed) DominoModel(i, ab[0], ab[1])];
 
   final solution = json["solution"];
 
@@ -60,12 +60,4 @@ Puzzle _fromJson(Map<String, dynamic> json, PuzzleDifficulty diff) {
   }
 
   return Puzzle(field: FieldRegion(cells), solution: placedDominoes, constraints: constraintRegions);
-}
-
-Puzzle loadPuzzleJson(String path, PuzzleDifficulty diff) {
-  final json = jsonDecode(File(path).readAsStringSync())[diff.name];
-  if (json["id"] <= 0) {
-    throw Exception("Puzzle not defined");
-  }
-  return _fromJson(json, diff);
 }
