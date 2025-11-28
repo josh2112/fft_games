@@ -41,13 +41,25 @@ class SolveState {
   SolveState(this.filled, this.edges, this.dominoes);
 }
 
+/// Returns whether or not the constraint is viable (i.e. satisfied or still possible to satisfy).
+/// TODO: And can the remaining dominoes satisfy the remaining constraints?
+bool isConstraintViable(
+  List<int> cells,
+  Constraint constraint,
+  Map<int, int> cellContents,
+  Set<DominoModel> remainingDominoes,
+) {
+  final values = cellContents.entries.where((e) => cells.contains(e.key)).map((e) => e.value).toList();
+  return values.length != cells.length || constraint.check(values);
+}
+
 void solve(Puzzle p) {
   final sw = Stopwatch()..start();
 
   final cellToIndex = {for (final (i, c) in p.field.cells.indexed) c: i};
   final indexToCell = {for (final e in cellToIndex.entries) e.value: e.key};
 
-  // Constraints in terms of cell indices
+  // Constraints, keyed by list of cell indices
   final constraints = {for (final cr in p.constraints) cr.cells.map((c) => cellToIndex[c]!).toList(): cr.constraint};
 
   // Build edge list. Only look right and down so we don't duplicate edges.
@@ -77,16 +89,17 @@ void solve(Puzzle p) {
 
     // For each of this cell's edges, try each remaining domino, forward and reverse.
     for (final edge in state.edges.where((e) => e.$1 == corneriestCell || e.$2 == corneriestCell)) {
-      final affectedConstraintKeys = constraints.keys.firstWhereOrNull(
+      // Group the constraints into those affected by this edge and those not.
+      final groupedConstraintKeys = constraints.keys.groupListsBy(
         (cells) => cells.contains(edge.$1) || cells.contains(edge.$2),
       );
-      final otherConstrainKeys = constraints.keys.where((k) => k != affectedConstraintKeys);
       for (final domino in state.dominoes) {
+        final remainingDominoes = {...state.dominoes}..remove(domino);
         for (final d in [domino, DominoModel(domino.id, domino.side2, domino.side1)]) {
-          // TODO: If we place [d] across [edge], will we break any constraint involving the edge? And can the remaining
-          // dominos satisfy the remaining constraints?
-          if( affectedConstraintKeys != null ) {
-            constraints[affectedConstraintKeys].check(values)
+          final pips = {...state.filled, edge.$1: d.side1, edge.$2: d.side2};
+          // If we place [d] across [edge], are all constraints still viable?
+          if (constraints.entries.every((e) => isConstraintViable(e.key, e.value, pips, remainingDominoes))) {
+            // TODO: Make & queue a new state with the placed domino
           }
         }
       }
