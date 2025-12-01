@@ -6,8 +6,24 @@ import 'package:fft_games/games/fosteroes/puzzle.dart';
 import 'package:fft_games/games/fosteroes/puzzle_gen.dart';
 import 'package:fft_games/games/fosteroes/region.dart';
 
+import 'fetch_nyt_puzzles.dart';
+
+// TODO: Gets stuck on some hard puzzles
+
 /*
-  Board:
+ A patholgically simple puzzle just for testing
+ Board: A B
+ Dominoes: 0/0
+ Constraints: None
+ Solution: 0/0
+*/
+final puzz0 = Puzzle(
+  field: FieldRegion([Cell(0, 0), Cell(1, 0)]),
+  constraints: [],
+  solution: [PlacedDomino(DominoModel(0, 0, 0), Cell(0, 0), 0)],
+);
+
+/* Board:
    A
    B C D
   Dominoes: 3/1, 1/2
@@ -25,11 +41,14 @@ final puzz1 = Puzzle(
   ],
 );
 
+Puzzle puzzleFromSeed(int seed) => PuzzleGenerator(PuzzleDifficulty.easy, seed).generate();
+Puzzle puzzleFromDate(DateTime dt) => puzzleFromSeed(int.parse(dt.toString().split(' ').first.split('-').join()));
+
 class SolveState {
   // Filled cells
-  final Map<int, int> filled;
+  final Map<Cell, int> filled;
   // Unfilled edges
-  final List<(int, int)> edges;
+  final List<(Cell, Cell)> edges;
   // Remaining dominoes
   final Set<DominoModel> dominoes;
 
@@ -39,9 +58,9 @@ class SolveState {
 /// Returns whether or not the constraint is viable (i.e. satisfied or still possible to satisfy).
 /// TODO: Take into account remaining dominoes too!
 bool isConstraintViable(
-  List<int> cells,
+  List<Cell> cells,
   Constraint constraint,
-  Map<int, int> cellContents,
+  Map<Cell, int> cellContents,
   Set<DominoModel> remainingDominoes,
 ) {
   final values = cellContents.entries.where((e) => cells.contains(e.key)).map((e) => e.value).toList();
@@ -49,38 +68,35 @@ bool isConstraintViable(
 }
 
 Map<Cell, int>? solve(Puzzle p) {
-  final cellToIndex = {for (final (i, c) in p.field.cells.indexed) c: i};
-  final indexToCell = {for (final e in cellToIndex.entries) e.value: e.key};
-
-  // Constraints, keyed by list of cell indices
-  final constraints = {for (final cr in p.constraints) cr.cells.map((c) => cellToIndex[c]!).toList(): cr.constraint};
-
   // Treat the playing field as a graph and store the list of edges. This way we don't have to care about horizontal/
   // vertical. Only look right and down so we don't duplicate edges.
-  final allEdges = <(int, int)>[];
+  final allEdges = <(Cell, Cell)>[];
   for (final c in p.field.cells) {
     for (final c2 in [c.right, c.down]) {
       if (p.field.cells.contains(c2)) {
-        allEdges.add((cellToIndex[c]!, cellToIndex[c2]!));
+        allEdges.add((c, c2));
       }
     }
   }
 
-  final allDominoes = {...p.dominoes};
+  // Constraints, keyed by list of cells
+  final constraints = {for (final cr in p.constraints) cr.cells: cr.constraint};
 
-  final states = Queue<SolveState>.from([SolveState({}, allEdges, allDominoes)]);
+  final states = Queue<SolveState>.from([
+    SolveState({}, allEdges, {...p.dominoes}),
+  ]);
 
   while (states.isNotEmpty) {
     final state = states.removeFirst();
 
     if (state.edges.isEmpty) {
       // Yay, we solved it
-      return {for (final e in state.filled.entries) indexToCell[e.key]!: e.value};
+      return {for (final e in state.filled.entries) e.key: e.value};
     }
 
     // Ensure we don't cause an unfillable hole by always placing dominoes across the most isolated cells... or
     // "corneriest" corners... that is, the cells with fewest number of edges.
-    final edgeCounts = <int, int>{};
+    final edgeCounts = <Cell, int>{};
     for (final (c1, c2) in state.edges) {
       edgeCounts[c1] = (edgeCounts[c1] ?? 0) + 1;
       edgeCounts[c2] = (edgeCounts[c2] ?? 0) + 1;
@@ -112,6 +128,7 @@ Map<Cell, int>? solve(Puzzle p) {
 }
 
 void solveAndPrint(Puzzle p) {
+  print("Starting solve...");
   final sw = Stopwatch()..start();
   final pips = solve(p);
   final elapsed = sw.elapsed;
@@ -120,7 +137,7 @@ void solveAndPrint(Puzzle p) {
     return;
   }
 
-  print("Found solution in $elapsed");
+  print("Solved in $elapsed");
   print(
     List.generate(
       p.field.bounds.height,
@@ -129,11 +146,11 @@ void solveAndPrint(Puzzle p) {
   );
 }
 
-void main() {
-  Puzzle puzzleFromSeed(int seed) => PuzzleGenerator(PuzzleDifficulty.easy, seed).generate();
-  Puzzle puzzleFromDate(DateTime dt) => puzzleFromSeed(int.parse(dt.toString().split(' ').first.split('-').join()));
-
-  //solveAndPrint(puzz1);
-  //solveAndPrint(puzzleFromDate(DateTime(2025, 12, 1)));
-  solveAndPrint(puzzleFromSeed(3404927097));
+void main() async {
+  final puzzles = await fetchNYTPuzzles(DateTime(2025, 11, 29));
+  solveAndPrint(puzzles[PuzzleDifficulty.medium]!);
+  /*solveAndPrint(puzz0);
+  solveAndPrint(puzz1);
+  solveAndPrint(puzzleFromDate(DateTime(2025, 12, 1)));
+  solveAndPrint(puzzleFromSeed(3404927097));*/
 }

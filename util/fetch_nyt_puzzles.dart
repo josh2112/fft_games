@@ -1,9 +1,12 @@
-import 'package:collection/collection.dart';
+import 'dart:convert';
 
-import 'constraint.dart';
-import 'domino_model.dart';
-import 'puzzle.dart';
-import 'region.dart';
+import 'package:collection/collection.dart';
+import 'package:fft_games/games/fosteroes/constraint.dart';
+import 'package:fft_games/games/fosteroes/domino_model.dart';
+import 'package:fft_games/games/fosteroes/puzzle.dart';
+import 'package:fft_games/games/fosteroes/region.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 
 class _NytEmptyConstraint extends Constraint {
   @override
@@ -57,4 +60,24 @@ Puzzle _fromJson(Map<String, dynamic> json, PuzzleDifficulty diff) {
   }
 
   return Puzzle(field: FieldRegion(cells), solution: placedDominoes, constraints: constraintRegions);
+}
+
+class FetchPuzzleException implements Exception {
+  final http.Response response;
+  FetchPuzzleException(this.response);
+
+  @override
+  String toString() => 'Failed to fetch puzzle: HTTP status ${response.statusCode} ${response.reasonPhrase}';
+}
+
+/// Fetches NYT Fosteroes puzzles, keyed by difficulty, for the given date.
+Future<Map<PuzzleDifficulty, Puzzle>> fetchNYTPuzzles(DateTime date) async {
+  final req = await http.get(
+    Uri.https('www.nytimes.com', '/svc/pips/v1/${DateFormat('yyyy-MM-dd').format(date)}.json'),
+  );
+  if (req.statusCode != 200) {
+    throw FetchPuzzleException(req);
+  }
+  final json = jsonDecode(req.body);
+  return {for (final diff in PuzzleDifficulty.values) diff: _fromJson(json[diff.name]!, diff)};
 }
