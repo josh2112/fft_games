@@ -1,17 +1,19 @@
 import 'dart:collection';
 
+import 'package:args/args.dart';
 import 'package:fft_games/games/fosteroes/constraint.dart';
 import 'package:fft_games/games/fosteroes/domino_model.dart';
 import 'package:fft_games/games/fosteroes/puzzle.dart';
 import 'package:fft_games/games/fosteroes/puzzle_gen.dart';
 import 'package:fft_games/games/fosteroes/region.dart';
+import 'package:intl/intl.dart';
 
 import 'fetch_nyt_puzzles.dart';
 
 // TODO: Gets stuck on some hard puzzles
 
 /*
- A patholgically simple puzzle just for testing
+ A pathologically simple puzzle just for testing
  Board: A B
  Dominoes: 0/0
  Constraints: None
@@ -41,8 +43,13 @@ final puzz1 = Puzzle(
   ],
 );
 
-Puzzle puzzleFromSeed(int seed) => PuzzleGenerator(PuzzleDifficulty.easy, seed).generate();
-Puzzle puzzleFromDate(DateTime dt) => puzzleFromSeed(int.parse(dt.toString().split(' ').first.split('-').join()));
+/// Fosteroes autogen puzzle from seed
+Puzzle puzzleFromSeed(int seed, [PuzzleDifficulty diff = PuzzleDifficulty.easy]) =>
+    PuzzleGenerator(diff, seed).generate();
+
+/// Fosteroes puzzle for date
+Puzzle puzzleFromDate(DateTime dt, [PuzzleDifficulty diff = PuzzleDifficulty.easy]) =>
+    puzzleFromSeed(int.parse(dt.toString().split(' ').first.split('-').join()), diff);
 
 class SolveState {
   // Filled cells
@@ -127,30 +134,64 @@ Map<Cell, int>? solve(Puzzle p) {
   return null;
 }
 
-void solveAndPrint(Puzzle p) {
-  print("Starting solve...");
-  final sw = Stopwatch()..start();
-  final pips = solve(p);
-  final elapsed = sw.elapsed;
-  if (pips == null) {
-    print("No solution found");
+void main(List<String> args) async {
+  final dateFormat = DateFormat('yyyy-MM-dd');
+
+  final parser = ArgParser()
+    ..addOption(
+      'date',
+      abbr: 'd',
+      defaultsTo: dateFormat.format(DateTime.now()),
+      help: 'Date to fetch puzzles for (default = today)',
+    )
+    ..addOption('seed', abbr: 's', help: 'Seed to use for autogen puzzles')
+    ..addOption(
+      'difficulty',
+      abbr: 'f',
+      defaultsTo: PuzzleDifficulty.easy.name,
+      allowed: PuzzleDifficulty.values.map((e) => e.name),
+      help: 'Puzzle difficulty (default = easy)',
+    )
+    ..addFlag(
+      'nyt',
+      abbr: 'n',
+      defaultsTo: false,
+      help: 'Fetch the NYT puzzle for provided date (instead of the Fosteroes generated puzzle)',
+    );
+
+  final opts = parser.parse(args);
+
+  final seed = int.tryParse(opts.option('seed') ?? "");
+  final diff = PuzzleDifficulty.values.firstWhere((e) => e.name == opts.option('difficulty'));
+  final date = DateTime.parse(opts.option('date')!);
+  final doNyt = opts.flag('nyt');
+
+  if (seed != null && doNyt) {
+    print("Error: NYT puzzles require a date, not a seed.");
     return;
   }
 
-  print("Solved in $elapsed");
-  print(
-    List.generate(
-      p.field.bounds.height,
-      (y) => List.generate(p.field.bounds.width, (x) => pips[Cell(x, y)]?.toString() ?? '.'),
-    ).map((r) => r.join('')).join('\n'),
-  );
-}
+  final puzzle = seed != null
+      ? puzzleFromSeed(seed, diff)
+      : (doNyt ? (await fetchNYTPuzzles(date))[diff]! : puzzleFromDate(date, diff));
 
-void main() async {
-  final puzzles = await fetchNYTPuzzles(DateTime(2025, 11, 29));
-  solveAndPrint(puzzles[PuzzleDifficulty.medium]!);
-  /*solveAndPrint(puzz0);
-  solveAndPrint(puzz1);
-  solveAndPrint(puzzleFromDate(DateTime(2025, 12, 1)));
-  solveAndPrint(puzzleFromSeed(3404927097));*/
+  print(
+    "Fetched ${doNyt ? 'NYT' : 'Fosteroes'} ${seed != null ? 'autogen #$seed' : dateFormat.format(date)} ${diff.name}",
+  );
+
+  final sw = Stopwatch()..start();
+  final pips = solve(puzzle);
+  final elapsed = sw.elapsed;
+
+  if (pips != null) {
+    print("Solved in $elapsed");
+    print(
+      List.generate(
+        puzzle.field.bounds.height,
+        (y) => List.generate(puzzle.field.bounds.width, (x) => pips[Cell(x, y)]?.toString() ?? '.'),
+      ).map((r) => r.join('')).join('\n'),
+    );
+  } else {
+    print("No solution found");
+  }
 }
