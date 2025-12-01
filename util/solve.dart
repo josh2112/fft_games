@@ -1,6 +1,5 @@
 import 'dart:collection';
 
-import 'package:collection/collection.dart';
 import 'package:fft_games/games/fosteroes/constraint.dart';
 import 'package:fft_games/games/fosteroes/domino_model.dart';
 import 'package:fft_games/games/fosteroes/puzzle.dart';
@@ -79,6 +78,20 @@ void solve(Puzzle p) {
   while (states.isNotEmpty) {
     final state = states.removeFirst();
 
+    if (state.edges.isEmpty && state.dominoes.isEmpty) {
+      print("Found solution! ${sw.elapsed}");
+      final grid = List.generate(p.field.bounds.height, (_) => List.generate(p.field.bounds.width, (_) => '.'));
+      for (final e in state.filled.entries) {
+        final c = indexToCell[e.key]!;
+        grid[c.y][c.x] = e.value.toString();
+      }
+      for (final row in grid) {
+        print(row);
+      }
+
+      break;
+    }
+
     // Find the "corneriest" corners - cells with fewest number of adjacents - and choose first.
     final cellCounts = <int, int>{};
     for (final (c1, c2) in state.edges) {
@@ -89,17 +102,18 @@ void solve(Puzzle p) {
 
     // For each of this cell's edges, try each remaining domino, forward and reverse.
     for (final edge in state.edges.where((e) => e.$1 == corneriestCell || e.$2 == corneriestCell)) {
-      // Group the constraints into those affected by this edge and those not.
-      final groupedConstraintKeys = constraints.keys.groupListsBy(
-        (cells) => cells.contains(edge.$1) || cells.contains(edge.$2),
-      );
+      // Remove all edges connecting to either of the cells in [edge]
+      final newEdges = state.edges
+          .where((e) => e.$1 != edge.$1 && e.$2 != edge.$1 && e.$1 != edge.$2 && e.$2 != edge.$2)
+          .toList();
       for (final domino in state.dominoes) {
         final remainingDominoes = {...state.dominoes}..remove(domino);
         for (final d in [domino, DominoModel(domino.id, domino.side2, domino.side1)]) {
           final pips = {...state.filled, edge.$1: d.side1, edge.$2: d.side2};
           // If we place [d] across [edge], are all constraints still viable?
           if (constraints.entries.every((e) => isConstraintViable(e.key, e.value, pips, remainingDominoes))) {
-            // TODO: Make & queue a new state with the placed domino
+            // Make & queue a new state with the placed domino
+            states.add(SolveState(pips, newEdges, remainingDominoes));
           }
         }
       }
@@ -111,6 +125,6 @@ Puzzle puzzleFromDate(DateTime dt) =>
     PuzzleGenerator(PuzzleDifficulty.easy, int.parse(dt.toString().split(' ').first.split('-').join())).generate();
 
 void main() {
-  solve(puzz1);
-  //solve(puzzleFromDate(DateTime(2025, 11, 18)));
+  //solve(puzz1);
+  solve(puzzleFromDate(DateTime(2025, 12, 1)));
 }
