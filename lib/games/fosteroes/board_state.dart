@@ -137,8 +137,6 @@ class BoardState {
   late final Timer _timer;
 
   BoardState(this.onWon, this.onBadSolution, this.puzzleDifficulty) {
-    //final puzzlePath = 'assets/fosteroes/testpuzzles/puzzle1.json';
-
     _timer = Timer.periodic(Duration(seconds: 1), (_) {
       if (isInProgress.value && !isPaused.value) {
         elapsedTimeSecs.value += 1;

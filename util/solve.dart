@@ -6,19 +6,15 @@ import 'package:fft_games/games/fosteroes/puzzle.dart';
 import 'package:fft_games/games/fosteroes/puzzle_gen.dart';
 import 'package:fft_games/games/fosteroes/region.dart';
 
-// TODO: Needs work; works great on small puzzle but slow and never finds solution on medium-sized.
-// Problems to solve:
-// 1) Should we make a graph out of the board? We would no longer have to worry about direction or rotating dominoes.
-// 2) How to prevent 1-sized 'holes' that can never be filled? Always choose the 'corneriest' corner for the next
-//    placement -- find cells with fewest number of adjacents and choose one of them (this is another benefit to having
-//    the board in graph form).
-// 3) Better pruning: In addition to checking the constraint on which we're placing a tile, check if the remaining
-//    dominoes can satisfy the remaining constraints.
-
 /*
-  3
-  1 1 2
-  3/1, 1/2  1-1 equals  3 3
+  Board:
+   A
+   B C D
+  Dominoes: 3/1, 1/2
+  Constraints: BC:=, A:3
+  Solution:
+   3
+   1 1 2
 */
 final puzz1 = Puzzle(
   field: FieldRegion([Cell(0, 0), Cell(0, 1), Cell(1, 1), Cell(2, 1)]),
@@ -41,7 +37,7 @@ class SolveState {
 }
 
 /// Returns whether or not the constraint is viable (i.e. satisfied or still possible to satisfy).
-/// TODO: And can the remaining dominoes satisfy the remaining constraints?
+/// TODO: Take into account remaining dominoes too!
 bool isConstraintViable(
   List<int> cells,
   Constraint constraint,
@@ -52,16 +48,15 @@ bool isConstraintViable(
   return values.length != cells.length || constraint.check(values);
 }
 
-void solve(Puzzle p) {
-  final sw = Stopwatch()..start();
-
+Map<Cell, int>? solve(Puzzle p) {
   final cellToIndex = {for (final (i, c) in p.field.cells.indexed) c: i};
   final indexToCell = {for (final e in cellToIndex.entries) e.value: e.key};
 
   // Constraints, keyed by list of cell indices
   final constraints = {for (final cr in p.constraints) cr.cells.map((c) => cellToIndex[c]!).toList(): cr.constraint};
 
-  // Build edge list. Only look right and down so we don't duplicate edges.
+  // Treat the playing field as a graph and store the list of edges. This way we don't have to care about horizontal/
+  // vertical. Only look right and down so we don't duplicate edges.
   final allEdges = <(int, int)>[];
   for (final c in p.field.cells) {
     for (final c2 in [c.right, c.down]) {
@@ -78,53 +73,67 @@ void solve(Puzzle p) {
   while (states.isNotEmpty) {
     final state = states.removeFirst();
 
-    if (state.edges.isEmpty && state.dominoes.isEmpty) {
-      print("Found solution! ${sw.elapsed}");
-      final grid = List.generate(p.field.bounds.height, (_) => List.generate(p.field.bounds.width, (_) => '.'));
-      for (final e in state.filled.entries) {
-        final c = indexToCell[e.key]!;
-        grid[c.y][c.x] = e.value.toString();
-      }
-      for (final row in grid) {
-        print(row);
-      }
-
-      break;
+    if (state.edges.isEmpty) {
+      // Yay, we solved it
+      return {for (final e in state.filled.entries) indexToCell[e.key]!: e.value};
     }
 
-    // Find the "corneriest" corners - cells with fewest number of adjacents - and choose first.
-    final cellCounts = <int, int>{};
+    // Ensure we don't cause an unfillable hole by always placing dominoes across the most isolated cells... or
+    // "corneriest" corners... that is, the cells with fewest number of edges.
+    final edgeCounts = <int, int>{};
     for (final (c1, c2) in state.edges) {
-      cellCounts[c1] = (cellCounts[c1] ?? 0) + 1;
-      cellCounts[c2] = (cellCounts[c2] ?? 0) + 1;
+      edgeCounts[c1] = (edgeCounts[c1] ?? 0) + 1;
+      edgeCounts[c2] = (edgeCounts[c2] ?? 0) + 1;
     }
-    final corneriestCell = cellCounts.entries.reduce((a, b) => a.value <= b.value ? a : b).key;
+    final corneriestCell = edgeCounts.entries.reduce((a, b) => a.value <= b.value ? a : b).key;
 
     // For each of this cell's edges, try each remaining domino, forward and reverse.
     for (final edge in state.edges.where((e) => e.$1 == corneriestCell || e.$2 == corneriestCell)) {
       // Remove all edges connecting to either of the cells in [edge]
-      final newEdges = state.edges
+      final edges = state.edges
           .where((e) => e.$1 != edge.$1 && e.$2 != edge.$1 && e.$1 != edge.$2 && e.$2 != edge.$2)
           .toList();
       for (final domino in state.dominoes) {
         final remainingDominoes = {...state.dominoes}..remove(domino);
+        // Try this domino both ways
         for (final d in [domino, DominoModel(domino.id, domino.side2, domino.side1)]) {
           final pips = {...state.filled, edge.$1: d.side1, edge.$2: d.side2};
           // If we place [d] across [edge], are all constraints still viable?
           if (constraints.entries.every((e) => isConstraintViable(e.key, e.value, pips, remainingDominoes))) {
             // Make & queue a new state with the placed domino
-            states.add(SolveState(pips, newEdges, remainingDominoes));
+            states.add(SolveState(pips, edges, remainingDominoes));
           }
         }
       }
     }
   }
+
+  return null;
 }
 
-Puzzle puzzleFromDate(DateTime dt) =>
-    PuzzleGenerator(PuzzleDifficulty.easy, int.parse(dt.toString().split(' ').first.split('-').join())).generate();
+void solveAndPrint(Puzzle p) {
+  final sw = Stopwatch()..start();
+  final pips = solve(p);
+  final elapsed = sw.elapsed;
+  if (pips == null) {
+    print("No solution found");
+    return;
+  }
+
+  print("Found solution in $elapsed");
+  print(
+    List.generate(
+      p.field.bounds.height,
+      (y) => List.generate(p.field.bounds.width, (x) => pips[Cell(x, y)]?.toString() ?? '.'),
+    ).map((r) => r.join('')).join('\n'),
+  );
+}
 
 void main() {
-  //solve(puzz1);
-  solve(puzzleFromDate(DateTime(2025, 12, 1)));
+  Puzzle puzzleFromSeed(int seed) => PuzzleGenerator(PuzzleDifficulty.easy, seed).generate();
+  Puzzle puzzleFromDate(DateTime dt) => puzzleFromSeed(int.parse(dt.toString().split(' ').first.split('-').join()));
+
+  //solveAndPrint(puzz1);
+  //solveAndPrint(puzzleFromDate(DateTime(2025, 12, 1)));
+  solveAndPrint(puzzleFromSeed(3404927097));
 }

@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:defer_pointer/defer_pointer.dart';
 import 'package:fft_games/games/fosteroes/puzzle.dart';
-import 'settings_dialog.dart';
 import 'package:fft_games/utils/dialog_or_bottom_sheet.dart';
 import 'package:fft_games/utils/multi_snack_bar.dart';
 import 'package:fft_games/utils/utils.dart';
@@ -15,6 +14,7 @@ import 'board.dart';
 import 'board_state.dart';
 import 'hand.dart';
 import 'settings.dart';
+import 'settings_dialog.dart';
 import 'stats_page.dart';
 
 class PlayPageParams {
@@ -118,9 +118,12 @@ class _PlayPageState extends State<PlayPage> {
           child: Row(
             mainAxisAlignment: .spaceBetween,
             children: [
-              Text(
-                "${widget.params.puzzleType == PuzzleType.daily ? DateFormat.yMMMMd().format(DateTime.now()) : "Autogen"} - ${toBeginningOfSentenceCase(boardState.puzzleDifficulty.name)}",
-                style: TextTheme.of(context).bodyMedium,
+              ValueListenableBuilder(
+                valueListenable: gameSettings.seed,
+                builder: (context, seed, child) => Text(
+                  "${widget.params.puzzleType == PuzzleType.daily ? DateFormat.yMMMMd().format(DateTime.now()) : "#${gameSettings.seed.value}"} - ${toBeginningOfSentenceCase(boardState.puzzleDifficulty.name)}",
+                  style: TextTheme.of(context).bodyMedium,
+                ),
               ),
               ValueListenableBuilder(
                 valueListenable: settings.showTime,
