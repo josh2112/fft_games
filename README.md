@@ -4,7 +4,7 @@ Experimenting with Flutter by building a suite of mobile games similar to those 
 
 So far we have Fosterdle (a clone of Wordle) and Fosteroes (a clone of Pips). More games and game modes coming as time and motivation allow!
 
-All games are online at `https://joshuafoster.info/fftgames`.
+All games are online at [https://joshuafoster.info/fftgames](https://joshuafoster.info/fftgames).
 
 ## Fosterdle
 
