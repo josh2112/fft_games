@@ -1,16 +1,15 @@
 import 'dart:math';
 
 import 'package:defer_pointer/defer_pointer.dart';
+import 'package:fft_games_lib/fosteroes/domino.dart' as model;
+import 'package:fft_games_lib/fosteroes/region.dart';
 import 'package:flutter/material.dart';
-
-import 'domino_model.dart';
-import 'region.dart';
 
 enum DominoLocation { hand, board, floating, dragging }
 
 enum DominoDirection { right, down, left, up }
 
-class DominoState extends DominoModel {
+class DominoState extends model.Domino {
   DominoLocation _location = DominoLocation.hand, _previousLocation = DominoLocation.hand;
 
   final ValueNotifier<int> quarterTurns = ValueNotifier(0);

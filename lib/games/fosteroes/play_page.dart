@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:defer_pointer/defer_pointer.dart';
-import 'package:fft_games/games/fosteroes/puzzle.dart';
+import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:fft_games/utils/dialog_or_bottom_sheet.dart';
 import 'package:fft_games/utils/multi_snack_bar.dart';
 import 'package:fft_games/utils/utils.dart';

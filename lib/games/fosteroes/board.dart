@@ -1,4 +1,5 @@
-import 'package:fft_games/games/fosteroes/region.dart';
+import 'package:fft_games_lib/fosteroes/region.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

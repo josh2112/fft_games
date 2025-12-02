@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:fft_games/games/fosteroes/puzzle.dart';
+import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:fft_games/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';

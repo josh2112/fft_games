@@ -2,8 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-import 'region.dart';
-//import 'package:path_drawing/path_drawing.dart';
+import 'package:fft_games_lib/fosteroes/region.dart';
 
 class RegionPalette {
   final Color label, fill, stroke;
