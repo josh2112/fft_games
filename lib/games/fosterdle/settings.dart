@@ -9,9 +9,9 @@ import '../../settings/persistence/shared_prefs_persistence.dart';
 import '../../settings/setting.dart';
 
 class SettingsController {
-  static final String _prefix = '${GlobalSettingsController.prefix}.Fosterdle';
+  static final String prefix = '${GlobalSettingsController.prefix}.Fosterdle';
 
-  static final _log = Logger('$_prefix.SettingsController');
+  static final _log = Logger('$prefix.SettingsController');
 
   final SettingsPersistence _store;
 
@@ -26,20 +26,20 @@ class SettingsController {
   late final Setting<List<List<LetterWithState>>> gameStateGuesses;
 
   SettingsController({SettingsPersistence? store}) : _store = store ?? SharedPrefsPersistence() {
-    isHardMode = Setting("$_prefix.hardMode", _store, false, log: _log);
+    isHardMode = Setting("$prefix.hardMode", _store, false, log: _log);
 
     gameStateDate = Setting(
-      "$_prefix.gameState.date",
+      "$prefix.gameState.date",
       _store,
       serializer: SettingSerializer.dateTime,
       DateTime.fromMillisecondsSinceEpoch(0),
       log: _log,
     );
 
-    gameStateIsCompleted = Setting("$_prefix.gameState.isCompleted", _store, false, log: _log);
+    gameStateIsCompleted = Setting("$prefix.gameState.isCompleted", _store, false, log: _log);
 
     gameStateGuesses = Setting(
-      "$_prefix.gameState.guesses",
+      "$prefix.gameState.guesses",
       _store,
       serializer: SettingSerializer<List<List<LetterWithState>>>(
         (guesses) => jsonEncode(
@@ -57,13 +57,13 @@ class SettingsController {
       log: _log,
     );
 
-    numPlayed = Setting("$_prefix.numPlayed", _store, 0, log: _log);
-    numWon = Setting("$_prefix.numWon", _store, 0, log: _log);
-    currentStreak = Setting("$_prefix.currentStreak", _store, 0, log: _log);
-    maxStreak = Setting("$_prefix.maxStreak", _store, 0, log: _log);
+    numPlayed = Setting("$prefix.numPlayed", _store, 0, log: _log);
+    numWon = Setting("$prefix.numWon", _store, 0, log: _log);
+    currentStreak = Setting("$prefix.currentStreak", _store, 0, log: _log);
+    maxStreak = Setting("$prefix.maxStreak", _store, 0, log: _log);
 
     solveCounts = Setting(
-      "$_prefix.solveCounts",
+      "$prefix.solveCounts",
       _store,
       serializer: SettingSerializer(jsonEncode, (str) => List<int>.from(jsonDecode(str))),
       [0, 0, 0, 0, 0, 0],

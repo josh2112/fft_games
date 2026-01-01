@@ -69,9 +69,9 @@ class GameSettingsController {
 }
 
 class SettingsController {
-  static final String _prefix = '${GlobalSettingsController.prefix}.Fosteroes';
+  static final String prefix = '${GlobalSettingsController.prefix}.Fosteroes';
 
-  static final _log = Logger('$_prefix.SettingsController');
+  static final _log = Logger('$prefix.SettingsController');
 
   // Whether to show the timer
   late final Setting<bool> showTime;
@@ -93,13 +93,13 @@ class SettingsController {
 
   SettingsController({SettingsPersistence? store}) {
     store ??= SharedPrefsPersistence();
-    showTime = Setting("$_prefix.showTime", store, true, log: _log);
-    numPlayed = Setting("$_prefix.numPlayed", store, 0, log: _log);
-    numWon = Setting("$_prefix.numWon", store, 0, log: _log);
-    currentStreak = Setting("$_prefix.currentStreak", store, 0, log: _log);
-    maxStreak = Setting("$_prefix.maxStreak", store, 0, log: _log);
+    showTime = Setting("$prefix.showTime", store, true, log: _log);
+    numPlayed = Setting("$prefix.numPlayed", store, 0, log: _log);
+    numWon = Setting("$prefix.numWon", store, 0, log: _log);
+    currentStreak = Setting("$prefix.currentStreak", store, 0, log: _log);
+    maxStreak = Setting("$prefix.maxStreak", store, 0, log: _log);
     lastDateDailyWon = Setting(
-      "$_prefix.lastDateDailyWon",
+      "$prefix.lastDateDailyWon",
       store,
       serializer: SettingSerializer.dateTime,
       DateTime.fromMillisecondsSinceEpoch(0),
@@ -108,7 +108,7 @@ class SettingsController {
     gameSettings = {
       for (final type in PuzzleType.values)
         for (final diff in PuzzleDifficulty.values)
-          (type, diff): GameSettingsController("$_prefix.${type.name}.${diff.name}", store),
+          (type, diff): GameSettingsController("$prefix.${type.name}.${diff.name}", store),
     };
   }
 }

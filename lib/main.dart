@@ -36,8 +36,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MultiProvider(
     providers: [
-      Provider<SettingsPersistence>.value(value: settingsStore),
-      Provider<GlobalSettingsController>(create: (context) => GlobalSettingsController(settingsStore)),
+      Provider.value(value: settingsStore),
+      Provider(create: (context) => GlobalSettingsController(settingsStore)),
     ],
     child: Builder(
       builder: (context) {
@@ -46,28 +46,8 @@ class MyApp extends StatelessWidget {
             valueListenable: globalSettings.themeMode,
             builder: (context, themeMode, child) => MaterialApp.router(
               title: 'Foster Family Times Games',
-              theme: ThemeData.light().copyWith(
-                //primaryColor: Colors.blue,
-                textTheme: Typography().black.apply(fontFamily: 'FacultyGlyphic'),
-                /*appBarTheme: AppBarTheme(
-                  systemOverlayStyle: SystemUiOverlayStyle(
-                    statusBarColor: Colors.transparent,
-                    statusBarIconBrightness: Brightness.dark,
-                    statusBarBrightness: Brightness.light,
-                  ),
-                ),*/
-              ),
-              darkTheme: ThemeData.dark().copyWith(
-                //primaryColor: Colors.blue,
-                textTheme: Typography().white.apply(fontFamily: 'FacultyGlyphic'),
-                /*appBarTheme: AppBarTheme(
-                  systemOverlayStyle: SystemUiOverlayStyle(
-                    statusBarColor: Colors.transparent,
-                    statusBarIconBrightness: Brightness.light,
-                    statusBarBrightness: Brightness.dark,
-                  ),
-                ),*/
-              ),
+              theme: ThemeData.light().copyWith(textTheme: Typography().black.apply(fontFamily: 'FacultyGlyphic')),
+              darkTheme: ThemeData.dark().copyWith(textTheme: Typography().white.apply(fontFamily: 'FacultyGlyphic')),
               themeMode: globalSettings.themeMode.isLoaded ? ThemeMode.values[themeMode] : initialThemeMode,
               routerConfig: router,
               debugShowCheckedModeBanner: false,
