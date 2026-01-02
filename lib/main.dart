@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) => MultiProvider(
     providers: [
-      Provider.value(value: settingsStore),
+      Provider<SettingsPersistence>.value(value: settingsStore),
       Provider(create: (context) => GlobalSettingsController(settingsStore)),
     ],
     child: Builder(

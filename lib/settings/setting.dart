@@ -46,6 +46,8 @@ class Setting<T> extends ValueNotifier<T> {
     }
   }
 
+  Future<T> update() async => _load();
+
   Future<T> _load() async {
     if (serializer != null) {
       value = await store

@@ -1,7 +1,5 @@
 # TODO
 
-- Daily puzzle(s)
-- Generate puzzle
-  - Will need to sort out stats generated vs. daily
-- Bucket stats by time taken
+- Medium and hard Fosteroes puzzles
+- Bucket stats by time taken?
 
