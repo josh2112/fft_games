@@ -15,7 +15,13 @@ final router = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => MainMenuPage(key: Key('main menu')),
+      builder: (context, state) => MultiProvider(
+        providers: [
+          // TODO: This doesn't actually get inherted by child routes like the doc says???
+          Provider(create: (context) => fosterdle.SettingsController(store: context.read<SettingsPersistence>())),
+        ],
+        child: const MainMenuPage(key: Key('main menu')),
+      ),
       routes: [
         // Use a "shell route" to provide a MultiProvider to all the Fosterdle subroutes.
         // Any child route will be able to grab whatever we put in the MultiProvider. The
@@ -26,7 +32,7 @@ final router = GoRouter(
           builder: (context, state, child) {
             return MultiProvider(
               providers: [
-                Provider(create: (context) => fosterdle.SettingsController(store: context.read<SettingsPersistence>())),
+                //Provider(create: (context) => fosterdle.SettingsController(store: context.read<SettingsPersistence>())),
                 Provider(create: (context) => fosterdle.Palette()),
               ],
               child: child,

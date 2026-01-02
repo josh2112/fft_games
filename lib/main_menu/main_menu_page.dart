@@ -27,6 +27,11 @@ class _MainMenuPageState extends State<MainMenuPage> {
   );
 
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   void didUpdateWidget(covariant MainMenuPage oldWidget) {
     newGamesAvail.update();
     super.didUpdateWidget(oldWidget);
@@ -48,14 +53,17 @@ class _MainMenuPageState extends State<MainMenuPage> {
                 spacing: 15,
                 children: [
                   ValueListenableBuilder(
-                    valueListenable: newGamesAvail.isFosterdleNew,
-                    builder: (context, isNew, child) => GameCard(
-                      'Fosterdle',
-                      'Guess the five-letter word within six tries.',
-                      "assets/tile-fosterdle.png",
-                      Theme.of(context).colorScheme.primary,
-                      GameCardAction('Daily', '', () => context.go('/fosterdle'), isNew: isNew),
-                    ),
+                    valueListenable: context.watch<fosterdle.SettingsController>().isNewGameAvailable,
+                    builder: (conntext, isNew, child) {
+                      print('isn ew ??????  $isNew');
+                      return GameCard(
+                        'Fosterdle',
+                        'Guess the five-letter word within six tries.',
+                        "assets/tile-fosterdle.png",
+                        Theme.of(context).colorScheme.primary,
+                        GameCardAction('Daily', '', () => context.go('/fosterdle'), isNew: isNew),
+                      );
+                    },
                   ),
                   ValueListenableBuilder(
                     valueListenable: newGamesAvail.isFosteroesNew,
