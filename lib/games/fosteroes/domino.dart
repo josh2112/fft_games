@@ -109,9 +109,9 @@ class _DominoState extends State<Domino> {
     final local = renderObject.globalToLocal(point);
 
     final xform = Matrix4.identity()
-      ..translateByDouble(_HalfDomino.width, _HalfDomino.height / 2, 0, 1)
+      ..translateByDouble(HalfDomino.width, HalfDomino.height / 2, 0, 1)
       ..rotateZ((d.data as DominoState).quarterTurns.value * pi / 2)
-      ..translateByDouble(-_HalfDomino.width, -_HalfDomino.height / 2, 0, 1);
+      ..translateByDouble(-HalfDomino.width, -HalfDomino.height / 2, 0, 1);
 
     var xformed = MatrixUtils.transformPoint(xform, local);
 
@@ -147,9 +147,9 @@ class _Domino extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            _HalfDomino(state.side1, colors.inverseSurface),
+            HalfDomino(state.side1, colors.inverseSurface),
             VerticalDivider(thickness: 1, indent: 5, width: 1, endIndent: 5),
-            _HalfDomino(state.side2, colors.inverseSurface),
+            HalfDomino(state.side2, colors.inverseSurface),
           ],
         ),
       ),
@@ -157,7 +157,7 @@ class _Domino extends StatelessWidget {
   }
 }
 
-class _HalfDomino extends StatelessWidget {
+class HalfDomino extends StatelessWidget {
   static const width = 51.0, height = 50.0;
   static const hInset = 14.0;
   static const vInset = 15.0;
@@ -171,7 +171,7 @@ class _HalfDomino extends StatelessWidget {
   final int pips;
   final Color color;
 
-  const _HalfDomino(this.pips, this.color);
+  const HalfDomino(this.pips, this.color);
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -227,7 +227,7 @@ class DominoPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
     decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(8)),
-    width: _HalfDomino.width * 2 + 3,
-    height: _HalfDomino.height + 3,
+    width: HalfDomino.width * 2 + 3,
+    height: HalfDomino.height + 3,
   );
 }

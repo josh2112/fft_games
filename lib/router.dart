@@ -15,13 +15,7 @@ final router = GoRouter(
   routes: [
     GoRoute(
       path: '/',
-      builder: (context, state) => MultiProvider(
-        providers: [
-          // TODO: This doesn't actually get inherted by child routes like the doc says???
-          Provider(create: (context) => fosterdle.SettingsController(store: context.read<SettingsPersistence>())),
-        ],
-        child: const MainMenuPage(key: Key('main menu')),
-      ),
+      builder: (context, state) => const MainMenuPage(key: Key('main menu')),
       routes: [
         // Use a "shell route" to provide a MultiProvider to all the Fosterdle subroutes.
         // Any child route will be able to grab whatever we put in the MultiProvider. The
@@ -32,7 +26,7 @@ final router = GoRouter(
           builder: (context, state, child) {
             return MultiProvider(
               providers: [
-                //Provider(create: (context) => fosterdle.SettingsController(store: context.read<SettingsPersistence>())),
+                Provider(create: (context) => fosterdle.SettingsController(store: context.read<SettingsPersistence>())),
                 Provider(create: (context) => fosterdle.Palette()),
               ],
               child: child,
@@ -55,23 +49,25 @@ final router = GoRouter(
           ],
         ),
         ShellRoute(
-          builder: (context, state, child) {
-            return MultiProvider(
-              providers: [
-                Provider(create: (context) => fosteroes.SettingsController(store: context.read<SettingsPersistence>())),
-              ],
-              child: child,
-            );
-          },
+          builder: (context, state, child) => Provider(
+            create: (context) => fosteroes.SettingsController(store: context.read<SettingsPersistence>()),
+            child: child,
+          ),
           routes: [
             GoRoute(
               path: 'fosteroes',
-              builder: (context, state) =>
-                  fosteroes.PlayPage(key: Key('fosteroes'), params: state.extra as fosteroes.PlayPageParams?),
+              builder: (context, state) => fosteroes.DifficultyPage(key: Key('fosteroes difficulty')),
               routes: [
                 GoRoute(
-                  path: 'stats',
-                  builder: (context, state) => const fosteroes.StatsPage(key: Key('fosteroes stats')),
+                  path: 'play',
+                  builder: (context, state) =>
+                      fosteroes.PlayPage(key: Key('fosteroes'), params: state.extra as fosteroes.PlayPageParams?),
+                  routes: [
+                    GoRoute(
+                      path: 'stats',
+                      builder: (context, state) => const fosteroes.StatsPage(key: Key('fosteroes stats')),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -80,5 +76,5 @@ final router = GoRouter(
       ],
     ),
   ],
-  //initialLocation: '/' # Go directly to a page (for testing)
+  // initialLocation: '/' # Go directly to a page (for testing)
 );

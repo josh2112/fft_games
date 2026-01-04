@@ -263,7 +263,7 @@ class _PlayPageState extends State<PlayPage> {
 
   void showStats({bool justWon = false}) {
     context.go(
-      '/fosteroes/stats',
+      '/fosteroes/play/stats',
       extra: justWon
           ? StatsPageParams(
               widget.params.puzzleType,
