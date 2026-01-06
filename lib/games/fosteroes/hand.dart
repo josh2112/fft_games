@@ -26,16 +26,17 @@ class Hand extends StatelessWidget {
       builder: (context, child) => DragTarget<DominoState>(
         builder: (context, candidateData, rejectedData) => Container(
           decoration: candidateData.isNotEmpty ? highlightBox : normalBox,
-          child: Padding(
+          child: GridView.extent(
             padding: const EdgeInsets.all(8.0),
-            child: Wrap(
-              spacing: 25,
-              runSpacing: 25,
-              children: [
-                for (final d in handState.positions)
-                  Stack(clipBehavior: Clip.none, children: [DominoPlaceholder(), if (d is DominoState) Domino(d)]),
-              ],
-            ),
+            childAspectRatio: 2,
+            maxCrossAxisExtent: 150,
+            mainAxisSpacing: 9,
+            crossAxisSpacing: 9,
+            shrinkWrap: true,
+            children: [
+              for (final d in handState.positions)
+                Stack(clipBehavior: Clip.none, children: [DominoPlaceholder(), if (d is DominoState) Domino(d)]),
+            ],
           ),
         ),
         onWillAcceptWithDetails: (_) => true,

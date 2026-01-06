@@ -10,7 +10,8 @@ import 'package:provider/provider.dart';
 import 'fosteroes.dart';
 
 class DifficultyPage extends StatefulWidget {
-  const DifficultyPage({super.key});
+  final PuzzleType puzzleType;
+  const DifficultyPage(this.puzzleType, {super.key});
 
   @override
   State<DifficultyPage> createState() => _DifficultyPageState();
@@ -39,7 +40,7 @@ class _DifficultyPageState extends State<DifficultyPage> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text("Daily", style: TextTheme.of(context).titleMedium),
+            Text(toBeginningOfSentenceCase(widget.puzzleType.name), style: TextTheme.of(context).titleMedium),
             Expanded(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -47,7 +48,9 @@ class _DifficultyPageState extends State<DifficultyPage> {
                 children: [
                   for (var d in PuzzleDifficulty.values)
                     ValueListenableBuilder(
-                      valueListenable: newGamesAvail.fosteroesWatchers[d]!.isNewGameAvailable,
+                      valueListenable: widget.puzzleType == PuzzleType.daily
+                          ? newGamesAvail.fosteroesWatchers[d]!.isNewGameAvailable
+                          : ValueNotifier(true),
                       builder: (context, isNew, child) => Badge(
                         label: Text("New"),
                         offset: Offset(-18, -4),
@@ -60,7 +63,7 @@ class _DifficultyPageState extends State<DifficultyPage> {
                               shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.all(Radius.circular(25))),
                               padding: EdgeInsets.symmetric(horizontal: 15, vertical: 20),
                             ),
-                            onPressed: () => context.go('/fosteroes/play', extra: PlayPageParams(PuzzleType.daily, d)),
+                            onPressed: () => context.go('/fosteroes/play', extra: PlayPageParams(widget.puzzleType, d)),
                             child: Row(
                               children: [
                                 Container(

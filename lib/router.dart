@@ -3,6 +3,7 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'package:fft_games/settings/persistence/settings_persistence.dart';
+import 'package:fft_games/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -56,7 +57,10 @@ final router = GoRouter(
           routes: [
             GoRoute(
               path: 'fosteroes',
-              builder: (context, state) => fosteroes.DifficultyPage(key: Key('fosteroes difficulty')),
+              builder: (context, state) {
+                final puzzleType = state.extra is PuzzleType ? state.extra as PuzzleType : PuzzleType.daily;
+                return fosteroes.DifficultyPage(puzzleType, key: Key('fosteroes difficulty'));
+              },
               routes: [
                 GoRoute(
                   path: 'play',

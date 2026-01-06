@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:defer_pointer/defer_pointer.dart';
-import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:fft_games/utils/dialog_or_bottom_sheet.dart';
 import 'package:fft_games/utils/multi_snack_bar.dart';
 import 'package:fft_games/utils/utils.dart';
+import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -172,7 +172,7 @@ class _PlayPageState extends State<PlayPage> {
                             ignoring: !inProgress,
                             child: DeferredPointerHandler(
                               child: Column(
-                                mainAxisSize: MainAxisSize.min,
+                                mainAxisSize: MainAxisSize.max,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 spacing: 10,
                                 children: [

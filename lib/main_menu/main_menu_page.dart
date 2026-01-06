@@ -2,8 +2,8 @@ import 'package:fft_games/games/fosterdle/fosterdle.dart' as fosterdle;
 import 'package:fft_games/games/fosteroes/fosteroes.dart' as fosteroes;
 import 'package:fft_games/settings/persistence/settings_persistence.dart';
 import 'package:fft_games/settings/setting.dart';
-import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:fft_games/utils/utils.dart';
+import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -62,14 +62,16 @@ class _MainMenuPageState extends State<MainMenuPage> {
                       'Arrange dominoes on the board to satisfy all conditions.',
                       "assets/tile-fosteroes.png",
                       Theme.of(context).colorScheme.primary,
-                      GameCardAction('Daily', '', () => context.go('/fosteroes', extra: newGamesAvail), isNew: isNew),
+                      GameCardAction(
+                        'Daily',
+                        '',
+                        () => context.go('/fosteroes', extra: PuzzleType.daily),
+                        isNew: isNew,
+                      ),
                       secondaryAction: GameCardAction(
                         'Autogen',
                         'Unlimited play',
-                        () => context.go(
-                          '/fosteroes',
-                          extra: fosteroes.PlayPageParams(PuzzleType.autogen, PuzzleDifficulty.easy),
-                        ),
+                        () => context.go('/fosteroes', extra: PuzzleType.autogen),
                       ),
                     ),
                   ),

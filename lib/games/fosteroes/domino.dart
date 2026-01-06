@@ -117,7 +117,7 @@ class _DominoState extends State<Domino> {
 
     if ((d.data as DominoState).isVertical) {
       // TODO: Big hack -- figure out what the correct formula is!
-      xformed += Offset(-25, 25);
+      xformed += Offset(-HalfDomino.height / 2, HalfDomino.height / 2);
     }
 
     return xformed;
