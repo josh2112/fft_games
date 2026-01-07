@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:fft_games/games/fosterdle/board_state.dart';
-import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 
 import '../../settings/global_settings.dart';
@@ -25,8 +24,6 @@ class SettingsController {
   late final Setting<DateTime> gameStateDate;
   late final Setting<bool> gameStateIsCompleted;
   late final Setting<List<List<LetterWithState>>> gameStateGuesses;
-
-  final isNewGameAvailable = ValueNotifier<bool>(false);
 
   SettingsController({SettingsPersistence? store}) : _store = store ?? SharedPrefsPersistence() {
     isHardMode = Setting("$prefix.hardMode", _store, false, log: _log);
@@ -72,13 +69,5 @@ class SettingsController {
       [0, 0, 0, 0, 0, 0],
       log: _log,
     );
-
-    gameStateDate.addListener(updateIsNewGameAvailable);
-    gameStateIsCompleted.addListener(updateIsNewGameAvailable);
-
-    isNewGameAvailable.addListener(() => print("PISS"));
   }
-
-  void updateIsNewGameAvailable() => isNewGameAvailable.value =
-      gameStateDate.value != DateUtils.dateOnly(DateTime.now()) || !gameStateIsCompleted.value;
 }

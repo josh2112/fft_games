@@ -171,7 +171,7 @@ class HalfDomino extends StatelessWidget {
   final int pips;
   final Color color;
 
-  const HalfDomino(this.pips, this.color);
+  const HalfDomino(this.pips, this.color, {super.key});
 
   @override
   Widget build(BuildContext context) => SizedBox(
