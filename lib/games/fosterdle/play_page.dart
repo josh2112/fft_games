@@ -88,7 +88,8 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Expanded(child: const BoardWidget()),
+                  SizedBox(height: 450, child: Expanded(child: const BoardWidget())),
+
                   const SizedBox(height: 5),
                   ListenableBuilder(
                     listenable: boardState.keyboard,
