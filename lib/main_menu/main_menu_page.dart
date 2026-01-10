@@ -41,41 +41,44 @@ class _MainMenuPageState extends State<MainMenuPage> {
           children: [
             Text('Foster Family Times Games', style: TextTheme.of(context).titleLarge, textAlign: TextAlign.center),
             Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                spacing: 15,
-                children: [
-                  ValueListenableBuilder(
-                    valueListenable: newGamesAvail.fosterdleWatcher.isNewGameAvailable,
-                    builder: (conntext, isNew, child) => GameCard(
-                      'Fosterdle',
-                      'Guess the five-letter word within six tries.',
-                      "assets/tile-fosterdle.png",
-                      Theme.of(context).colorScheme.primary,
-                      GameCardAction('Daily', '', () => context.go('/fosterdle'), isNew: isNew),
-                    ),
-                  ),
-                  ValueListenableBuilder(
-                    valueListenable: newGamesAvail.fosteroesWatchers[PuzzleDifficulty.easy]!.isNewGameAvailable,
-                    builder: (context, isNew, child) => GameCard(
-                      'Fosteroes',
-                      'Arrange dominoes on the board to satisfy all conditions.',
-                      "assets/tile-fosteroes.png",
-                      Theme.of(context).colorScheme.primary,
-                      GameCardAction(
-                        'Daily',
-                        '',
-                        () => context.go('/fosteroes', extra: PuzzleType.daily),
-                        isNew: isNew,
-                      ),
-                      secondaryAction: GameCardAction(
-                        'Autogen',
-                        'Unlimited play',
-                        () => context.go('/fosteroes', extra: PuzzleType.autogen),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: 600),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  spacing: 15,
+                  children: [
+                    ValueListenableBuilder(
+                      valueListenable: newGamesAvail.fosterdleWatcher.isNewGameAvailable,
+                      builder: (conntext, isNew, child) => GameCard(
+                        'Fosterdle',
+                        'Guess the five-letter word within six tries.',
+                        "assets/tile-fosterdle.png",
+                        Theme.of(context).colorScheme.primary,
+                        GameCardAction('Daily', '', () => context.go('/fosterdle'), isNew: isNew),
                       ),
                     ),
-                  ),
-                ],
+                    ValueListenableBuilder(
+                      valueListenable: newGamesAvail.fosteroesWatchers[PuzzleDifficulty.easy]!.isNewGameAvailable,
+                      builder: (context, isNew, child) => GameCard(
+                        'Fosteroes',
+                        'Arrange dominoes on the board to satisfy all conditions.',
+                        "assets/tile-fosteroes.png",
+                        Theme.of(context).colorScheme.primary,
+                        GameCardAction(
+                          'Daily',
+                          '',
+                          () => context.go('/fosteroes', extra: PuzzleType.daily),
+                          isNew: isNew,
+                        ),
+                        secondaryAction: GameCardAction(
+                          'Autogen',
+                          'Unlimited play',
+                          () => context.go('/fosteroes', extra: PuzzleType.autogen),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             Builder(
