@@ -31,9 +31,9 @@ class HandDominoes extends ChangeNotifier {
   }
 
   bool tryPutBack(DominoState domino) {
+    domino.location = DominoLocation.hand;
     if (_positions.contains(domino)) return false;
     _positions[_positions.indexWhere((ds) => ds == null)] = domino;
-    domino.location = DominoLocation.hand;
     domino.quarterTurns.value = 0;
     notifyListeners();
     return true;

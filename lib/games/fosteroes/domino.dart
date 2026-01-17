@@ -23,8 +23,10 @@ class DominoState extends model.Domino {
   DominoLocation get previousLocation => _previousLocation;
 
   set location(DominoLocation value) {
-    _previousLocation = _location;
-    _location = value;
+    if (value != _location) {
+      _previousLocation = _location;
+      _location = value;
+    }
   }
 
   DominoState(super.id, super.side1, super.side2);
@@ -95,6 +97,8 @@ class _DominoState extends State<Domino> {
               hitTestBehavior: HitTestBehavior.opaque,
               data: widget.state,
               dragAnchorStrategy: centeredDragAnchorStrategy,
+              onDragStarted: () => widget.state.location = DominoLocation.dragging,
+              onDraggableCanceled: (v, o) => widget.state.location = widget.state.previousLocation,
               child: _Domino(widget.state),
             ),
           ),
@@ -142,16 +146,17 @@ class _Domino extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         border: BoxBorder.all(color: colors.inverseSurface, width: 1.5),
       ),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            HalfDomino(state.side1, colors.inverseSurface),
-            VerticalDivider(thickness: 1, indent: 5, width: 1, endIndent: 5),
-            HalfDomino(state.side2, colors.inverseSurface),
-          ],
-        ),
+
+      width: HalfDomino.width * 2 + 4,
+      height: HalfDomino.height,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          HalfDomino(state.side1, colors.inverseSurface),
+          VerticalDivider(thickness: 1, indent: 5, width: 1, endIndent: 5),
+          HalfDomino(state.side2, colors.inverseSurface),
+        ],
       ),
     );
   }

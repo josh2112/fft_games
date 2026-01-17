@@ -112,16 +112,16 @@ class _StatsPageState extends State<StatsPage> {
               SolveCountsGraph(settings.solveCounts.value, widget.winLoseData),
               */
               const Spacer(flex: 3),
-              ElevatedButton(
-                onPressed: () {
-                  if (_params != null) {
-                    context.go('/');
-                  } else {
-                    context.pop();
-                  }
-                },
-                child: Text(_params != null ? "Home" : 'Back'),
-              ),
+              if (_params != null)
+                Row(
+                  mainAxisAlignment: .center,
+                  spacing: 20,
+                  children: [
+                    ElevatedButton(onPressed: () => context.go('/fosteroes'), child: Text("Play another")),
+                    ElevatedButton(onPressed: () => context.go('/'), child: Text("Home")),
+                  ],
+                ),
+              if (_params == null) ElevatedButton(onPressed: () => context.pop(), child: Text("Back")),
               const Spacer(),
             ],
           ),
