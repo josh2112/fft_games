@@ -31,7 +31,7 @@ class HandDominoes extends ChangeNotifier {
   }
 
   bool tryPutBack(DominoState domino) {
-    domino.location = DominoLocation.hand;
+    domino.location.value = DominoLocation.hand;
     if (_positions.contains(domino)) return false;
     _positions[_positions.indexWhere((ds) => ds == null)] = domino;
     domino.quarterTurns.value = 0;
@@ -83,7 +83,7 @@ class BoardDominoes extends ChangeNotifier {
 
   bool canPlace(Set<Cell> domino) {
     var allCells = dominoes.entries
-        .where((e) => e.key.location == DominoLocation.board)
+        .where((e) => e.key.location.value == DominoLocation.board)
         .map((e) => e.key.area(e.value))
         .flattened;
 
@@ -185,7 +185,7 @@ class BoardState {
       return;
     }
     onBoard.remove(d);
-    d.location = DominoLocation.floating;
+    d.location.value = DominoLocation.floating;
     floatingDomino.value = FloatingDomino(d, baseCell, d.quarterTurns.value - 1);
   }
 
@@ -206,14 +206,14 @@ class BoardState {
       if (isReturning) {
         float.domino.quarterTurns.value = float.originalTurns;
       }
-      float.domino.location = DominoLocation.board;
+      float.domino.location.value = DominoLocation.board;
       floatingDomino.value = null;
       onBoard.add(float.domino, float.baseCell, rotateFrom: rotateFrom);
     }
   }
 
   void onDominoRotated(DominoState d) {
-    if (d.location == DominoLocation.board) {
+    if (d.location.value == DominoLocation.board) {
       // If another domino is floating, return it to its original position.
       if (floatingDomino.value?.domino != d) {
         unfloatDomino(isReturning: true);
@@ -222,12 +222,12 @@ class BoardState {
       floatDomino(d);
     }
 
-    if (d.location == DominoLocation.floating) {
+    if (d.location.value == DominoLocation.floating) {
       // Turn it, and try to snap it in place after some delay (if it hasn't been turned again)
       final previousTurns = d.quarterTurns;
       Future.delayed(Duration(milliseconds: 500), () {
         // Unless we've been turned again, try to snap this domino back to the board
-        if (d.location == DominoLocation.floating && previousTurns == d.quarterTurns) {
+        if (d.location.value == DominoLocation.floating && previousTurns == d.quarterTurns) {
           if (canSnapFloatingDomino()) {
             unfloatDomino();
           }
@@ -261,7 +261,7 @@ class BoardState {
     for (final sdp in state) {
       final domino = inHand.positions.firstWhere((ds) => ds?.id == sdp.id)!;
       inHand.remove(domino);
-      domino.location = DominoLocation.board;
+      domino.location.value = DominoLocation.board;
       domino.quarterTurns.value = sdp.quarterTurns;
       onBoard.add(domino, Cell(sdp.x, sdp.y), animateFrom: Offset(0, 5));
       await Future.delayed(Duration(milliseconds: 200));

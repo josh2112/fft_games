@@ -54,7 +54,7 @@ class Hand extends StatelessWidget {
         onAcceptWithDetails: (details) {
           if (handState.tryPutBack(details.data)) {
             final boardState = context.read<BoardState>();
-            details.data.location == DominoLocation.hand;
+            details.data.location.value == DominoLocation.hand;
             details.data.quarterTurns.value = 0;
             if (boardState.floatingDomino.value?.domino == details.data) {
               boardState.floatingDomino.value = null;

@@ -124,7 +124,7 @@ class _BoardState extends State<Board> {
         ),
       ),
       onWillAcceptWithDetails: (details) {
-        details.data.location = DominoLocation.dragging;
+        details.data.location.value = DominoLocation.dragging;
         return true;
       },
       onMove: (details) => onDominoDragged(details, boardState),
@@ -146,7 +146,7 @@ class _BoardState extends State<Board> {
       boardState.unfloatDomino(isReturning: !boardState.canSnapFloatingDomino());
     }
 
-    for (final d in boardState.inHand.positions.where((d) => d?.location != DominoLocation.dragging)) {
+    for (final d in boardState.inHand.positions.where((d) => d?.location.value != DominoLocation.dragging)) {
       d?.quarterTurns.value = 0;
     }
 
@@ -172,7 +172,7 @@ class _BoardState extends State<Board> {
 
     if (boardState.puzzle.value!.field.canPlace(cells) && boardState.onBoard.canPlace(cells)) {
       boardState.inHand.remove(domino);
-      domino.location = DominoLocation.board;
+      domino.location.value = DominoLocation.board;
       if (domino.direction == DominoDirection.left) {
         baseCell = baseCell.right;
       } else if (domino.direction == DominoDirection.up) {
@@ -187,7 +187,7 @@ class _BoardState extends State<Board> {
       boardState.onBoard.add(domino, baseCell);
       boardState.maybeCheckConstraints();
     } else {
-      domino.location = domino.previousLocation;
+      domino.location.revert();
     }
   }
 }

@@ -9,32 +9,38 @@ enum DominoLocation { hand, board, floating, dragging }
 
 enum DominoDirection { right, down, left, up }
 
-class DominoState extends model.Domino {
-  DominoLocation _location = DominoLocation.hand, _previousLocation = DominoLocation.hand;
+class DominoLocationNotifier extends ValueNotifier<DominoLocation> {
+  late DominoLocation _prev;
 
+  DominoLocationNotifier(super.value) : _prev = value;
+
+  @override
+  set value(DominoLocation newValue) {
+    if (newValue != value) {
+      print("domino location $value => $newValue");
+      _prev = value;
+      super.value = newValue;
+    }
+  }
+
+  void revert() => value = _prev;
+}
+
+class DominoState extends model.Domino {
   final ValueNotifier<int> quarterTurns = ValueNotifier(0);
+
+  final location = DominoLocationNotifier(DominoLocation.hand);
 
   DominoDirection get direction => DominoDirection.values[quarterTurns.value % 4];
 
   bool get isVertical => quarterTurns.value % 2 == 1;
-
-  DominoLocation get location => _location;
-
-  DominoLocation get previousLocation => _previousLocation;
-
-  set location(DominoLocation value) {
-    if (value != _location) {
-      _previousLocation = _location;
-      _location = value;
-    }
-  }
 
   DominoState(super.id, super.side1, super.side2);
 
   List<Cell> area(Cell baseCell) => [baseCell, baseCell.adjacent(quarterTurns.value)];
 
   @override
-  String toString() => "Domino $side1/$side2 ${direction.name}, ${location.name}";
+  String toString() => "Domino $side1/$side2 ${direction.name}, ${location.value.name}";
 }
 
 class Domino extends StatefulWidget {
@@ -80,26 +86,31 @@ class _DominoState extends State<Domino> {
     return AnimatedSlide(
       offset: (initialTranslation ?? Offset.zero),
       duration: Duration(milliseconds: 200),
-      child: AnimatedRotation(
-        turns: (initialRotation ?? widget.state.quarterTurns.value) / 4.0,
-        duration: Duration(milliseconds: 200),
-        alignment: widget.state.location == DominoLocation.hand ? Alignment.center : FractionalOffset(0.25, 0.5),
-        child: DeferPointer(
-          child: GestureDetector(
-            onTap: onRotateDomino,
-            behavior: HitTestBehavior.opaque,
-            child: Draggable<DominoState>(
-              feedback: RotatedBox(
-                quarterTurns: widget.state.quarterTurns.value,
-                child: Opacity(opacity: 0.8, child: _Domino(widget.state)),
+      child: ListenableBuilder(
+        listenable: widget.state.location,
+        builder: (context, child) => AnimatedRotation(
+          turns: (initialRotation ?? widget.state.quarterTurns.value) / 4.0,
+          duration: Duration(milliseconds: 200),
+          alignment: widget.state.location.value == DominoLocation.hand
+              ? Alignment.center
+              : FractionalOffset(0.25, 0.5),
+          child: DeferPointer(
+            child: GestureDetector(
+              onTap: onRotateDomino,
+              behavior: HitTestBehavior.opaque,
+              child: Draggable<DominoState>(
+                feedback: RotatedBox(
+                  quarterTurns: widget.state.quarterTurns.value,
+                  child: Opacity(opacity: 0.8, child: _Domino(widget.state)),
+                ),
+                childWhenDragging: SizedBox(),
+                hitTestBehavior: HitTestBehavior.opaque,
+                data: widget.state,
+                dragAnchorStrategy: centeredDragAnchorStrategy,
+                onDragStarted: () => widget.state.location.value = DominoLocation.dragging,
+                onDraggableCanceled: (v, o) => widget.state.location.revert(),
+                child: _Domino(widget.state),
               ),
-              childWhenDragging: SizedBox(),
-              hitTestBehavior: HitTestBehavior.opaque,
-              data: widget.state,
-              dragAnchorStrategy: centeredDragAnchorStrategy,
-              onDragStarted: () => widget.state.location = DominoLocation.dragging,
-              onDraggableCanceled: (v, o) => widget.state.location = widget.state.previousLocation,
-              child: _Domino(widget.state),
             ),
           ),
         ),
@@ -148,7 +159,7 @@ class _Domino extends StatelessWidget {
       ),
 
       width: HalfDomino.width * 2 + 4,
-      height: HalfDomino.height,
+      height: HalfDomino.height + 2,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisSize: MainAxisSize.min,
