@@ -17,7 +17,6 @@ class DominoLocationNotifier extends ValueNotifier<DominoLocation> {
   @override
   set value(DominoLocation newValue) {
     if (newValue != value) {
-      print("domino location $value => $newValue");
       _prev = value;
       super.value = newValue;
     }

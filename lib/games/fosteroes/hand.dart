@@ -17,7 +17,7 @@ class Hand extends StatelessWidget {
 
   const Hand({super.key});
 
-  Widget handWidget(List<Widget> children) => GridView.extent(
+  Widget dominoHolderWidget(List<Widget> children) => GridView.extent(
     padding: const EdgeInsets.all(8.0),
     childAspectRatio: 2,
     maxCrossAxisExtent: 150,
@@ -39,8 +39,8 @@ class Hand extends StatelessWidget {
           decoration: candidateData.isNotEmpty ? highlightBox : normalBox,
           child: Stack(
             children: [
-              handWidget([for (final _ in handState.positions) Center(child: DominoPlaceholder())]),
-              handWidget([
+              dominoHolderWidget([for (final _ in handState.positions) Center(child: DominoPlaceholder())]),
+              dominoHolderWidget([
                 for (final d in handState.positions)
                   if (d is DominoState)
                     Center(child: Domino(d))

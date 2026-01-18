@@ -11,7 +11,7 @@ import 'region_painter.dart';
 
 class ConstraintLabel extends StatelessWidget {
   static const double size = 36;
-  static const Offset offset = Offset(17, 16.2);
+  static const Offset offset = Offset(15, 15);
 
   final ConstraintRegion region;
   final RegionPalette palette;

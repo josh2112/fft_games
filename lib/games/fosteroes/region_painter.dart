@@ -45,7 +45,7 @@ class RegionPainter extends CustomPainter {
   }
 
   void paintContour(Canvas canvas, Contour contour) {
-    final outset = (_region is FieldRegion ? 5.0 : -2.5);
+    final outset = (_region is FieldRegion ? 5.0 : -1.0);
     final cornerRadius = _region is FieldRegion ? 5.0 : 3.5;
 
     var path = _makePath(contour, outset, cornerRadius);
