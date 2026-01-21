@@ -93,18 +93,29 @@ class _StatsPageState extends State<StatsPage> {
                 ),
               if (_params != null) const Spacer(),
               subtitle(context, "STATISTICS"),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 5,
+              const SizedBox(height: 30),
+              Column(
+                spacing: 50,
                 children: [
-                  StatsWidget("Played", settings.numPlayed.value.toString()),
-                  StatsWidget(
-                    "Win %",
-                    (settings.numWon.value / max(settings.numPlayed.value, 1) * 100).round().toString(),
+                  Row(
+                    mainAxisAlignment: .center,
+                    spacing: 50,
+                    children: [
+                      StatsWidget("Played", settings.numPlayed.value.toString()),
+                      StatsWidget(
+                        "Win %",
+                        (settings.numWon.value / max(settings.numPlayed.value, 1) * 100).round().toString(),
+                      ),
+                    ],
                   ),
-                  StatsWidget("Current Streak", settings.currentStreak.value.toString()),
-                  StatsWidget("Max Streak", settings.maxStreak.value.toString()),
+                  Row(
+                    mainAxisAlignment: .center,
+                    spacing: 50,
+                    children: [
+                      StatsWidget("Current Streak", settings.currentStreak.value.toString()),
+                      StatsWidget("Max Streak", settings.maxStreak.value.toString()),
+                    ],
+                  ),
                 ],
               ),
               const Spacer(),

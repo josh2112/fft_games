@@ -5,14 +5,12 @@ class StatsWidget extends StatelessWidget {
   const StatsWidget(this.label, this.value, {super.key});
 
   @override
-  Widget build(BuildContext context) => SizedBox(
-    width: 85,
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        Text(value, style: TextTheme.of(context).displayMedium),
-        Text(label, textAlign: TextAlign.center),
-      ],
-    ),
+  Widget build(BuildContext context) => Column(
+    mainAxisAlignment: MainAxisAlignment.start,
+    crossAxisAlignment: .center,
+    children: [
+      Text(value, style: TextTheme.of(context).displayMedium),
+      Text(label, textAlign: TextAlign.center),
+    ],
   );
 }
