@@ -2,6 +2,8 @@ import 'dart:math';
 
 import 'package:confetti/confetti.dart';
 import 'package:fft_games/games/fosteroes/fosteroes.dart';
+import 'package:fft_games/main_menu/main_menu_page.dart';
+import 'package:fft_games/settings/persistence/settings_persistence.dart';
 import 'package:fft_games/utils/stats_widget.dart';
 import 'package:fft_games/utils/utils.dart';
 import 'package:flutter/material.dart';
@@ -24,14 +26,24 @@ class StatsPage extends StatefulWidget {
 }
 
 class _StatsPageState extends State<StatsPage> {
+  late final newGamesAvail = NewGameWatcher(context.read<SettingsPersistence>());
+
   ConfettiController? _confettiController;
 
   StatsPageParams? _params;
 
   @override
   void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await newGamesAvail.update();
+      setState(() {});
+    });
     super.initState();
   }
+
+  bool get isAnotherGameAvailable =>
+      _params?.puzzleType == PuzzleType.autogen ||
+      PuzzleDifficulty.values.any((d) => true == newGamesAvail.fosteroesWatchers[d]!.isNewGameAvailable.value);
 
   @override
   void didChangeDependencies() {
@@ -119,17 +131,16 @@ class _StatsPageState extends State<StatsPage> {
                 ],
               ),
               const Spacer(),
-              /*subtitle(context, "GUESS DISTRIBUTION"),
-              SolveCountsGraph(settings.solveCounts.value, widget.winLoseData),
-              */
+              //*SolveCountsGraph(settings.solveCounts.value, widget.winLoseData),
               const Spacer(flex: 3),
               if (_params != null)
                 Row(
                   mainAxisAlignment: .center,
                   spacing: 20,
                   children: [
-                    ElevatedButton(onPressed: () => context.go('/fosteroes'), child: Text("Play another")),
                     ElevatedButton(onPressed: () => context.go('/'), child: Text("Home")),
+                    if (isAnotherGameAvailable)
+                      FilledButton(onPressed: () => context.go('/fosteroes'), child: Text("Play another")),
                   ],
                 ),
               if (_params == null) ElevatedButton(onPressed: () => context.pop(), child: Text("Back")),

@@ -21,9 +21,12 @@ class _DifficultyPageState extends State<DifficultyPage> {
   late final NewGameWatcher newGamesAvail = NewGameWatcher(context.read<SettingsPersistence>());
 
   @override
-  void didUpdateWidget(covariant DifficultyPage oldWidget) {
-    newGamesAvail.update();
-    super.didUpdateWidget(oldWidget);
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await newGamesAvail.update();
+      setState(() {});
+    });
+    super.initState();
   }
 
   @override

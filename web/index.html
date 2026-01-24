@@ -1,30 +1,24 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
     <head>
         <base href="$FLUTTER_BASE_HREF" />
 
         <meta charset="UTF-8" />
         <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
-        <meta
-            name="description"
-            content="A suite of mobile games similar to those from NYT"
-        />
+        <meta name="description" content="A new Flutter project." />
 
         <!-- iOS meta tags & icons -->
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="lack" />
-        <meta name="apple-mobile-web-app-title" content="fft_games" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <meta name="apple-mobile-web-app-title" content="rungoal" />
         <link rel="apple-touch-icon" href="icons/Icon-192.png" />
-
-        <!-- Attempt to change the status bar color when theme is changed -->
-        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#FFFFFF">
-        <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#000000">
 
         <!-- Favicon -->
         <link rel="icon" type="image/png" href="favicon.png" />
 
-        <title>Foster Family Times Games</title>
+        <title>RunGoal</title>
         <link rel="manifest" href="manifest.json" />
+
         <style type="text/css">
             body {
                 background: #141218;
@@ -42,33 +36,59 @@
                 box-sizing: border-box;
                 animation: animloader 2s linear infinite;
             }
-
             @keyframes animloader {
                 0% {
-                    box-shadow: 14px 0 0 -2px, 38px 0 0 -2px, -14px 0 0 -2px,
+                    box-shadow:
+                        14px 0 0 -2px,
+                        38px 0 0 -2px,
+                        -14px 0 0 -2px,
                         -38px 0 0 -2px;
                 }
                 25% {
-                    box-shadow: 14px 0 0 -2px, 38px 0 0 -2px, -14px 0 0 -2px,
+                    box-shadow:
+                        14px 0 0 -2px,
+                        38px 0 0 -2px,
+                        -14px 0 0 -2px,
                         -38px 0 0 2px;
                 }
                 50% {
-                    box-shadow: 14px 0 0 -2px, 38px 0 0 -2px, -14px 0 0 2px,
+                    box-shadow:
+                        14px 0 0 -2px,
+                        38px 0 0 -2px,
+                        -14px 0 0 2px,
                         -38px 0 0 -2px;
                 }
                 75% {
-                    box-shadow: 14px 0 0 2px, 38px 0 0 -2px, -14px 0 0 -2px,
+                    box-shadow:
+                        14px 0 0 2px,
+                        38px 0 0 -2px,
+                        -14px 0 0 -2px,
                         -38px 0 0 -2px;
                 }
                 100% {
-                    box-shadow: 14px 0 0 -2px, 38px 0 0 2px, -14px 0 0 -2px,
+                    box-shadow:
+                        14px 0 0 -2px,
+                        38px 0 0 2px,
+                        -14px 0 0 -2px,
                         -38px 0 0 -2px;
                 }
+            }
+
+            .centered-container {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
             }
         </style>
     </head>
     <body>
-        <span class="loader"></span>
         <script src="flutter_bootstrap.js" async></script>
+        <div class="centered-container">
+            <div>
+                <div class="loader"></div>
+                <div id="status"></div>
+            </div>
+        </div>
     </body>
 </html>
