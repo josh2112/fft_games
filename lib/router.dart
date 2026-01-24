@@ -6,7 +6,7 @@ import 'package:fft_games/settings/persistence/settings_persistence.dart';
 import 'package:fft_games/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as prov;
 
 import 'games/fosterdle/fosterdle.dart' as fosterdle;
 import 'games/fosteroes/fosteroes.dart' as fosteroes;
@@ -25,10 +25,12 @@ final router = GoRouter(
         // provided manually (with BackButton( onPressed: () => context.pop())).
         ShellRoute(
           builder: (context, state, child) {
-            return MultiProvider(
+            return prov.MultiProvider(
               providers: [
-                Provider(create: (context) => fosterdle.SettingsController(store: context.read<SettingsPersistence>())),
-                Provider(create: (context) => fosterdle.Palette()),
+                prov.Provider(
+                  create: (context) => fosterdle.SettingsController(store: context.read<SettingsPersistence>()),
+                ),
+                prov.Provider(create: (context) => fosterdle.Palette()),
               ],
               child: child,
             );
@@ -50,7 +52,7 @@ final router = GoRouter(
           ],
         ),
         ShellRoute(
-          builder: (context, state, child) => Provider(
+          builder: (context, state, child) => prov.Provider(
             create: (context) => fosteroes.SettingsController(store: context.read<SettingsPersistence>()),
             child: child,
           ),

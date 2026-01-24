@@ -6,7 +6,7 @@ import 'package:fft_games/utils/utils.dart';
 import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as prov;
 
 import '../utils/consts.dart';
 import '../utils/dialog_or_bottom_sheet.dart';

@@ -1,6 +1,6 @@
 import 'package:fft_games/utils/shake_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as prov;
 
 import 'board_state.dart';
 import 'letter_widget.dart';

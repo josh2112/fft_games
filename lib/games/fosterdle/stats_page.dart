@@ -4,7 +4,7 @@ import 'package:confetti/confetti.dart';
 import 'package:fft_games/utils/stats_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as prov;
 
 import '../../utils/confetti_star_path.dart';
 import 'palette.dart';

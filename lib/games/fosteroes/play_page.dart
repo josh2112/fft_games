@@ -8,7 +8,7 @@ import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as prov;
 
 import 'board.dart';
 import 'board_state.dart';
@@ -155,7 +155,7 @@ class _PlayPageState extends State<PlayPage> {
     ),
     body: Stack(
       children: [
-        Provider.value(
+        prov.Provider.value(
           value: boardState,
           builder: (context, child) => Center(
             child: ConstrainedBox(

@@ -6,7 +6,7 @@ import 'package:fft_games/settings/persistence/shared_prefs_persistence.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as prov;
 
 import 'router.dart';
 
@@ -34,14 +34,14 @@ class MyApp extends StatelessWidget {
   MyApp({this.initialThemeMode = ThemeMode.light, super.key});
 
   @override
-  Widget build(BuildContext context) => MultiProvider(
+  Widget build(BuildContext context) => prov.MultiProvider(
     providers: [
-      Provider<SettingsPersistence>.value(value: settingsStore),
-      Provider(create: (context) => GlobalSettingsController(settingsStore)),
+      prov.Provider<SettingsPersistence>.value(value: settingsStore),
+      prov.Provider(create: (context) => GlobalSettingsController(settingsStore)),
     ],
     child: Builder(
       builder: (context) {
-        return Consumer<GlobalSettingsController>(
+        return prov.Consumer<GlobalSettingsController>(
           builder: (context, globalSettings, child) => ValueListenableBuilder(
             valueListenable: globalSettings.themeMode,
             builder: (context, themeMode, child) => MaterialApp.router(

@@ -3,7 +3,7 @@ import 'package:fft_games/games/fosterdle/settings.dart';
 import 'package:fft_games/settings/global_settings.dart';
 import 'package:fft_games/utils/multi_snack_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as prov;
 
 class SettingsDialog extends StatelessWidget {
   final SettingsController settings;

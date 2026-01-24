@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as prov;
 
 import '../../utils/flip_tile.dart';
 import '../../utils/pop_tile.dart';

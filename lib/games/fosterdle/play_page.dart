@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as prov;
 
 import 'board_state.dart';
 import 'board_widget.dart';
@@ -83,7 +83,7 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
           onKeyEvent: _processKeyEvent,
           child: Padding(
             padding: EdgeInsets.all(10),
-            child: ChangeNotifierProvider.value(
+            child: prov.ChangeNotifierProvider.value(
               value: boardState,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
