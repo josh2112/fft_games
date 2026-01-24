@@ -27,6 +27,8 @@ dependencies:
     confetti: ^0.8.0
     intl: ^0.20.2
     flutter_lints: ^6.0.0
+    riverpod: ^3.2.0
+    flutter_riverpod: ^3.2.0
 
 dev_dependencies:
     flutter_test:
