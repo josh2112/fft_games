@@ -21,14 +21,14 @@ class SettingsController {
   late final Setting<int> numWon;
   late final Setting<int> currentStreak;
   late final Setting<int> maxStreak;
-  late final Setting<DateTime> gameStateDate;
-  late final Setting<bool> gameStateIsCompleted;
+  //late final Setting<DateTime> gameStateDate;
+  //late final Setting<bool> gameStateIsCompleted;
   late final Setting<List<List<LetterWithState>>> gameStateGuesses;
 
   SettingsController({SettingsPersistence? store}) : _store = store ?? SharedPrefsPersistence() {
     isHardMode = Setting("$prefix.hardMode", _store, false, log: _log);
 
-    gameStateDate = Setting(
+    /*    gameStateDate = Setting(
       "$prefix.gameState.date",
       _store,
       serializer: SettingSerializer.dateTime,
@@ -36,7 +36,7 @@ class SettingsController {
       log: _log,
     );
 
-    gameStateIsCompleted = Setting("$prefix.gameState.isCompleted", _store, false, log: _log);
+    gameStateIsCompleted = Setting("$prefix.gameState.isCompleted", _store, false, log: _log);*/
 
     gameStateGuesses = Setting(
       "$prefix.gameState.guesses",

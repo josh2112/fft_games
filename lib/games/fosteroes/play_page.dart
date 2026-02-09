@@ -6,6 +6,7 @@ import 'package:fft_games/utils/multi_snack_bar.dart';
 import 'package:fft_games/utils/utils.dart';
 import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart' as prov;
@@ -24,17 +25,17 @@ class PlayPageParams {
   PlayPageParams(this.puzzleType, this.puzzleDifficulty);
 }
 
-class PlayPage extends StatefulWidget {
+class PlayPage extends ConsumerStatefulWidget {
   final PlayPageParams params;
 
   PlayPage({PlayPageParams? params, super.key})
     : params = params ?? PlayPageParams(PuzzleType.daily, PuzzleDifficulty.easy);
 
   @override
-  State<PlayPage> createState() => _PlayPageState();
+  ConsumerState<PlayPage> createState() => _PlayPageState();
 }
 
-class _PlayPageState extends State<PlayPage> {
+class _PlayPageState extends ConsumerState<PlayPage> {
   late final SettingsController settings;
   late final AppLifecycleListener appLifecycleListener;
   late final MultiSnackBarMessenger messenger;

@@ -1,10 +1,12 @@
+import 'package:fft_games/games/fosterdle/fosterdle.dart' as fosterdle;
+import 'package:fft_games/games/fosteroes/fosteroes.dart' as fosteroes;
+import 'package:fft_games/settings/persistence/settings_persistence.dart';
+import 'package:fft_games/settings/setting.dart';
 import 'package:fft_games/utils/utils.dart';
 import 'package:fft_games/utils/yarsp.dart';
 import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:fft_games/games/fosterdle/fosterdle.dart' as fosterdle;
-import 'package:fft_games/games/fosteroes/fosteroes.dart' as fosteroes;
 
 typedef NewGameSetting = ({String prefix, String dateSettingName, String isCompletedSettingName});
 
@@ -39,7 +41,7 @@ final fosteroesNewGameSettingsProvider = FutureProvider.autoDispose.family((ref,
   );
 });
 
-/*class NewGameSettingsWatcher {
+class NewGameSettingsWatcher {
   final SettingsPersistence store;
   final Setting<DateTime> _date;
   final Setting<bool> _isCompleted;
@@ -100,4 +102,3 @@ class NewGameWatcher {
     isAnyFosteroesDailyGameAvailable.value = fosteroesWatchers.values.any((w) => w.isNewGameAvailable.value);
   }
 }
-*/

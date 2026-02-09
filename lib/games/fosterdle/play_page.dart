@@ -5,8 +5,10 @@ import 'package:fft_games/games/fosterdle/settings.dart';
 import 'package:fft_games/games/fosterdle/settings_dialog.dart';
 import 'package:fft_games/utils/dialog_or_bottom_sheet.dart';
 import 'package:fft_games/utils/multi_snack_bar.dart';
+import 'package:fft_games/utils/yarsp.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart' as prov;
@@ -15,14 +17,20 @@ import 'board_state.dart';
 import 'board_widget.dart';
 import 'stats_page.dart';
 
-class PlayPage extends StatefulWidget {
+class PlayPage extends ConsumerStatefulWidget {
+  static AsyncNotifierProvider<SharedPreferenceDateTimeNotifier, DateTime> get gameStateDateTime =>
+      dateTimeSharedPreferenceProvider("${SettingsController.prefix}.gameState.date");
+
+  static AsyncNotifierProvider<SharedPreferenceBoolNotifier, bool> get gameStateIsCompleted =>
+      boolSharedPreferenceProvider("${SettingsController.prefix}.gameState.isCompleted");
+
   const PlayPage({super.key});
 
   @override
-  State<PlayPage> createState() => _PlayPageState();
+  ConsumerState<PlayPage> createState() => _PlayPageState();
 }
 
-class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
+class _PlayPageState extends ConsumerState<PlayPage> with KeyboardAdapter {
   late final SettingsController settings;
   late final BoardState boardState;
 
@@ -43,9 +51,9 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => Future.wait([
         boardState.isLoaded,
-        settings.gameStateDate.waitLoaded,
+        //settings.gameStateDate.waitLoaded,
         settings.gameStateGuesses.waitLoaded,
-        settings.gameStateIsCompleted.waitLoaded,
+        //settings.gameStateIsCompleted.waitLoaded,
       ]).then(_maybeApplyBoardState),
     );
   }
@@ -159,8 +167,9 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
           .where((g) => g.isSubmitted)
           .map((g) => g.letters.toList())
           .toList();
-      settings.gameStateIsCompleted.value = !boardState.isGameInProgress;
-      settings.gameStateDate.value = DateUtils.dateOnly(DateTime.now());
+
+      ref.read(PlayPage.gameStateDateTime.notifier).setValue(DateUtils.dateOnly(DateTime.now()));
+      ref.read(PlayPage.gameStateIsCompleted.notifier).setValue(!boardState.isGameInProgress);
 
       if (!mounted) return;
       if (result == SubmissionResult.wordNotInDictionary) {
@@ -206,13 +215,13 @@ class _PlayPageState extends State<PlayPage> with KeyboardAdapter {
     // a shell route). If this is not our final destination, we want to skip all the animation delays.
     bool isNavigatingToChildPage = GoRouter.of(context).state.path != "fosterdle";
 
-    if (DateUtils.isSameDay(settings.gameStateDate.value, DateTime.now())) {
+    final date = ref.read(PlayPage.gameStateDateTime).requireValue;
+    final isCompleted = ref.read(PlayPage.gameStateIsCompleted).requireValue;
+
+    if (DateUtils.isSameDay(date, DateTime.now())) {
       if (!isNavigatingToChildPage) await Future.delayed(Duration(milliseconds: 50));
 
-      final numGuesses = await boardState.applyGameState(
-        settings.gameStateGuesses.value,
-        settings.gameStateIsCompleted.value,
-      );
+      final numGuesses = await boardState.applyGameState(settings.gameStateGuesses.value, isCompleted);
 
       if (!isNavigatingToChildPage) {
         await Future.delayed(Duration(milliseconds: 750));

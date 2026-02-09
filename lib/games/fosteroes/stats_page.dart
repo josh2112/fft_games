@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:confetti/confetti.dart';
 import 'package:fft_games/games/fosteroes/fosteroes.dart';
-import 'package:fft_games/main_menu/main_menu_page.dart';
+import 'package:fft_games/settings/new_game_settings_providers.dart';
 import 'package:fft_games/settings/persistence/settings_persistence.dart';
 import 'package:fft_games/utils/stats_widget.dart';
 import 'package:fft_games/utils/utils.dart';

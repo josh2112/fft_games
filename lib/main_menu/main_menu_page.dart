@@ -1,15 +1,11 @@
-import 'package:fft_games/games/fosterdle/fosterdle.dart' as fosterdle;
-import 'package:fft_games/games/fosteroes/fosteroes.dart' as fosteroes;
 import 'package:fft_games/settings/new_game_settings_providers.dart';
 import 'package:fft_games/settings/persistence/settings_persistence.dart';
-import 'package:fft_games/settings/setting.dart';
 import 'package:fft_games/utils/utils.dart';
-import 'package:fft_games/utils/yarsp.dart';
 import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart' as prov;
+import 'package:provider/provider.dart' hide Consumer;
 
 import '../utils/consts.dart';
 import '../utils/dialog_or_bottom_sheet.dart';
@@ -25,13 +21,13 @@ class MainMenuPage extends StatefulWidget {
 class _MainMenuPageState extends State<MainMenuPage> {
   static const isRunningWithWasm = bool.fromEnvironment('dart.tool.dart2wasm');
 
-  //late final NewGameWatcher newGamesAvail = NewGameWatcher(context.read<SettingsPersistence>());
+  late final NewGameWatcher newGamesAvail = NewGameWatcher(context.read<SettingsPersistence>());
 
-  //@override
-  //void didUpdateWidget(covariant MainMenuPage oldWidget) {
-    //newGamesAvail.update();
-    //super.didUpdateWidget(oldWidget);
-  //}
+  @override
+  void didUpdateWidget(covariant MainMenuPage oldWidget) {
+    newGamesAvail.update();
+    super.didUpdateWidget(oldWidget);
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -50,29 +46,33 @@ class _MainMenuPageState extends State<MainMenuPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   spacing: 15,
                   children: [
-                    Consumer( builder: (context, ref, child) {
-                      return ref.watch(fosterdleNewGameSettingsProvider).when(
-                        data: (isNewGameAvailable) => GameCard(
+                    Consumer(
+                      builder: (context, ref, child) => GameCard(
                         'Fosterdle',
                         'Guess the five-letter word within six tries.',
                         "assets/tile-fosterdle.png",
                         Theme.of(context).colorScheme.primary,
-                        GameCardAction('Daily', '', () => context.go('/fosterdle'), isNew: isNewGameAvailable),
+                        GameCardAction(
+                          'Daily',
+                          '',
+                          () => context.go('/fosterdle'),
+                          isNew: switch (ref.watch(fosterdleNewGameSettingsProvider)) {
+                            AsyncData(:final value) => value,
+                            _ => false,
+                          },
+                        ),
                       ),
-                      loading: () => const SizedBox(),
-                      error: (err,stackTrace) => const SizedBox(),
-                      );
-                    }),
-                    
-                      /*valueListenable: newGamesAvail.fosterdleWatcher.isNewGameAvailable,
+                    ),
+                    /*ValueListenableBuilder(
+                      valueListenable: newGamesAvail.fosterdleWatcher.isNewGameAvailable,
                       builder: (conntext, isNew, child) => GameCard(
                         'Fosterdle',
                         'Guess the five-letter word within six tries.',
                         "assets/tile-fosterdle.png",
                         Theme.of(context).colorScheme.primary,
                         GameCardAction('Daily', '', () => context.go('/fosterdle'), isNew: isNew),
-                      ),*/
-                    ),
+                      ),
+                    ),*/
                     ValueListenableBuilder(
                       valueListenable: newGamesAvail.fosteroesWatchers[PuzzleDifficulty.easy]!.isNewGameAvailable,
                       builder: (context, isNew, child) => GameCard(
