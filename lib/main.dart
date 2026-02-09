@@ -3,7 +3,6 @@ import 'dart:developer' as dev;
 import 'package:fft_games/settings/global_settings.dart';
 import 'package:fft_games/settings/persistence/settings_persistence.dart';
 import 'package:fft_games/settings/persistence/shared_prefs_persistence.dart';
-import 'package:fft_games/settings_new.dart/test_settings_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,8 +12,6 @@ import 'package:provider/provider.dart' as prov;
 import 'router.dart';
 
 void main() async {
-  main2();
-} /*
   // Basic logging setup.
   Logger.root.level = kDebugMode ? Level.FINE : Level.INFO;
   Logger.root.onRecord.listen((record) {
@@ -33,7 +30,7 @@ void main() async {
       child: MyApp(initialThemeMode: ThemeMode.values[await GlobalSettingsController(prefs).themeMode.waitLoaded]),
     ),
   );
-}*/
+}
 
 class MyApp extends StatelessWidget {
   final settingsStore = SharedPrefsPersistence();

@@ -1,10 +1,13 @@
 import 'package:fft_games/games/fosterdle/fosterdle.dart' as fosterdle;
 import 'package:fft_games/games/fosteroes/fosteroes.dart' as fosteroes;
+import 'package:fft_games/settings/new_game_settings_providers.dart';
 import 'package:fft_games/settings/persistence/settings_persistence.dart';
 import 'package:fft_games/settings/setting.dart';
 import 'package:fft_games/utils/utils.dart';
+import 'package:fft_games/utils/yarsp.dart';
 import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart' as prov;
 
@@ -22,13 +25,13 @@ class MainMenuPage extends StatefulWidget {
 class _MainMenuPageState extends State<MainMenuPage> {
   static const isRunningWithWasm = bool.fromEnvironment('dart.tool.dart2wasm');
 
-  late final NewGameWatcher newGamesAvail = NewGameWatcher(context.read<SettingsPersistence>());
+  //late final NewGameWatcher newGamesAvail = NewGameWatcher(context.read<SettingsPersistence>());
 
-  @override
-  void didUpdateWidget(covariant MainMenuPage oldWidget) {
-    newGamesAvail.update();
-    super.didUpdateWidget(oldWidget);
-  }
+  //@override
+  //void didUpdateWidget(covariant MainMenuPage oldWidget) {
+    //newGamesAvail.update();
+    //super.didUpdateWidget(oldWidget);
+  //}
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -47,15 +50,28 @@ class _MainMenuPageState extends State<MainMenuPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   spacing: 15,
                   children: [
-                    ValueListenableBuilder(
-                      valueListenable: newGamesAvail.fosterdleWatcher.isNewGameAvailable,
+                    Consumer( builder: (context, ref, child) {
+                      return ref.watch(fosterdleNewGameSettingsProvider).when(
+                        data: (isNewGameAvailable) => GameCard(
+                        'Fosterdle',
+                        'Guess the five-letter word within six tries.',
+                        "assets/tile-fosterdle.png",
+                        Theme.of(context).colorScheme.primary,
+                        GameCardAction('Daily', '', () => context.go('/fosterdle'), isNew: isNewGameAvailable),
+                      ),
+                      loading: () => const SizedBox(),
+                      error: (err,stackTrace) => const SizedBox(),
+                      );
+                    }),
+                    
+                      /*valueListenable: newGamesAvail.fosterdleWatcher.isNewGameAvailable,
                       builder: (conntext, isNew, child) => GameCard(
                         'Fosterdle',
                         'Guess the five-letter word within six tries.',
                         "assets/tile-fosterdle.png",
                         Theme.of(context).colorScheme.primary,
                         GameCardAction('Daily', '', () => context.go('/fosterdle'), isNew: isNew),
-                      ),
+                      ),*/
                     ),
                     ValueListenableBuilder(
                       valueListenable: newGamesAvail.fosteroesWatchers[PuzzleDifficulty.easy]!.isNewGameAvailable,
@@ -229,66 +245,4 @@ class GameCardActionButton extends StatelessWidget {
     Brightness.dark => Colors.white,
     Brightness.light => Colors.black,
   };
-}
-
-class NewGameSettingsWatcher {
-  final SettingsPersistence store;
-  final Setting<DateTime> _date;
-  final Setting<bool> _isCompleted;
-
-  final isNewGameAvailable = ValueNotifier(false);
-
-  NewGameSettingsWatcher(this.store, String prefix, String dateSettingName, String isCompletedSettingName)
-    : _date = Setting(
-        "$prefix.$dateSettingName",
-        store,
-        serializer: SettingSerializer.dateTime,
-        DateTime.fromMillisecondsSinceEpoch(0),
-      ),
-
-      _isCompleted = Setting("$prefix.$isCompletedSettingName", store, false) {
-    // We can't rely on addListener() here, since the settings getting updated in Fosterdle
-    // are separate instances. Maybe make a settings source factory so we can always get the same instance
-    // for a given key? This would also solve the problem of having to remember to pass the right params in
-    // case we're accessing this setting for the first time.
-
-    Future.wait([
-      for (var s in [_date, _isCompleted]) s.waitLoaded,
-    ]).then((_) => update());
-  }
-
-  Future update() async => isNewGameAvailable.value =
-      await _date.update() != DateUtils.dateOnly(DateTime.now()) || !await _isCompleted.update();
-}
-
-class NewGameWatcher {
-  final NewGameSettingsWatcher fosterdleWatcher;
-  final Map<PuzzleDifficulty, NewGameSettingsWatcher> fosteroesWatchers;
-
-  final isAnyFosteroesDailyGameAvailable = ValueNotifier(false);
-
-  NewGameWatcher(SettingsPersistence store)
-    : fosterdleWatcher = NewGameSettingsWatcher(
-        store,
-        "${fosterdle.SettingsController.prefix}.gameState",
-        "date",
-        "isCompleted",
-      ),
-      fosteroesWatchers = {
-        for (var diff in PuzzleDifficulty.values)
-          diff: NewGameSettingsWatcher(
-            store,
-            "${fosteroes.SettingsController.prefix}.${PuzzleType.daily.name}.${diff.name}",
-            "date",
-            "isCompleted",
-          ),
-      };
-
-  Future update() async {
-    await fosterdleWatcher.update();
-    for (var w in fosteroesWatchers.values) {
-      await w.update();
-    }
-    isAnyFosteroesDailyGameAvailable.value = fosteroesWatchers.values.any((w) => w.isNewGameAvailable.value);
-  }
 }
