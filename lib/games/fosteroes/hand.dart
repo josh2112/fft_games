@@ -1,7 +1,7 @@
-import 'package:fft_games/games/fosteroes/domino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart' as prov;
 
+import '/games/fosteroes/domino.dart';
 import 'board_state.dart';
 
 class Hand extends StatelessWidget {

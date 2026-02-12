@@ -1,12 +1,12 @@
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:fft_games/utils/pop_in_out_widget.dart';
 import 'package:fft_games_lib/fosteroes/constraint.dart';
 import 'package:fft_games_lib/fosteroes/region.dart';
 import 'package:flutter/material.dart';
 import 'package:svg_path_parser/svg_path_parser.dart';
 
+import '/utils/pop_in_out_widget.dart';
 import 'region_painter.dart';
 
 class ConstraintLabel extends StatelessWidget {

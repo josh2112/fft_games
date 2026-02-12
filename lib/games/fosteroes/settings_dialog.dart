@@ -1,9 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '/settings/global_settings.dart';
 import 'settings.dart';
-import 'package:fft_games/settings/global_settings.dart';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart' as prov;
 
 class SettingsDialog extends ConsumerWidget {
   final SettingsController settings;
@@ -59,10 +58,14 @@ class SettingsDialog extends ConsumerWidget {
             ),
             ListTile(
               title: Text("Show time"),
-              trailing: ValueListenableBuilder(
-                valueListenable: settings.showTime,
-                builder: (context, showTime, child) =>
-                    Switch(value: showTime, onChanged: (v) => settings.showTime.value = v),
+              trailing: Consumer(
+                builder: (context, ref, child) => switch (ref.watch(settings.showTime)) {
+                  AsyncData(value: final showTime) => Switch(
+                    value: showTime,
+                    onChanged: (newShowTime) => ref.read(settings.showTime.notifier).setValue(newShowTime),
+                  ),
+                  _ => const CircularProgressIndicator(),
+                },
               ),
             ),
           ],

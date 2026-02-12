@@ -1,15 +1,14 @@
 import 'dart:math';
 
 import 'package:confetti/confetti.dart';
-import 'package:fft_games/games/fosterdle/providers.dart';
-import 'package:fft_games/utils/stats_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../utils/confetti_star_path.dart';
+import '/games/fosterdle/providers.dart';
+import '/utils/confetti_star_path.dart';
+import '/utils/stats_widget.dart';
 import 'palette.dart';
-import 'settings.dart';
 
 class StatsPageWinLoseData {
   final String word;

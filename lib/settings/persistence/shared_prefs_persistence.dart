@@ -1,5 +1,6 @@
-import 'package:fft_games/settings/persistence/settings_persistence.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '/settings/persistence/settings_persistence.dart';
 
 class SharedPrefsPersistence extends SettingsPersistence {
   final SharedPreferencesAsync prefs = SharedPreferencesAsync();

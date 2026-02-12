@@ -1,6 +1,7 @@
-import 'package:fft_games/settings/global_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '/settings/global_settings.dart';
 
 // TODO: The three SettingsDialogs should share some code
 

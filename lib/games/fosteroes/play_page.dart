@@ -1,9 +1,6 @@
 import 'dart:async';
 
 import 'package:defer_pointer/defer_pointer.dart';
-import 'package:fft_games/utils/dialog_or_bottom_sheet.dart';
-import 'package:fft_games/utils/multi_snack_bar.dart';
-import 'package:fft_games/utils/utils.dart';
 import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +8,9 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart' as prov;
 
+import '/utils/dialog_or_bottom_sheet.dart';
+import '/utils/multi_snack_bar.dart';
+import '/utils/utils.dart';
 import 'board.dart';
 import 'board_state.dart';
 import 'hand.dart';
@@ -60,25 +60,26 @@ class _PlayPageState extends ConsumerState<PlayPage> {
 
     gameSettings = settings.gameSettings[(widget.params.puzzleType, widget.params.puzzleDifficulty)]!;
 
-    gameSettings.waitUntilLoaded().then((_) async {
+    WidgetsBinding.instance.scheduleFrameCallback((_) async {
       await _maybeApplyBoardState();
       boardState.onBoard.addListener(() {
-        gameSettings.state.value = boardState.onBoard.dominoes.entries
-            .map((e) => SavedDominoPlacement(e.key.id, e.value.x, e.value.y, e.key.quarterTurns.value))
-            .toList();
+        ref.read(gameSettings.state.notifier).setValue([
+          for (final e in boardState.onBoard.dominoes.entries)
+            SavedDominoPlacement(e.key.id, e.value.x, e.value.y, e.key.quarterTurns.value),
+        ]);
       });
     });
   }
 
   void maybeUpdateElapsedTime() {
     if (boardState.isPaused.value) {
-      gameSettings.elapsedTime.value = boardState.elapsedTimeSecs.value;
+      ref.read(gameSettings.elapsedTime.notifier).setValue(boardState.elapsedTimeSecs.value);
     }
   }
 
   @override
   void deactivate() {
-    gameSettings.elapsedTime.value = boardState.elapsedTimeSecs.value;
+    ref.read(gameSettings.elapsedTime.notifier).setValue(boardState.elapsedTimeSecs.value);
     super.deactivate();
   }
 
@@ -119,33 +120,35 @@ class _PlayPageState extends ConsumerState<PlayPage> {
           child: Row(
             mainAxisAlignment: .spaceBetween,
             children: [
-              ValueListenableBuilder(
-                valueListenable: gameSettings.seed,
-                builder: (context, seed, child) => Text(
-                  "${widget.params.puzzleType == PuzzleType.daily ? DateFormat.yMMMMd().format(DateTime.now()) : "#${gameSettings.seed.value}"} - ${toBeginningOfSentenceCase(boardState.puzzleDifficulty.name)}",
-                  style: TextTheme.of(context).bodyMedium,
-                ),
+              Consumer(
+                builder: (context, ref, child) => switch (ref.watch(gameSettings.seed)) {
+                  AsyncData(value: final seed) => Text(
+                    "${widget.params.puzzleType == PuzzleType.daily ? DateFormat.yMMMMd().format(DateTime.now()) : "#$seed"} - ${toBeginningOfSentenceCase(boardState.puzzleDifficulty.name)}",
+                    style: TextTheme.of(context).bodyMedium,
+                  ),
+                  _ => SizedBox(),
+                },
               ),
-              ValueListenableBuilder(
-                valueListenable: settings.showTime,
-                builder: (context, showTime, child) => showTime
-                    ? ListenableBuilder(
-                        listenable: Listenable.merge([boardState.elapsedTimeSecs, boardState.isPaused]),
-                        builder: (context, child) => Opacity(
-                          opacity: 0.6,
-                          child: Padding(
-                            padding: EdgeInsetsGeometry.only(left: 15),
-                            child: Text(
-                              boardState.isPaused.value
-                                  ? "Paused"
-                                  : Duration(seconds: boardState.elapsedTimeSecs.value).formatHHMMSS(),
-                              style: TextTheme.of(context).bodyMedium,
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
+              Consumer(
+                builder: (context, ref, child) => switch (ref.watch(settings.showTime)) {
+                  AsyncData(value: final showTime) when showTime => ListenableBuilder(
+                    listenable: Listenable.merge([boardState.elapsedTimeSecs, boardState.isPaused]),
+                    builder: (context, child) => Opacity(
+                      opacity: 0.6,
+                      child: Padding(
+                        padding: EdgeInsetsGeometry.only(left: 15),
+                        child: Text(
+                          boardState.isPaused.value
+                              ? "Paused"
+                              : Duration(seconds: boardState.elapsedTimeSecs.value).formatHHMMSS(),
+                          style: TextTheme.of(context).bodyMedium,
+                          textAlign: TextAlign.right,
                         ),
-                      )
-                    : SizedBox(),
+                      ),
+                    ),
+                  ),
+                  _ => SizedBox(),
+                },
               ),
               Spacer(),
               TextButton(onPressed: boardState.clearBoard, child: Text("Clear")),
@@ -197,18 +200,26 @@ class _PlayPageState extends ConsumerState<PlayPage> {
     ),
   );
 
-  void _onPlayerWon() {
-    gameSettings.elapsedTime.value = boardState.elapsedTimeSecs.value;
-    gameSettings.isCompleted.value = true;
-    settings.numWon.value += 1;
+  void _onPlayerWon() async {
+    ref.read(gameSettings.elapsedTime.notifier).setValue(boardState.elapsedTimeSecs.value);
+    ref.read(gameSettings.isCompleted.notifier).setValue(true);
 
+    ref.read(settings.numPlayed.notifier).increment();
+    ref.read(settings.numWon.notifier).increment();
+
+    final currentStreak = await ref.read(settings.currentStreak.future) + 1;
+    ref.read(settings.currentStreak.notifier).setValue(currentStreak);
+
+    final lastDateDailyWon = await ref.read(settings.lastDateDailyWon.future);
     final today = DateUtils.dateOnly(DateTime.now());
-    if (widget.params.puzzleType == .daily && settings.lastDateDailyWon.value.isBefore(today)) {
-      settings.lastDateDailyWon.value = today;
-      settings.currentStreak.value += 1;
 
-      if (settings.currentStreak.value > settings.maxStreak.value) {
-        settings.maxStreak.value = settings.currentStreak.value;
+    if (widget.params.puzzleType == .daily && lastDateDailyWon.isBefore(today)) {
+      ref.read(settings.lastDateDailyWon.notifier).setValue(today);
+
+      final maxStreak = await ref.read(settings.maxStreak.future);
+
+      if (currentStreak > maxStreak) {
+        ref.read(settings.maxStreak.notifier).setValue(currentStreak);
       }
     }
 
@@ -220,58 +231,60 @@ class _PlayPageState extends ConsumerState<PlayPage> {
   Future _maybeApplyBoardState() async {
     final today = DateUtils.dateOnly(DateTime.now());
 
+    final isCompleted = await ref.read(gameSettings.isCompleted.future);
+
     // Different algorithms depending on game type...
     if (widget.params.puzzleType == PuzzleType.daily) {
       // Make today's puzzle. The seed is today's date as an int.
       // Daily games reset only once a day
       boardState.makePuzzle(int.parse(today.toString().split(' ').first.split('-').join()));
 
-      if (gameSettings.date.value != today) {
+      if (await ref.read(gameSettings.date.future) != today) {
         // If the last saved-game state is for a different day, reset everything
-        gameSettings.reset();
-        settings.numPlayed.value += 1;
+        gameSettings.reset(ref);
+        ref.read(settings.numPlayed.notifier).increment();
       } else {
         await restoreGameState();
       }
     } else {
       //Autogen games reset after they have been completed.
-      if (gameSettings.elapsedTime.value > 0 && !gameSettings.isCompleted.value) {
-        boardState.makePuzzle(gameSettings.seed.value);
+      if (await ref.read(gameSettings.elapsedTime.future) > 0 && !isCompleted) {
+        boardState.makePuzzle(await ref.read(gameSettings.seed.future));
         await restoreGameState();
       } else {
         // Start over
-        gameSettings.seed.value = boardState.makePuzzle(null);
-        gameSettings.reset();
-        settings.numPlayed.value += 1;
+        ref.read(gameSettings.seed.notifier).setValue(boardState.makePuzzle(null));
+        gameSettings.reset(ref);
+        ref.read(settings.numPlayed.notifier).increment();
       }
     }
 
-    if (gameSettings.isCompleted.value && mounted) {
+    if (isCompleted && mounted) {
       showStats(justWon: true);
     }
   }
 
   Future restoreGameState() async {
-    if (gameSettings.state.value.isNotEmpty) {
+    final gameState = await ref.read(gameSettings.state.future);
+
+    if (gameState.isNotEmpty) {
       messenger.showSnackBar("Continuing from earlier");
     }
     await boardState.applyGameState(
-      gameSettings.state.value,
-      gameSettings.elapsedTime.value,
-      gameSettings.isCompleted.value,
+      gameState,
+      await ref.read(gameSettings.elapsedTime.future),
+      await ref.read(gameSettings.isCompleted.future),
     );
   }
 
-  void showStats({bool justWon = false}) {
-    context.go(
-      '/fosteroes/play/stats',
-      extra: justWon
-          ? StatsPageParams(
-              widget.params.puzzleType,
-              widget.params.puzzleDifficulty,
-              Duration(seconds: boardState.elapsedTimeSecs.value),
-            )
-          : null,
-    );
-  }
+  void showStats({bool justWon = false}) => context.go(
+    '/fosteroes/play/stats',
+    extra: justWon
+        ? StatsPageParams(
+            widget.params.puzzleType,
+            widget.params.puzzleDifficulty,
+            Duration(seconds: boardState.elapsedTimeSecs.value),
+          )
+        : null,
+  );
 }

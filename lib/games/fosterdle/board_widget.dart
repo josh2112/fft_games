@@ -1,7 +1,7 @@
-import 'package:fft_games/games/fosterdle/fosterdle.dart';
-import 'package:fft_games/utils/shake_widget.dart';
 import 'package:flutter/material.dart';
 
+import '/games/fosterdle/fosterdle.dart';
+import '/utils/shake_widget.dart';
 import 'board_state.dart';
 import 'letter_widget.dart';
 

@@ -1,7 +1,8 @@
-import 'package:fft_games/games/fosterdle/palette.dart';
-import 'package:fft_games/games/fosterdle/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '/games/fosterdle/palette.dart';
+import '/games/fosterdle/settings.dart';
 
 final paletteProvider = Provider((ref) => Palette());
 

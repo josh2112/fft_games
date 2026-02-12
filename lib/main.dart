@@ -1,14 +1,12 @@
 import 'dart:developer' as dev;
 
-import 'package:fft_games/settings/global_settings.dart';
-import 'package:fft_games/settings/persistence/settings_persistence.dart';
-import 'package:fft_games/settings/persistence/shared_prefs_persistence.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
-import 'package:provider/provider.dart' as prov;
 
+import '/settings/global_settings.dart';
+import '/settings/persistence/shared_prefs_persistence.dart';
 import 'router.dart';
 
 void main() async {
@@ -18,43 +16,48 @@ void main() async {
     dev.log(record.message, time: record.time, level: record.level.value, name: record.loggerName);
   });
 
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Data migration TODO: Do in MyApp once rewritten with riverpod
-  final prefs = SharedPrefsPersistence();
-  await GlobalSettingsController.migrate(prefs);
-
   runApp(ProviderScope(child: MyApp()));
 }
 
-class MyApp extends ConsumerWidget {
+class MyApp extends ConsumerStatefulWidget {
   final settingsStore = SharedPrefsPersistence();
   final ThemeMode initialThemeMode;
 
   MyApp({this.initialThemeMode = ThemeMode.light, super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ConsumerStatefulWidget> createState() => _MyAppState();
+}
+
+class _MyAppState extends ConsumerState<MyApp> {
+  var _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    GlobalSettingsController.migrate(ref).then((_) => setState(() => _isLoading = false));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const CircularProgressIndicator();
+    }
+
     final globalSettings = ref.read(globalSettingsProvider);
     final themeModeState = ref.watch(globalSettings.themeMode);
 
-    return prov.MultiProvider(
-      providers: [
-        prov.Provider<SettingsPersistence>.value(value: settingsStore),
-        prov.Provider(create: (context) => GlobalSettingsController()),
-      ],
-      child: switch (themeModeState) {
-        AsyncData(value: final themeMode) => MaterialApp.router(
-          title: 'Foster Family Times Games',
-          theme: ThemeData.light().copyWith(textTheme: Typography().black.apply(fontFamily: 'FacultyGlyphic')),
-          darkTheme: ThemeData.dark().copyWith(textTheme: Typography().white.apply(fontFamily: 'FacultyGlyphic')),
-          themeMode: themeMode,
-          routerConfig: router,
-          debugShowCheckedModeBanner: false,
-        ),
-        AsyncLoading() => const CircularProgressIndicator(),
-        AsyncError(:final error) => Text("Error: $error"),
-      },
-    );
+    return switch (themeModeState) {
+      AsyncData(value: final themeMode) => MaterialApp.router(
+        title: 'Foster Family Times Games',
+        theme: ThemeData.light().copyWith(textTheme: Typography().black.apply(fontFamily: 'FacultyGlyphic')),
+        darkTheme: ThemeData.dark().copyWith(textTheme: Typography().white.apply(fontFamily: 'FacultyGlyphic')),
+        themeMode: themeMode,
+        routerConfig: router,
+        debugShowCheckedModeBanner: false,
+      ),
+      AsyncLoading() => const CircularProgressIndicator(),
+      AsyncError(:final error) => Text("Error: $error"),
+    };
   }
 }

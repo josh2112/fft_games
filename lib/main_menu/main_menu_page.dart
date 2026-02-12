@@ -1,15 +1,15 @@
-import 'package:fft_games/games/fosterdle/providers.dart' as fosterdle;
-import 'package:fft_games/settings/new_game_settings_providers.dart';
-import 'package:fft_games/settings/persistence/settings_persistence.dart';
-import 'package:fft_games/utils/utils.dart';
 import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart' hide Consumer;
 
-import '../utils/consts.dart';
-import '../utils/dialog_or_bottom_sheet.dart';
+import '/games/fosterdle/providers.dart' as fosterdle;
+import '/settings/new_game_settings_providers.dart';
+import '/settings/persistence/settings_persistence.dart';
+import '/utils/consts.dart';
+import '/utils/dialog_or_bottom_sheet.dart';
+import '/utils/utils.dart';
 import 'settings_dialog.dart';
 
 class MainMenuPage extends StatefulWidget {

@@ -1,8 +1,9 @@
 import 'dart:async';
 
-import 'package:fft_games/settings/persistence/settings_persistence.dart';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
+
+import '/settings/persistence/settings_persistence.dart';
 
 class SettingSerializer<T> {
   final String Function(T obj) serialize;

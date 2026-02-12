@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../utils/flip_tile.dart';
-import '../../utils/pop_tile.dart';
+import '/utils/flip_tile.dart';
+import '/utils/pop_tile.dart';
 import 'board_state.dart';
 import 'palette.dart';
 

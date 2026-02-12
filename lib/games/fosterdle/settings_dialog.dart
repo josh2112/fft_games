@@ -1,9 +1,10 @@
-import 'package:fft_games/games/fosterdle/board_state.dart';
-import 'package:fft_games/games/fosterdle/settings.dart';
-import 'package:fft_games/settings/global_settings.dart';
-import 'package:fft_games/utils/multi_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '/games/fosterdle/board_state.dart';
+import '/games/fosterdle/settings.dart';
+import '/settings/global_settings.dart';
+import '/utils/multi_snack_bar.dart';
 
 class SettingsDialog extends ConsumerWidget {
   final SettingsController settings;

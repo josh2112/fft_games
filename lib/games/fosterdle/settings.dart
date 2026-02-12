@@ -1,14 +1,12 @@
-import 'dart:convert';
-
-import 'package:fft_games/games/fosterdle/board_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 import 'package:yarsp/yarsp.dart';
 
-import '../../settings/global_settings.dart';
+import '/games/fosterdle/board_state.dart';
+import '/settings/global_settings.dart';
 
 final solveCountsSharedPreferenceNotifier = AsyncNotifierProvider.autoDispose.family(
-  (SharedPreference<List<int>> pref) => JsonSharedPreferenceNotifier<List<int>>(
+  (SharedPreference<List<int>> pref) => JsonSharedPreferenceNotifier(
     pref,
     serialize: (solveCounts) => solveCounts,
     deserialize: (json) => json.cast<int>(),
@@ -16,7 +14,7 @@ final solveCountsSharedPreferenceNotifier = AsyncNotifierProvider.autoDispose.fa
 );
 
 final guessesSharedPreferenceNotifier = AsyncNotifierProvider.autoDispose.family(
-  (SharedPreference<List<List<LetterWithState>>> pref) => JsonSharedPreferenceNotifier<List<List<LetterWithState>>>(
+  (SharedPreference<List<List<LetterWithState>>> pref) => JsonSharedPreferenceNotifier(
     pref,
     serialize: (guesses) =>
         guesses.map((letters) => letters.map((lws) => "${lws.letter}${lws.state.index}").join()).toList(),

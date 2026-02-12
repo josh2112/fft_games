@@ -1,14 +1,11 @@
-import 'dart:convert';
-
-import 'package:fft_games/utils/utils.dart';
 import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:yarsp/yarsp.dart';
 
-import '../../settings/global_settings.dart';
-import '../../settings/persistence/settings_persistence.dart';
-import '../../settings/persistence/shared_prefs_persistence.dart';
-import '../../settings/setting.dart';
+import '/settings/global_settings.dart';
+import '/utils/utils.dart';
 
 class SavedDominoPlacement {
   final int id;
@@ -18,53 +15,38 @@ class SavedDominoPlacement {
   const SavedDominoPlacement(this.id, this.x, this.y, this.quarterTurns);
 }
 
+final dominoPlacementListSharedPreferenceNotifier = AsyncNotifierProvider.autoDispose.family(
+  (SharedPreference<List<SavedDominoPlacement>> pref) => JsonSharedPreferenceNotifier(
+    pref,
+    serialize: (placements) => [
+      for (final p in placements) {"id": p.id, "x": p.x, "y": p.y, "quarterTurns": p.quarterTurns},
+    ],
+
+    deserialize: (json) => [for (final p in json) SavedDominoPlacement(p["id"], p["x"], p["y"], p["quarterTurns"])],
+  ),
+);
+
 // The settings for one game (combination of puzzle type and difficulty)
 class GameSettingsController {
-  late final Setting<DateTime> date;
-  late final Setting<int> elapsedTime;
-  late final Setting<int> seed;
-  late final Setting<List<SavedDominoPlacement>> state;
-  late final Setting<bool> isCompleted;
+  final String prefix;
 
-  GameSettingsController(String prefix, SettingsPersistence store, {Logger? log}) {
-    date = Setting(
-      "$prefix.date",
-      store,
-      serializer: SettingSerializer.dateTime,
-      DateTime.fromMillisecondsSinceEpoch(0),
-      log: log,
-    );
+  late final date = dateTimeSharedPreferenceProvider(
+    SharedPreference("$prefix.date", DateTime.fromMillisecondsSinceEpoch(0)),
+  );
+  late final isCompleted = boolSharedPreferenceProvider(SharedPreference("$prefix.isCompleted", false));
 
-    isCompleted = Setting("$prefix.isCompleted", store, false, log: log);
+  late final seed = intSharedPreferenceProvider(SharedPreference("$prefix.seed", 0));
 
-    state = Setting(
-      "$prefix.state",
-      store,
-      serializer: SettingSerializer<List<SavedDominoPlacement>>(
-        (List<SavedDominoPlacement> placements) => jsonEncode(
-          placements.map((p) => {"id": p.id, "x": p.x, "y": p.y, "quarterTurns": p.quarterTurns}).toList(),
-        ),
-        (String str) => [
-          for (final p in jsonDecode(str)) SavedDominoPlacement(p["id"], p["x"], p["y"], p["quarterTurns"]),
-        ],
-      ),
-      [],
-      log: log,
-    );
+  late final elapsedTime = intSharedPreferenceProvider(SharedPreference("$prefix.elapsedTime", 0));
+  late final state = dominoPlacementListSharedPreferenceNotifier(SharedPreference("$prefix.state", []));
 
-    elapsedTime = Setting("$prefix.elapsedTime", store, 0, log: log);
+  GameSettingsController(this.prefix, {Logger? log});
 
-    seed = Setting("$prefix.seed", store, 0, log: log);
-  }
-
-  Future waitUntilLoaded() =>
-      Future.wait([date.waitLoaded, state.waitLoaded, isCompleted.waitLoaded, elapsedTime.waitLoaded, seed.waitLoaded]);
-
-  void reset() {
-    date.value = DateUtils.dateOnly(DateTime.now());
-    isCompleted.value = false;
-    elapsedTime.value = 0;
-    state.value = [];
+  void reset(WidgetRef ref) {
+    ref.read(date.notifier).setValue(DateUtils.dateOnly(DateTime.now()));
+    ref.read(isCompleted.notifier).setValue(false);
+    ref.read(elapsedTime.notifier).setValue(0);
+    ref.read(state.notifier).setValue([]);
   }
 }
 
@@ -74,41 +56,26 @@ class SettingsController {
   static final _log = Logger('$prefix.SettingsController');
 
   // Whether to show the timer
-  late final Setting<bool> showTime;
+  final showTime = boolSharedPreferenceProvider(SharedPreference("$prefix.showTime", true));
 
   // Total number of games started
-  late final Setting<int> numPlayed;
+  final numPlayed = intSharedPreferenceProvider(SharedPreference("$prefix.numPlayed", 0));
 
   // Total number of games won
-  late final Setting<int> numWon;
+  final numWon = intSharedPreferenceProvider(SharedPreference("$prefix.numWon", 0));
 
   // Last date a daily game was won (for streaks)
-  late final Setting<DateTime> lastDateDailyWon;
+  final lastDateDailyWon = dateTimeSharedPreferenceProvider(
+    SharedPreference("$prefix.lastDateDailyWon", DateTime.fromMillisecondsSinceEpoch(0)),
+  );
 
   // Number of consecutive days where at least one daily has been played and won
-  late final Setting<int> currentStreak;
-  late final Setting<int> maxStreak;
+  final currentStreak = intSharedPreferenceProvider(SharedPreference("$prefix.currentStreak", 0));
+  final maxStreak = intSharedPreferenceProvider(SharedPreference("$prefix.maxStreak", 0));
 
-  late final Map<(PuzzleType, PuzzleDifficulty), GameSettingsController> gameSettings;
-
-  SettingsController({SettingsPersistence? store}) {
-    store ??= SharedPrefsPersistence();
-    showTime = Setting("$prefix.showTime", store, true, log: _log);
-    numPlayed = Setting("$prefix.numPlayed", store, 0, log: _log);
-    numWon = Setting("$prefix.numWon", store, 0, log: _log);
-    currentStreak = Setting("$prefix.currentStreak", store, 0, log: _log);
-    maxStreak = Setting("$prefix.maxStreak", store, 0, log: _log);
-    lastDateDailyWon = Setting(
-      "$prefix.lastDateDailyWon",
-      store,
-      serializer: SettingSerializer.dateTime,
-      DateTime.fromMillisecondsSinceEpoch(0),
-    );
-
-    gameSettings = {
-      for (final type in PuzzleType.values)
-        for (final diff in PuzzleDifficulty.values)
-          (type, diff): GameSettingsController("$prefix.${type.name}.${diff.name}", store),
-    };
-  }
+  final Map<(PuzzleType, PuzzleDifficulty), GameSettingsController> gameSettings = {
+    for (final type in PuzzleType.values)
+      for (final diff in PuzzleDifficulty.values)
+        (type, diff): GameSettingsController("$prefix.${type.name}.${diff.name}"),
+  };
 }

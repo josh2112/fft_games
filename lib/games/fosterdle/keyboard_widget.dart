@@ -1,7 +1,6 @@
-import 'package:fft_games/games/fosterdle/board_state.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart' as prov;
 
+import '/games/fosterdle/board_state.dart';
 import 'palette.dart';
 
 typedef KeyPressedCallback = void Function(String key);

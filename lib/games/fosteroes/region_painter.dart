@@ -1,8 +1,7 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
-
 import 'package:fft_games_lib/fosteroes/region.dart';
+import 'package:flutter/material.dart';
 
 class RegionPalette {
   final Color label, fill, stroke;

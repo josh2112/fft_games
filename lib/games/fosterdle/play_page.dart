@@ -1,18 +1,17 @@
 import 'dart:async';
 
-import 'package:fft_games/games/fosterdle/keyboard_widget.dart';
-import 'package:fft_games/games/fosterdle/providers.dart';
-import 'package:fft_games/games/fosterdle/settings.dart';
-import 'package:fft_games/games/fosterdle/settings_dialog.dart';
-import 'package:fft_games/utils/dialog_or_bottom_sheet.dart';
-import 'package:fft_games/utils/multi_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart' as prov;
 
+import '/games/fosterdle/keyboard_widget.dart';
+import '/games/fosterdle/providers.dart';
+import '/games/fosterdle/settings.dart';
+import '/games/fosterdle/settings_dialog.dart';
+import '/utils/dialog_or_bottom_sheet.dart';
+import '/utils/multi_snack_bar.dart';
 import 'board_state.dart';
 import 'board_widget.dart';
 import 'stats_page.dart';
@@ -188,12 +187,13 @@ class _PlayPageState extends ConsumerState<PlayPage> with KeyboardAdapter {
     solveCounts[numGuesses - 1] += 1;
     ref.read(settings.solveCounts.notifier).setValue(solveCounts);
 
-    final currentStreak = await ref.read(settings.currentStreak.future) + 1;
-    final maxStreak = await ref.read(settings.maxStreak.future);
-
     ref.read(settings.numPlayed.notifier).increment();
     ref.read(settings.numWon.notifier).increment();
+
+    final currentStreak = await ref.read(settings.currentStreak.future) + 1;
     ref.read(settings.currentStreak.notifier).setValue(currentStreak);
+
+    final maxStreak = await ref.read(settings.maxStreak.future);
 
     if (currentStreak > maxStreak) {
       ref.read(settings.maxStreak.notifier).setValue(currentStreak);

@@ -1,13 +1,16 @@
-import 'package:fft_games/games/fosteroes/fosteroes.dart' as fosteroes;
-import 'package:fft_games/settings/persistence/settings_persistence.dart';
-import 'package:fft_games/settings/setting.dart';
-import 'package:fft_games/utils/utils.dart';
-import 'package:yarsp/yarsp.dart';
 import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:yarsp/yarsp.dart';
+
+import '/games/fosteroes/fosteroes.dart' as fosteroes;
+import '/settings/persistence/settings_persistence.dart';
+import '/settings/setting.dart';
+import '/utils/utils.dart';
 
 typedef NewGameSetting = ({String prefix, String dateSettingName, String isCompletedSettingName});
+
+// TODO: Finish migrating this over
 
 final newGameSettingsProvider = FutureProvider.autoDispose.family((ref, NewGameSetting newGameSetting) async {
   final date = await ref.watch(

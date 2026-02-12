@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:collection/collection.dart';
-import 'package:fft_games/games/fosteroes/domino.dart';
+import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:fft_games_lib/fosteroes/puzzle_gen.dart';
-import 'package:fft_games/games/fosteroes/settings.dart';
+import 'package:fft_games_lib/fosteroes/region.dart';
 import 'package:flutter/material.dart';
 
-import 'package:fft_games_lib/fosteroes/puzzle.dart';
-import 'package:fft_games_lib/fosteroes/region.dart';
+import '/games/fosteroes/domino.dart';
+import '/games/fosteroes/settings.dart';
 
 class HandDominoes extends ChangeNotifier {
   var _positions = <DominoState?>[];

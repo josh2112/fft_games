@@ -1,16 +1,19 @@
 import 'dart:math';
 
 import 'package:confetti/confetti.dart';
-import 'package:fft_games/games/fosteroes/fosteroes.dart';
-import 'package:fft_games/settings/new_game_settings_providers.dart';
-import 'package:fft_games/settings/persistence/settings_persistence.dart';
-import 'package:fft_games/utils/stats_widget.dart';
-import 'package:fft_games/utils/utils.dart';
+import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart' as prov;
 
-import '../../utils/confetti_star_path.dart';
+import '/settings/new_game_settings_providers.dart';
+import '/settings/persistence/settings_persistence.dart';
+import '/utils/confetti_star_path.dart';
+import '/utils/stats_widget.dart';
+import '/utils/utils.dart';
+import 'play_page.dart';
+import 'providers.dart';
 
 class StatsPageParams extends PlayPageParams {
   final Duration elapsedTime;
@@ -18,14 +21,14 @@ class StatsPageParams extends PlayPageParams {
   StatsPageParams(super.type, super.difficulty, this.elapsedTime);
 }
 
-class StatsPage extends StatefulWidget {
+class StatsPage extends ConsumerStatefulWidget {
   const StatsPage({super.key});
 
   @override
-  State<StatsPage> createState() => _StatsPageState();
+  ConsumerState<StatsPage> createState() => _StatsPageState();
 }
 
-class _StatsPageState extends State<StatsPage> {
+class _StatsPageState extends ConsumerState<StatsPage> {
   late final newGamesAvail = NewGameWatcher(context.read<SettingsPersistence>());
 
   ConfettiController? _confettiController;
@@ -76,7 +79,16 @@ class _StatsPageState extends State<StatsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final settings = context.select((SettingsController settings) => settings);
+    final settings = ref.watch(settingsProvider);
+
+    final numPlayedState = ref.watch(settings.numPlayed);
+    final numWonState = ref.watch(settings.numWon);
+    final currentStreakState = ref.watch(settings.currentStreak);
+    final maxStreakState = ref.watch(settings.maxStreak);
+
+    if (!numPlayedState.hasValue || !numWonState.hasValue || !currentStreakState.hasValue || !maxStreakState.hasValue) {
+      return const CircularProgressIndicator();
+    }
 
     return Scaffold(
       appBar: AppBar(title: Text('Fosteroes Stats'), centerTitle: true),
@@ -105,29 +117,15 @@ class _StatsPageState extends State<StatsPage> {
                 ),
               if (_params != null) const Spacer(),
               subtitle(context, "STATISTICS"),
-              const SizedBox(height: 30),
-              Column(
-                spacing: 50,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 5,
                 children: [
-                  Row(
-                    mainAxisAlignment: .center,
-                    spacing: 50,
-                    children: [
-                      StatsWidget("Played", settings.numPlayed.value.toString()),
-                      StatsWidget(
-                        "Win %",
-                        (settings.numWon.value / max(settings.numPlayed.value, 1) * 100).round().toString(),
-                      ),
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: .center,
-                    spacing: 50,
-                    children: [
-                      StatsWidget("Current Streak", settings.currentStreak.value.toString()),
-                      StatsWidget("Max Streak", settings.maxStreak.value.toString()),
-                    ],
-                  ),
+                  StatsWidget("Played", numPlayedState.value!.toString()),
+                  StatsWidget("Win %", (numWonState.value! / max(numPlayedState.value!, 1) * 100).round().toString()),
+                  StatsWidget("Current Streak", currentStreakState.value!.toString()),
+                  StatsWidget("Max Streak", maxStreakState.value!.toString()),
                 ],
               ),
               const Spacer(),
