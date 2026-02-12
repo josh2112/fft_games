@@ -17,7 +17,6 @@ dependencies:
         path: ../fft_games_lib
 
     logging: ^1.3.0
-    provider: ^6.1.5+1
     go_router: ^17.0.0
     shared_preferences: ^2.5.3
     collection: ^1.19.1

@@ -1,11 +1,10 @@
+import 'package:fft_games/games/fosteroes/providers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart' as prov;
 
 import '/games/fosteroes/domino.dart';
-import '/settings/new_game_settings_providers.dart';
-import '/settings/persistence/settings_persistence.dart';
 import '/utils/utils.dart';
 import 'fosteroes.dart';
 
@@ -18,17 +17,6 @@ class DifficultyPage extends StatefulWidget {
 }
 
 class _DifficultyPageState extends State<DifficultyPage> {
-  late final NewGameWatcher newGamesAvail = NewGameWatcher(context.read<SettingsPersistence>());
-
-  @override
-  void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await newGamesAvail.update();
-      setState(() {});
-    });
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
@@ -50,43 +38,44 @@ class _DifficultyPageState extends State<DifficultyPage> {
                 spacing: 15,
                 children: [
                   for (var d in PuzzleDifficulty.values)
-                    ValueListenableBuilder(
-                      valueListenable: widget.puzzleType == PuzzleType.daily
-                          ? newGamesAvail.fosteroesWatchers[d]!.isNewGameAvailable
-                          : ValueNotifier(true),
-                      builder: (context, isNew, child) => Badge(
-                        label: Text("New"),
-                        offset: Offset(-18, -4),
-                        isLabelVisible: isNew,
-                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        child: SizedBox(
-                          width: 180,
-                          child: FilledButton(
-                            style: FilledButton.styleFrom(
-                              shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.all(Radius.circular(25))),
-                              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 20),
-                            ),
-                            onPressed: () => context.go('/fosteroes/play', extra: PlayPageParams(widget.puzzleType, d)),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 50,
-                                  height: 50,
-                                  margin: EdgeInsets.only(right: 20),
-                                  decoration: ShapeDecoration(
-                                    color: Colors.white,
-                                    shape: RoundedSuperellipseBorder(
-                                      borderRadius: BorderRadius.all(Radius.circular(10)),
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final isNew = true == ref.watch(isNewGameAvailableProvider((PuzzleType.daily, d))).value;
+                        return Badge(
+                          label: Text("New"),
+                          offset: Offset(-18, -4),
+                          isLabelVisible: isNew,
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          child: SizedBox(
+                            width: 180,
+                            child: FilledButton(
+                              style: FilledButton.styleFrom(
+                                shape: RoundedSuperellipseBorder(borderRadius: BorderRadius.all(Radius.circular(25))),
+                                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+                              ),
+                              onPressed: () =>
+                                  context.go('/fosteroes/play', extra: PlayPageParams(widget.puzzleType, d)),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 50,
+                                    height: 50,
+                                    margin: EdgeInsets.only(right: 20),
+                                    decoration: ShapeDecoration(
+                                      color: Colors.white,
+                                      shape: RoundedSuperellipseBorder(
+                                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                                      ),
                                     ),
+                                    child: HalfDomino(d.index + 1, Colors.black),
                                   ),
-                                  child: HalfDomino(d.index + 1, Colors.black),
-                                ),
-                                Text(toBeginningOfSentenceCase(d.name)),
-                              ],
+                                  Text(toBeginningOfSentenceCase(d.name)),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ),
+                        );
+                      },
                     ),
                 ],
               ),

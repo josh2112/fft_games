@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart' as prov;
 
 import '/utils/dialog_or_bottom_sheet.dart';
 import '/utils/multi_snack_bar.dart';
@@ -14,6 +13,7 @@ import '/utils/utils.dart';
 import 'board.dart';
 import 'board_state.dart';
 import 'hand.dart';
+import 'providers.dart';
 import 'settings.dart';
 import 'settings_dialog.dart';
 import 'stats_page.dart';
@@ -47,7 +47,7 @@ class _PlayPageState extends ConsumerState<PlayPage> {
   void initState() {
     super.initState();
 
-    settings = context.read<SettingsController>();
+    settings = ref.read(settingsProvider);
 
     appLifecycleListener = AppLifecycleListener(
       onStateChange: (state) => boardState.isPaused.value = state != AppLifecycleState.resumed,
@@ -159,38 +159,35 @@ class _PlayPageState extends ConsumerState<PlayPage> {
     ),
     body: Stack(
       children: [
-        prov.Provider.value(
-          value: boardState,
-          builder: (context, child) => Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 600),
-              child: Padding(
-                padding: EdgeInsets.all(20),
-                child: ValueListenableBuilder(
-                  valueListenable: boardState.puzzle,
-                  builder: (context, puzzle, child) => puzzle == null
-                      ? CircularProgressIndicator()
-                      : ValueListenableBuilder(
-                          valueListenable: boardState.isInProgress,
-                          builder: (context, inProgress, child) => IgnorePointer(
-                            ignoring: !inProgress,
-                            child: DeferredPointerHandler(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.max,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                spacing: 10,
-                                children: [
-                                  Expanded(
-                                    child: FittedBox(fit: BoxFit.contain, child: Board()),
-                                  ),
-                                  Divider(),
-                                  Hand(),
-                                ],
-                              ),
+        Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 600),
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: ValueListenableBuilder(
+                valueListenable: boardState.puzzle,
+                builder: (context, puzzle, child) => puzzle == null
+                    ? CircularProgressIndicator()
+                    : ValueListenableBuilder(
+                        valueListenable: boardState.isInProgress,
+                        builder: (context, inProgress, child) => IgnorePointer(
+                          ignoring: !inProgress,
+                          child: DeferredPointerHandler(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.max,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              spacing: 10,
+                              children: [
+                                Expanded(
+                                  child: FittedBox(fit: BoxFit.contain, child: Board(boardState)),
+                                ),
+                                Divider(),
+                                Hand(boardState),
+                              ],
                             ),
                           ),
                         ),
-                ),
+                      ),
               ),
             ),
           ),

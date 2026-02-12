@@ -1,6 +1,5 @@
 import 'package:fft_games_lib/fosteroes/region.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart' as prov;
 
 import 'board_state.dart';
 import 'constraint_label.dart';
@@ -10,7 +9,9 @@ import 'region_painter.dart';
 class Board extends StatefulWidget {
   static const cellSize = 53.0;
 
-  const Board({super.key});
+  final BoardState boardState;
+
+  const Board(this.boardState, {super.key});
 
   @override
   State<Board> createState() => _BoardState();
@@ -23,8 +24,7 @@ class _BoardState extends State<Board> {
 
   @override
   Widget build(BuildContext context) {
-    final boardState = context.watch<BoardState>();
-    final puzzle = boardState.puzzle.value!;
+    final puzzle = widget.boardState.puzzle.value!;
 
     return DragTarget<DominoState>(
       key: _dragTargetKey,
@@ -54,17 +54,17 @@ class _BoardState extends State<Board> {
                 ),
               Positioned(
                 child: ListenableBuilder(
-                  listenable: boardState.onBoard,
+                  listenable: widget.boardState.onBoard,
                   builder: (context, child) => Stack(
                     children: [
-                      for (final dOnBoard in boardState.onBoard.dominoes.entries)
+                      for (final dOnBoard in widget.boardState.onBoard.dominoes.entries)
                         Positioned(
                           left: dOnBoard.value.x * Board.cellSize,
                           top: dOnBoard.value.y * Board.cellSize,
                           child: Domino(
                             dOnBoard.key,
-                            rotateFrom: boardState.onBoard.getRotateFrom(dOnBoard.key),
-                            translateFrom: boardState.onBoard.getAnimateFrom(dOnBoard.key),
+                            rotateFrom: widget.boardState.onBoard.getRotateFrom(dOnBoard.key),
+                            translateFrom: widget.boardState.onBoard.getAnimateFrom(dOnBoard.key),
                           ),
                         ),
                     ],
@@ -86,7 +86,7 @@ class _BoardState extends State<Board> {
               ),
               Positioned(
                 child: ValueListenableBuilder(
-                  valueListenable: boardState.violatedConstraintRegions,
+                  valueListenable: widget.boardState.violatedConstraintRegions,
                   builder: (context, violatedConstraintRegions, child) => Stack(
                     clipBehavior: Clip.none,
                     children: [
@@ -103,9 +103,9 @@ class _BoardState extends State<Board> {
               ),
 
               ListenableBuilder(
-                listenable: boardState.floatingDomino,
+                listenable: widget.boardState.floatingDomino,
                 builder: (context, child) {
-                  final floating = boardState.floatingDomino.value;
+                  final floating = widget.boardState.floatingDomino.value;
                   return floating != null
                       ? Positioned(
                           left: floating.baseCell.x * Board.cellSize,
@@ -126,8 +126,8 @@ class _BoardState extends State<Board> {
         details.data.location.value = DominoLocation.dragging;
         return true;
       },
-      onMove: (details) => onDominoDragged(details, boardState),
-      onAcceptWithDetails: (details) => onDominoDropped(details, boardState),
+      onMove: (details) => onDominoDragged(details, widget.boardState),
+      onAcceptWithDetails: (details) => onDominoDropped(details, widget.boardState),
       onLeave: (_) => highlightArea.value = null,
     );
   }

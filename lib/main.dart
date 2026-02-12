@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
 import '/settings/global_settings.dart';
-import '/settings/persistence/shared_prefs_persistence.dart';
 import 'router.dart';
 
 void main() async {
@@ -20,10 +19,9 @@ void main() async {
 }
 
 class MyApp extends ConsumerStatefulWidget {
-  final settingsStore = SharedPrefsPersistence();
   final ThemeMode initialThemeMode;
 
-  MyApp({this.initialThemeMode = ThemeMode.light, super.key});
+  const MyApp({this.initialThemeMode = ThemeMode.light, super.key});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _MyAppState();

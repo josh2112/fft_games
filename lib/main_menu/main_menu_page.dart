@@ -1,12 +1,9 @@
-import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart' hide Consumer;
 
 import '/games/fosterdle/providers.dart' as fosterdle;
-import '/settings/new_game_settings_providers.dart';
-import '/settings/persistence/settings_persistence.dart';
+import '/games/fosteroes/providers.dart' as fosteroes;
 import '/utils/consts.dart';
 import '/utils/dialog_or_bottom_sheet.dart';
 import '/utils/utils.dart';
@@ -21,14 +18,6 @@ class MainMenuPage extends StatefulWidget {
 
 class _MainMenuPageState extends State<MainMenuPage> {
   static const isRunningWithWasm = bool.fromEnvironment('dart.tool.dart2wasm');
-
-  late final NewGameWatcher newGamesAvail = NewGameWatcher(context.read<SettingsPersistence>());
-
-  @override
-  void didUpdateWidget(covariant MainMenuPage oldWidget) {
-    newGamesAvail.update();
-    super.didUpdateWidget(oldWidget);
-  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -64,9 +53,8 @@ class _MainMenuPageState extends State<MainMenuPage> {
                         ),
                       ),
                     ),
-                    ValueListenableBuilder(
-                      valueListenable: newGamesAvail.fosteroesWatchers[PuzzleDifficulty.easy]!.isNewGameAvailable,
-                      builder: (context, isNew, child) => GameCard(
+                    Consumer(
+                      builder: (context, ref, child) => GameCard(
                         'Fosteroes',
                         'Arrange dominoes on the board to satisfy all conditions.',
                         "assets/tile-fosteroes.png",
@@ -75,7 +63,10 @@ class _MainMenuPageState extends State<MainMenuPage> {
                           'Daily',
                           '',
                           () => context.go('/fosteroes', extra: PuzzleType.daily),
-                          isNew: isNew,
+                          isNew: switch (ref.watch(fosteroes.isAnyNewGameAvailableProvider(PuzzleType.daily))) {
+                            AsyncData(:final value) => value,
+                            _ => false,
+                          },
                         ),
                         secondaryAction: GameCardAction(
                           'Autogen',

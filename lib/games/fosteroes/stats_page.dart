@@ -1,14 +1,10 @@
 import 'dart:math';
 
 import 'package:confetti/confetti.dart';
-import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart' as prov;
 
-import '/settings/new_game_settings_providers.dart';
-import '/settings/persistence/settings_persistence.dart';
 import '/utils/confetti_star_path.dart';
 import '/utils/stats_widget.dart';
 import '/utils/utils.dart';
@@ -29,24 +25,9 @@ class StatsPage extends ConsumerStatefulWidget {
 }
 
 class _StatsPageState extends ConsumerState<StatsPage> {
-  late final newGamesAvail = NewGameWatcher(context.read<SettingsPersistence>());
-
   ConfettiController? _confettiController;
 
   StatsPageParams? _params;
-
-  @override
-  void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await newGamesAvail.update();
-      setState(() {});
-    });
-    super.initState();
-  }
-
-  bool get isAnotherGameAvailable =>
-      _params?.puzzleType == PuzzleType.autogen ||
-      PuzzleDifficulty.values.any((d) => true == newGamesAvail.fosteroesWatchers[d]!.isNewGameAvailable.value);
 
   @override
   void didChangeDependencies() {
@@ -137,7 +118,8 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                   spacing: 20,
                   children: [
                     ElevatedButton(onPressed: () => context.go('/'), child: Text("Home")),
-                    if (isAnotherGameAvailable)
+                    if (true ==
+                        ref.watch(isNewGameAvailableProvider((_params!.puzzleType, _params!.puzzleDifficulty))).value)
                       FilledButton(onPressed: () => context.go('/fosteroes'), child: Text("Play another")),
                   ],
                 ),

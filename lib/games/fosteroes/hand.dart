@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart' as prov;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '/games/fosteroes/domino.dart';
 import 'board_state.dart';
 
-class Hand extends StatelessWidget {
+class Hand extends ConsumerWidget {
   static final BoxDecoration normalBox = BoxDecoration(
     border: Border.all(color: Colors.transparent, width: 2),
     borderRadius: BorderRadius.circular(10),
@@ -15,7 +15,9 @@ class Hand extends StatelessWidget {
     borderRadius: BorderRadius.circular(10),
   );
 
-  const Hand({super.key});
+  final BoardState boardState;
+
+  const Hand(this.boardState, {super.key});
 
   Widget dominoHolderWidget(List<Widget> children) => GridView.extent(
     padding: const EdgeInsets.all(8.0),
@@ -29,8 +31,8 @@ class Hand extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
-    final handState = context.select((BoardState bs) => bs.inHand);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final handState = boardState.inHand;
 
     return ListenableBuilder(
       listenable: handState,
@@ -53,7 +55,6 @@ class Hand extends StatelessWidget {
         onWillAcceptWithDetails: (_) => true,
         onAcceptWithDetails: (details) {
           if (handState.tryPutBack(details.data)) {
-            final boardState = context.read<BoardState>();
             details.data.location.value == DominoLocation.hand;
             details.data.quarterTurns.value = 0;
             if (boardState.floatingDomino.value?.domino == details.data) {
