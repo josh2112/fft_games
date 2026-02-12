@@ -1,14 +1,15 @@
+import 'package:fft_games/games/fosterdle/fosterdle.dart';
 import 'package:fft_games/utils/shake_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart' as prov;
 
 import 'board_state.dart';
 import 'letter_widget.dart';
 
 class GuessRowWidget extends StatefulWidget {
   final Guess guess;
+  final Palette palette;
 
-  const GuessRowWidget(this.guess, {super.key});
+  const GuessRowWidget(this.guess, this.palette, {super.key});
 
   @override
   State<GuessRowWidget> createState() => _GuessRowWidgetState();
@@ -18,30 +19,29 @@ class _GuessRowWidgetState extends State<GuessRowWidget> {
   final shakeController = ShakeController();
 
   @override
-  Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: widget.guess.incorrectGuessStream,
-      builder: (context, snapshot) {
-        shakeController.shake();
-        return ShakeWidget(
-          controller: shakeController,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [...widget.guess.letters.map((lws) => LetterWidget(lws))],
-          ),
-        );
-      },
-    );
-  }
+  Widget build(BuildContext context) => StreamBuilder(
+    stream: widget.guess.incorrectGuessStream,
+    builder: (context, snapshot) {
+      shakeController.shake();
+      return ShakeWidget(
+        controller: shakeController,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [...widget.guess.letters.map((lws) => LetterWidget(lws, widget.palette))],
+        ),
+      );
+    },
+  );
 }
 
 class BoardWidget extends StatelessWidget {
-  const BoardWidget({super.key});
+  final BoardState boardState;
+  final Palette palette;
+
+  const BoardWidget(this.boardState, this.palette, {super.key});
 
   @override
   Widget build(BuildContext context) {
-    final boardState = context.watch<BoardState>();
-
     if (boardState.guesses.isEmpty) {
       return Center(child: SizedBox.square(dimension: 64, child: const CircularProgressIndicator(value: null)));
     } else {
@@ -49,7 +49,7 @@ class BoardWidget extends StatelessWidget {
         fit: BoxFit.scaleDown,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [for (final guess in boardState.guesses) GuessRowWidget(guess)],
+          children: [for (final guess in boardState.guesses) GuessRowWidget(guess, palette)],
         ),
       );
     }

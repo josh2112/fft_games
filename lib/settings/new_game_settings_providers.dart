@@ -1,9 +1,8 @@
-import 'package:fft_games/games/fosterdle/fosterdle.dart' as fosterdle;
 import 'package:fft_games/games/fosteroes/fosteroes.dart' as fosteroes;
 import 'package:fft_games/settings/persistence/settings_persistence.dart';
 import 'package:fft_games/settings/setting.dart';
 import 'package:fft_games/utils/utils.dart';
-import 'package:fft_games/utils/yarsp.dart';
+import 'package:yarsp/yarsp.dart';
 import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,23 +11,20 @@ typedef NewGameSetting = ({String prefix, String dateSettingName, String isCompl
 
 final newGameSettingsProvider = FutureProvider.autoDispose.family((ref, NewGameSetting newGameSetting) async {
   final date = await ref.watch(
-    dateTimeSharedPreferenceProvider("${newGameSetting.prefix}.${newGameSetting.dateSettingName}").future,
+    dateTimeSharedPreferenceProvider(
+      SharedPreference(
+        "${newGameSetting.prefix}.${newGameSetting.dateSettingName}",
+        DateTime.fromMillisecondsSinceEpoch(0),
+      ),
+    ).future,
   );
   final isCompleted = await ref.watch(
-    boolSharedPreferenceProvider("${newGameSetting.prefix}.${newGameSetting.isCompletedSettingName}").future,
+    boolSharedPreferenceProvider(
+      SharedPreference("${newGameSetting.prefix}.${newGameSetting.isCompletedSettingName}", false),
+    ).future,
   );
 
   return date != DateUtils.dateOnly(DateTime.now()) || !isCompleted;
-});
-
-final fosterdleNewGameSettingsProvider = FutureProvider.autoDispose((ref) async {
-  return await ref.watch(
-    newGameSettingsProvider((
-      prefix: "${fosterdle.SettingsController.prefix}.gameState",
-      dateSettingName: "date",
-      isCompletedSettingName: "isCompleted",
-    )).future,
-  );
 });
 
 final fosteroesNewGameSettingsProvider = FutureProvider.autoDispose.family((ref, PuzzleDifficulty difficulty) async {
@@ -72,19 +68,12 @@ class NewGameSettingsWatcher {
 }
 
 class NewGameWatcher {
-  final NewGameSettingsWatcher fosterdleWatcher;
   final Map<PuzzleDifficulty, NewGameSettingsWatcher> fosteroesWatchers;
 
   final isAnyFosteroesDailyGameAvailable = ValueNotifier(false);
 
   NewGameWatcher(SettingsPersistence store)
-    : fosterdleWatcher = NewGameSettingsWatcher(
-        store,
-        "${fosterdle.SettingsController.prefix}.gameState",
-        "date",
-        "isCompleted",
-      ),
-      fosteroesWatchers = {
+    : fosteroesWatchers = {
         for (var diff in PuzzleDifficulty.values)
           diff: NewGameSettingsWatcher(
             store,
@@ -95,7 +84,6 @@ class NewGameWatcher {
       };
 
   Future update() async {
-    await fosterdleWatcher.update();
     for (var w in fosteroesWatchers.values) {
       await w.update();
     }

@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
 
 import 'package:fft_games/games/fosteroes/settings.dart' as fosteroes;
+import 'package:yarsp/yarsp.dart';
 
 import '../utils/consts.dart';
 import 'persistence/settings_persistence.dart';
-import 'setting.dart';
+
+final themeModeSharedPreferenceProvider = AsyncNotifierProvider.autoDispose.family(
+  (SharedPreference<ThemeMode> pref) => SerializedSharedPreferenceNotifier<ThemeMode>(
+    pref,
+    serialize: (themeMode) => themeMode.index.toString(),
+    deserialize: (str) => ThemeMode.values[int.parse(str)],
+  ),
+);
+
+final globalSettingsProvider = Provider((ref) => GlobalSettingsController());
 
 /// Contains settings for all games, such as light/dark mode
 class GlobalSettingsController {
@@ -13,14 +24,11 @@ class GlobalSettingsController {
 
   static final prefix = "fft_games";
 
-  final SettingsPersistence _store;
+  //final _version = intSharedPreferenceProvider(SharedPreference("$prefix.version", 0));
 
-  late final Setting<int> themeMode;
+  final themeMode = themeModeSharedPreferenceProvider(SharedPreference("$prefix.themeMode", ThemeMode.system));
 
-  GlobalSettingsController(SettingsPersistence store) : _store = store {
-    themeMode = Setting("$prefix.themeMode", _store, ThemeMode.system.index, log: _log);
-  }
-
+  // TODO: Rewrite once Fosteroes settings are converted over
   static Future migrate(SettingsPersistence store) async {
     final ver = await store.getInt("$prefix.version", defaultValue: 0);
     if (ver != dbVersion) {

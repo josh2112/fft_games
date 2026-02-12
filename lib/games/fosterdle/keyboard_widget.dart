@@ -14,6 +14,7 @@ mixin KeyboardAdapter {
 
 class KeyboardWidget extends StatelessWidget {
   final KeyboardAdapter adapter;
+  final Palette palette;
 
   final Map<String, LetterState> letterStates;
 
@@ -33,7 +34,7 @@ class KeyboardWidget extends StatelessWidget {
   final double _keySpacingVert = 6.0;
   final double _keyHeight = 56;
 
-  const KeyboardWidget({required this.adapter, required this.letterStates, super.key});
+  const KeyboardWidget({required this.adapter, required this.letterStates, required this.palette, super.key});
 
   Widget regularKey(Widget b) => Flexible(
     flex: 2,
@@ -77,37 +78,33 @@ class KeyboardWidget extends StatelessWidget {
   );
 
   @override
-  Widget build(BuildContext context) {
-    final palette = context.watch<Palette>();
+  Widget build(BuildContext context) => Column(
+    spacing: _keySpacingVert,
+    children: [
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        spacing: _keySpacingHoriz,
+        children: [...'QWERTYUIOP'.split('').map((ltr) => _keyButton(ltr, palette, context))],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        spacing: _keySpacingHoriz,
 
-    return Column(
-      spacing: _keySpacingVert,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: _keySpacingHoriz,
-          children: [...'QWERTYUIOP'.split('').map((ltr) => _keyButton(ltr, palette, context))],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: _keySpacingHoriz,
-
-          children: [
-            halfKeySpace(),
-            ...'ASDFGHJKL'.split('').map((ltr) => _keyButton(ltr, palette, context)),
-            halfKeySpace(),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: _keySpacingHoriz,
-          children: [
-            _controlButton(adapter.onSubmit, Text("ENTER"), palette),
-            ...'ZXCVBNM'.split('').map((ltr) => _keyButton(ltr, palette, context)),
-            _controlButton(adapter.onBackspace, Icon(Icons.backspace_outlined), palette),
-          ],
-        ),
-      ],
-    );
-  }
+        children: [
+          halfKeySpace(),
+          ...'ASDFGHJKL'.split('').map((ltr) => _keyButton(ltr, palette, context)),
+          halfKeySpace(),
+        ],
+      ),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        spacing: _keySpacingHoriz,
+        children: [
+          _controlButton(adapter.onSubmit, Text("ENTER"), palette),
+          ...'ZXCVBNM'.split('').map((ltr) => _keyButton(ltr, palette, context)),
+          _controlButton(adapter.onBackspace, Icon(Icons.backspace_outlined), palette),
+        ],
+      ),
+    ],
+  );
 }

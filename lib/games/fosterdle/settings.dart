@@ -1,73 +1,54 @@
 import 'dart:convert';
 
 import 'package:fft_games/games/fosterdle/board_state.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:logging/logging.dart';
+import 'package:yarsp/yarsp.dart';
 
 import '../../settings/global_settings.dart';
-import '../../settings/persistence/settings_persistence.dart';
-import '../../settings/persistence/shared_prefs_persistence.dart';
-import '../../settings/setting.dart';
+
+final solveCountsSharedPreferenceNotifier = AsyncNotifierProvider.autoDispose.family(
+  (SharedPreference<List<int>> pref) => JsonSharedPreferenceNotifier<List<int>>(
+    pref,
+    serialize: (solveCounts) => solveCounts,
+    deserialize: (json) => json.cast<int>(),
+  ),
+);
+
+final guessesSharedPreferenceNotifier = AsyncNotifierProvider.autoDispose.family(
+  (SharedPreference<List<List<LetterWithState>>> pref) => JsonSharedPreferenceNotifier<List<List<LetterWithState>>>(
+    pref,
+    serialize: (guesses) =>
+        guesses.map((letters) => letters.map((lws) => "${lws.letter}${lws.state.index}").join()).toList(),
+    deserialize: (json) => [
+      for (final letters in json)
+        [
+          for (int i = 0; i < letters.length; i += 2)
+            LetterWithState(letter: letters[i], state: LetterState.values[int.parse(letters[i + 1])]),
+        ],
+    ],
+  ),
+);
 
 class SettingsController {
   static final String prefix = '${GlobalSettingsController.prefix}.Fosterdle';
 
   static final _log = Logger('$prefix.SettingsController');
 
-  final SettingsPersistence _store;
+  final isHardMode = boolSharedPreferenceProvider(SharedPreference("$prefix.hardMode", false));
 
-  late final Setting<bool> isHardMode;
-  late final Setting<List<int>> solveCounts;
-  late final Setting<int> numPlayed;
-  late final Setting<int> numWon;
-  late final Setting<int> currentStreak;
-  late final Setting<int> maxStreak;
-  //late final Setting<DateTime> gameStateDate;
-  //late final Setting<bool> gameStateIsCompleted;
-  late final Setting<List<List<LetterWithState>>> gameStateGuesses;
+  final numPlayed = intSharedPreferenceProvider(SharedPreference("$prefix.numPlayed", 0));
+  final numWon = intSharedPreferenceProvider(SharedPreference("$prefix.numWon", 0));
 
-  SettingsController({SettingsPersistence? store}) : _store = store ?? SharedPrefsPersistence() {
-    isHardMode = Setting("$prefix.hardMode", _store, false, log: _log);
+  final currentStreak = intSharedPreferenceProvider(SharedPreference("$prefix.currentStreak", 0));
+  final maxStreak = intSharedPreferenceProvider(SharedPreference("$prefix.maxStreak", 0));
 
-    /*    gameStateDate = Setting(
-      "$prefix.gameState.date",
-      _store,
-      serializer: SettingSerializer.dateTime,
-      DateTime.fromMillisecondsSinceEpoch(0),
-      log: _log,
-    );
+  final gameStateDate = dateTimeSharedPreferenceProvider(
+    SharedPreference("$prefix.gameState.date", DateTime.fromMillisecondsSinceEpoch(0)),
+  );
+  final gameStateIsCompleted = boolSharedPreferenceProvider(SharedPreference("$prefix.gameState.isCompleted", false));
 
-    gameStateIsCompleted = Setting("$prefix.gameState.isCompleted", _store, false, log: _log);*/
+  final solveCounts = solveCountsSharedPreferenceNotifier(SharedPreference("$prefix.solveCounts", [0, 0, 0, 0, 0, 0]));
 
-    gameStateGuesses = Setting(
-      "$prefix.gameState.guesses",
-      _store,
-      serializer: SettingSerializer<List<List<LetterWithState>>>(
-        (guesses) => jsonEncode(
-          guesses.map((letters) => letters.map((lws) => "${lws.letter}${lws.state.index}").join()).toList(),
-        ),
-        (str) => [
-          for (final letters in jsonDecode(str))
-            [
-              for (int i = 0; i < letters.length; i += 2)
-                LetterWithState(letter: letters[i], state: LetterState.values[int.parse(letters[i + 1])]),
-            ],
-        ],
-      ),
-      [],
-      log: _log,
-    );
-
-    numPlayed = Setting("$prefix.numPlayed", _store, 0, log: _log);
-    numWon = Setting("$prefix.numWon", _store, 0, log: _log);
-    currentStreak = Setting("$prefix.currentStreak", _store, 0, log: _log);
-    maxStreak = Setting("$prefix.maxStreak", _store, 0, log: _log);
-
-    solveCounts = Setting(
-      "$prefix.solveCounts",
-      _store,
-      serializer: SettingSerializer(jsonEncode, (str) => List<int>.from(jsonDecode(str))),
-      [0, 0, 0, 0, 0, 0],
-      log: _log,
-    );
-  }
+  final gameStateGuesses = guessesSharedPreferenceNotifier(SharedPreference("$prefix.gameState.guesses", []));
 }

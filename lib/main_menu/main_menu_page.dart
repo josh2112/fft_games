@@ -1,3 +1,4 @@
+import 'package:fft_games/games/fosterdle/providers.dart' as fosterdle;
 import 'package:fft_games/settings/new_game_settings_providers.dart';
 import 'package:fft_games/settings/persistence/settings_persistence.dart';
 import 'package:fft_games/utils/utils.dart';
@@ -56,23 +57,13 @@ class _MainMenuPageState extends State<MainMenuPage> {
                           'Daily',
                           '',
                           () => context.go('/fosterdle'),
-                          isNew: switch (ref.watch(fosterdleNewGameSettingsProvider)) {
+                          isNew: switch (ref.watch(fosterdle.isNewGameAvailableProvider)) {
                             AsyncData(:final value) => value,
                             _ => false,
                           },
                         ),
                       ),
                     ),
-                    /*ValueListenableBuilder(
-                      valueListenable: newGamesAvail.fosterdleWatcher.isNewGameAvailable,
-                      builder: (conntext, isNew, child) => GameCard(
-                        'Fosterdle',
-                        'Guess the five-letter word within six tries.',
-                        "assets/tile-fosterdle.png",
-                        Theme.of(context).colorScheme.primary,
-                        GameCardAction('Daily', '', () => context.go('/fosterdle'), isNew: isNew),
-                      ),
-                    ),*/
                     ValueListenableBuilder(
                       valueListenable: newGamesAvail.fosteroesWatchers[PuzzleDifficulty.easy]!.isNewGameAvailable,
                       builder: (context, isNew, child) => GameCard(

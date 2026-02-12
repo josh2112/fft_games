@@ -18,36 +18,16 @@ final router = GoRouter(
       path: '/',
       builder: (context, state) => MainMenuPage(key: Key('main menu')),
       routes: [
-        // Use a "shell route" to provide a MultiProvider to all the Fosterdle subroutes.
-        // Any child route will be able to grab whatever we put in the MultiProvider. The
-        // only downside is the AppBar inside a first-level shell route won't show
-        // the Back button, even if there is a previous route, so it has to be
-        // provided manually (with BackButton( onPressed: () => context.pop())).
-        ShellRoute(
-          builder: (context, state, child) {
-            return prov.MultiProvider(
-              providers: [
-                prov.Provider(
-                  create: (context) => fosterdle.SettingsController(store: context.read<SettingsPersistence>()),
-                ),
-                prov.Provider(create: (context) => fosterdle.Palette()),
-              ],
-              child: child,
-            );
-          },
+        GoRoute(
+          path: 'fosterdle',
+          builder: (context, state) => const fosterdle.PlayPage(key: Key('fosterdle')),
           routes: [
             GoRoute(
-              path: 'fosterdle',
-              builder: (context, state) => const fosterdle.PlayPage(key: Key('fosterdle')),
-              routes: [
-                GoRoute(
-                  path: 'stats',
-                  builder: (context, state) => fosterdle.StatsPage(
-                    key: Key('fosterdle stats'),
-                    winLoseData: state.extra as fosterdle.StatsPageWinLoseData?,
-                  ),
-                ),
-              ],
+              path: 'stats',
+              builder: (context, state) => fosterdle.StatsPage(
+                key: Key('fosterdle stats'),
+                winLoseData: state.extra as fosterdle.StatsPageWinLoseData?,
+              ),
             ),
           ],
         ),
@@ -81,6 +61,5 @@ final router = GoRouter(
         ),
       ],
     ),
-  ],
-  // initialLocation: '/' # Go directly to a page (for testing)
+  ], // initialLocation: '/' # Go directly to a page (for testing)
 );

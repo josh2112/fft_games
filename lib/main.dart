@@ -20,46 +20,41 @@ void main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Data migration
+  // Data migration TODO: Do in MyApp once rewritten with riverpod
   final prefs = SharedPrefsPersistence();
   await GlobalSettingsController.migrate(prefs);
 
-  // Pass in initial theme to avoid flickering from default (system) to dark/light.
-  runApp(
-    ProviderScope(
-      child: MyApp(initialThemeMode: ThemeMode.values[await GlobalSettingsController(prefs).themeMode.waitLoaded]),
-    ),
-  );
+  runApp(ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   final settingsStore = SharedPrefsPersistence();
   final ThemeMode initialThemeMode;
 
   MyApp({this.initialThemeMode = ThemeMode.light, super.key});
 
   @override
-  Widget build(BuildContext context) => prov.MultiProvider(
-    providers: [
-      prov.Provider<SettingsPersistence>.value(value: settingsStore),
-      prov.Provider(create: (context) => GlobalSettingsController(settingsStore)),
-    ],
-    child: Builder(
-      builder: (context) {
-        return prov.Consumer<GlobalSettingsController>(
-          builder: (context, globalSettings, child) => ValueListenableBuilder(
-            valueListenable: globalSettings.themeMode,
-            builder: (context, themeMode, child) => MaterialApp.router(
-              title: 'Foster Family Times Games',
-              theme: ThemeData.light().copyWith(textTheme: Typography().black.apply(fontFamily: 'FacultyGlyphic')),
-              darkTheme: ThemeData.dark().copyWith(textTheme: Typography().white.apply(fontFamily: 'FacultyGlyphic')),
-              themeMode: globalSettings.themeMode.isLoaded ? ThemeMode.values[themeMode] : initialThemeMode,
-              routerConfig: router,
-              debugShowCheckedModeBanner: false,
-            ),
-          ),
-        );
+  Widget build(BuildContext context, WidgetRef ref) {
+    final globalSettings = ref.read(globalSettingsProvider);
+    final themeModeState = ref.watch(globalSettings.themeMode);
+
+    return prov.MultiProvider(
+      providers: [
+        prov.Provider<SettingsPersistence>.value(value: settingsStore),
+        prov.Provider(create: (context) => GlobalSettingsController()),
+      ],
+      child: switch (themeModeState) {
+        AsyncData(value: final themeMode) => MaterialApp.router(
+          title: 'Foster Family Times Games',
+          theme: ThemeData.light().copyWith(textTheme: Typography().black.apply(fontFamily: 'FacultyGlyphic')),
+          darkTheme: ThemeData.dark().copyWith(textTheme: Typography().white.apply(fontFamily: 'FacultyGlyphic')),
+          themeMode: themeMode,
+          routerConfig: router,
+          debugShowCheckedModeBanner: false,
+        ),
+        AsyncLoading() => const CircularProgressIndicator(),
+        AsyncError(:final error) => Text("Error: $error"),
       },
-    ),
-  );
+    );
+  }
 }

@@ -1,10 +1,11 @@
 import 'dart:math';
 
 import 'package:confetti/confetti.dart';
+import 'package:fft_games/games/fosterdle/providers.dart';
 import 'package:fft_games/utils/stats_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart' as prov;
 
 import '../../utils/confetti_star_path.dart';
 import 'palette.dart';
@@ -19,22 +20,20 @@ class StatsPageWinLoseData {
   const StatsPageWinLoseData(this.numGuesses, this.word);
 }
 
-class StatsPage extends StatefulWidget {
+class StatsPage extends ConsumerStatefulWidget {
   final StatsPageWinLoseData? winLoseData;
 
   const StatsPage({super.key, this.winLoseData});
 
   @override
-  State<StatsPage> createState() => _StatsPageState();
+  ConsumerState<StatsPage> createState() => _StatsPageState();
 }
 
-class _StatsPageState extends State<StatsPage> {
+class _StatsPageState extends ConsumerState<StatsPage> {
   late ConfettiController? _confettiController;
 
   @override
   void initState() {
-    super.initState();
-
     final confettiDurationMsec = (true == widget.winLoseData?.didWin) ? 2000 / widget.winLoseData!.numGuesses : 0;
 
     if (confettiDurationMsec > 0) {
@@ -43,6 +42,8 @@ class _StatsPageState extends State<StatsPage> {
     } else {
       _confettiController = null;
     }
+
+    super.initState();
   }
 
   @override
@@ -58,7 +59,22 @@ class _StatsPageState extends State<StatsPage> {
       _ => "The word was ${widget.winLoseData!.word}. Better luck tomorrow!",
     };
 
-    final settings = context.watch<SettingsController>();
+    final settings = ref.watch(settingsProvider);
+    final palette = ref.watch(paletteProvider);
+
+    final numPlayedState = ref.watch(settings.numPlayed);
+    final numWonState = ref.watch(settings.numWon);
+    final currentStreakState = ref.watch(settings.currentStreak);
+    final maxStreakState = ref.watch(settings.maxStreak);
+    final solveCountState = ref.watch(settings.solveCounts);
+
+    if (!numPlayedState.hasValue ||
+        !numWonState.hasValue ||
+        !currentStreakState.hasValue ||
+        !maxStreakState.hasValue ||
+        !solveCountState.hasValue) {
+      return const CircularProgressIndicator();
+    }
 
     return Scaffold(
       appBar: AppBar(title: Text('Fosterdle Stats'), centerTitle: true),
@@ -88,18 +104,15 @@ class _StatsPageState extends State<StatsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 spacing: 5,
                 children: [
-                  StatsWidget("Played", settings.numPlayed.value.toString()),
-                  StatsWidget(
-                    "Win %",
-                    (settings.numWon.value / max(settings.numPlayed.value, 1) * 100).round().toString(),
-                  ),
-                  StatsWidget("Current Streak", settings.currentStreak.value.toString()),
-                  StatsWidget("Max Streak", settings.maxStreak.value.toString()),
+                  StatsWidget("Played", numPlayedState.value!.toString()),
+                  StatsWidget("Win %", (numWonState.value! / max(numPlayedState.value!, 1) * 100).round().toString()),
+                  StatsWidget("Current Streak", currentStreakState.value!.toString()),
+                  StatsWidget("Max Streak", maxStreakState.value!.toString()),
                 ],
               ),
               const Spacer(),
               subtitle(context, "GUESS DISTRIBUTION"),
-              SolveCountsGraph(settings.solveCounts.value, widget.winLoseData),
+              SolveCountsGraph(solveCountState.value!, widget.winLoseData, palette),
               const Spacer(flex: 3),
               ElevatedButton(
                 onPressed: () {
@@ -126,49 +139,47 @@ class _StatsPageState extends State<StatsPage> {
 }
 
 class SolveCountsGraph extends StatelessWidget {
+  final Palette palette;
   final List<int> solveCounts;
   final StatsPageWinLoseData? wonGameData;
   final int maxSolveCount;
 
-  SolveCountsGraph(this.solveCounts, this.wonGameData, {super.key}) : maxSolveCount = solveCounts.reduce(max);
+  SolveCountsGraph(this.solveCounts, this.wonGameData, this.palette, {super.key})
+    : maxSolveCount = solveCounts.reduce(max);
 
   @override
-  Widget build(BuildContext context) {
-    final palette = context.watch<Palette>();
-
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 200),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          for (var i = 0; i < solveCounts.length; i++)
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: 3),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  SizedBox(width: 20, child: Text("${i + 1}", style: TextTheme.of(context).labelLarge)),
-                  Container(
-                    width: 180 - 160 * (maxSolveCount - solveCounts[i]) / max(maxSolveCount, 1),
-                    color: wonGameData?.numGuesses == i + 1 ? palette.letterRightPlace : palette.letterWidgetBorder,
-                    child: Padding(
-                      padding: EdgeInsets.only(right: 6),
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          "${solveCounts[i]}",
-                          style: TextTheme.of(context).labelLarge!.copyWith(color: Colors.white),
-                        ),
+  Widget build(BuildContext context) => ConstrainedBox(
+    constraints: const BoxConstraints(maxWidth: 200),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (var i = 0; i < solveCounts.length; i++)
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 3),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                SizedBox(width: 20, child: Text("${i + 1}", style: TextTheme.of(context).labelLarge)),
+                Container(
+                  width: 180 - 160 * (maxSolveCount - solveCounts[i]) / max(maxSolveCount, 1),
+                  color: wonGameData?.numGuesses == i + 1 ? palette.letterRightPlace : palette.letterWidgetBorder,
+                  child: Padding(
+                    padding: EdgeInsets.only(right: 6),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Text(
+                        "${solveCounts[i]}",
+                        style: TextTheme.of(context).labelLarge!.copyWith(color: Colors.white),
                       ),
                     ),
                   ),
-                  solveCounts[i] == maxSolveCount ? SizedBox(width: 0) : Spacer(flex: maxSolveCount - solveCounts[i]),
-                ],
-              ),
+                ),
+                solveCounts[i] == maxSolveCount ? SizedBox(width: 0) : Spacer(flex: maxSolveCount - solveCounts[i]),
+              ],
             ),
-        ],
-      ),
-    );
-  }
+          ),
+      ],
+    ),
+  );
 }
