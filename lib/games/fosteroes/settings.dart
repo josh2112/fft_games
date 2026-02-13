@@ -53,8 +53,6 @@ class GameSettingsController {
 class SettingsController {
   static final String prefix = '${GlobalSettingsController.prefix}.Fosteroes';
 
-  static final _log = Logger('$prefix.SettingsController');
-
   // Whether to show the timer
   final showTime = boolSharedPreferenceProvider(SharedPreference("$prefix.showTime", true));
 
@@ -73,9 +71,9 @@ class SettingsController {
   final currentStreak = intSharedPreferenceProvider(SharedPreference("$prefix.currentStreak", 0));
   final maxStreak = intSharedPreferenceProvider(SharedPreference("$prefix.maxStreak", 0));
 
-  final Map<(PuzzleType, PuzzleDifficulty), GameSettingsController> gameSettings = {
-    for (final type in PuzzleType.values)
-      for (final diff in PuzzleDifficulty.values)
-        (type, diff): GameSettingsController("$prefix.${type.name}.${diff.name}"),
+  final Map<({PuzzleType type, PuzzleDifficulty difficulty}), GameSettingsController> gameSettings = {
+    for (final t in PuzzleType.values)
+      for (final d in PuzzleDifficulty.values)
+        (type: t, difficulty: d): GameSettingsController("$prefix.${t.name}.${d.name}"),
   };
 }

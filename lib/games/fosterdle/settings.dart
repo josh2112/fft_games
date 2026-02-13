@@ -1,5 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:logging/logging.dart';
 import 'package:yarsp/yarsp.dart';
 
 import '/games/fosterdle/board_state.dart';
@@ -30,8 +29,6 @@ final guessesSharedPreferenceNotifier = AsyncNotifierProvider.autoDispose.family
 
 class SettingsController {
   static final String prefix = '${GlobalSettingsController.prefix}.Fosterdle';
-
-  static final _log = Logger('$prefix.SettingsController');
 
   final isHardMode = boolSharedPreferenceProvider(SharedPreference("$prefix.hardMode", false));
 

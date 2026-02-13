@@ -18,32 +18,19 @@ void main() async {
   runApp(ProviderScope(child: MyApp()));
 }
 
-class MyApp extends ConsumerStatefulWidget {
-  final ThemeMode initialThemeMode;
-
-  const MyApp({this.initialThemeMode = ThemeMode.light, super.key});
+class MyApp extends ConsumerWidget {
+  const MyApp({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _MyAppState();
-}
-
-class _MyAppState extends ConsumerState<MyApp> {
-  var _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    GlobalSettingsController.migrate(ref).then((_) => setState(() => _isLoading = false));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final globalSettingsState = ref.watch(globalSettingsProvider);
+    if (globalSettingsState.hasError) {
+      return Text("Error: ${globalSettingsState.error}");
+    } else if (globalSettingsState.isLoading) {
       return const CircularProgressIndicator();
     }
 
-    final globalSettings = ref.read(globalSettingsProvider);
-    final themeModeState = ref.watch(globalSettings.themeMode);
+    final themeModeState = ref.watch(globalSettingsState.value!.themeMode);
 
     return switch (themeModeState) {
       AsyncData(value: final themeMode) => MaterialApp.router(

@@ -58,7 +58,7 @@ class _PlayPageState extends ConsumerState<PlayPage> {
     boardState = BoardState(_onPlayerWon, _onBadSolution, widget.params.puzzleDifficulty);
     boardState.isPaused.addListener(maybeUpdateElapsedTime);
 
-    gameSettings = settings.gameSettings[(widget.params.puzzleType, widget.params.puzzleDifficulty)]!;
+    gameSettings = settings.gameSettings[(type: widget.params.puzzleType, difficulty: widget.params.puzzleDifficulty)]!;
 
     WidgetsBinding.instance.scheduleFrameCallback((_) async {
       await _maybeApplyBoardState();

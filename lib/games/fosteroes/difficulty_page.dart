@@ -1,12 +1,12 @@
-import 'package:fft_games/games/fosteroes/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
-import '/games/fosteroes/domino.dart';
 import '/utils/utils.dart';
+import 'domino.dart';
 import 'fosteroes.dart';
+import 'providers.dart';
 
 class DifficultyPage extends StatefulWidget {
   final PuzzleType puzzleType;
@@ -40,7 +40,9 @@ class _DifficultyPageState extends State<DifficultyPage> {
                   for (var d in PuzzleDifficulty.values)
                     Consumer(
                       builder: (context, ref, child) {
-                        final isNew = true == ref.watch(isNewGameAvailableProvider((PuzzleType.daily, d))).value;
+                        final isNew =
+                            true ==
+                            ref.watch(isNewGameAvailableProvider((type: PuzzleType.daily, difficulty: d))).value;
                         return Badge(
                           label: Text("New"),
                           offset: Offset(-18, -4),

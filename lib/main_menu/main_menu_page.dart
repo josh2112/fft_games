@@ -7,7 +7,7 @@ import '/games/fosteroes/providers.dart' as fosteroes;
 import '/utils/consts.dart';
 import '/utils/dialog_or_bottom_sheet.dart';
 import '/utils/utils.dart';
-import 'settings_dialog.dart';
+import '../settings/settings_dialog.dart';
 
 class MainMenuPage extends StatefulWidget {
   const MainMenuPage({super.key});

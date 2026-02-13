@@ -118,8 +118,7 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                   spacing: 20,
                   children: [
                     ElevatedButton(onPressed: () => context.go('/'), child: Text("Home")),
-                    if (true ==
-                        ref.watch(isNewGameAvailableProvider((_params!.puzzleType, _params!.puzzleDifficulty))).value)
+                    if (true == ref.watch(isAnyNewGameAvailableProvider(_params!.puzzleType)).value)
                       FilledButton(onPressed: () => context.go('/fosteroes'), child: Text("Play another")),
                   ],
                 ),

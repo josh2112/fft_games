@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '/games/fosterdle/board_state.dart';
 import '/games/fosterdle/settings.dart';
-import '/settings/global_settings.dart';
+import '/settings/settings_dialog.dart' as global;
 import '/utils/multi_snack_bar.dart';
 
 class SettingsDialog extends ConsumerWidget {
@@ -14,74 +14,27 @@ class SettingsDialog extends ConsumerWidget {
   const SettingsDialog(this.settings, this.boardState, this.messenger, {super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final globalSettings = ref.read(globalSettingsProvider);
-
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: 500),
-      child: Padding(
-        padding: EdgeInsetsGeometry.only(top: 8, bottom: 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                Padding(
-                  padding: EdgeInsetsGeometry.only(right: 15),
-                  child: Align(alignment: Alignment.centerRight, child: CloseButton()),
-                ),
-                Center(
-                  child: Container(
-                    color: Colors.transparent,
-                    child: Text("Settings", style: Theme.of(context).textTheme.titleLarge),
-                  ),
-                ),
-              ],
+  Widget build(BuildContext context, WidgetRef ref) => global.SettingsDialog(
+    children: [
+      global.SettingsEntry(
+        title: "Hard mode",
+        subtitle: "Each guess must use the letters you've learned",
+        child: Consumer(
+          builder: (context, ref, child) => switch (ref.watch(settings.isHardMode)) {
+            AsyncData(value: final isHardMode) => Switch(
+              value: isHardMode,
+              onChanged: (v) {
+                if (isHardMode && boardState.guesses.first.isSubmitted) {
+                  messenger.showSnackBar("Can't turn off hard mode once you've made a guess!");
+                } else {
+                  ref.read(settings.isHardMode.notifier).toggle();
+                }
+              },
             ),
-            ListTile(
-              title: Text("Color theme"),
-              trailing: Consumer(
-                builder: (context, ref, child) => switch (ref.watch(globalSettings.themeMode)) {
-                  AsyncData(value: final themeMode) => DropdownButton(
-                    value: themeMode,
-                    onChanged: (newThemeMode) => ref.read(globalSettings.themeMode.notifier).setValue(newThemeMode!),
-                    items: ThemeMode.values
-                        .map(
-                          (m) => DropdownMenuItem(
-                            value: m,
-                            child: Text("${m.name[0].toUpperCase()}${m.name.substring(1)}"),
-                          ),
-                        )
-                        .toList(),
-                  ),
-
-                  _ => const CircularProgressIndicator(),
-                },
-              ),
-            ),
-            ListTile(
-              title: Text("Hard mode"),
-              subtitle: Text("Each guess must use the letters you've learned"),
-              trailing: Consumer(
-                builder: (context, ref, child) => switch (ref.watch(settings.isHardMode)) {
-                  AsyncData(value: final isHardMode) => Switch(
-                    value: isHardMode,
-                    onChanged: (v) {
-                      if (isHardMode && boardState.guesses.first.isSubmitted) {
-                        messenger.showSnackBar("Can't turn off hard mode once you've made a guess!");
-                      } else {
-                        ref.read(settings.isHardMode.notifier).toggle();
-                      }
-                    },
-                  ),
-                  _ => const CircularProgressIndicator(),
-                },
-              ),
-            ),
-          ],
+            _ => const CircularProgressIndicator(),
+          },
         ),
       ),
-    );
-  }
+    ],
+  );
 }

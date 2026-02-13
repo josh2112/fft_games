@@ -9,18 +9,18 @@ final settingsProvider = Provider((ref) => SettingsController());
 
 final isNewGameAvailableProvider = FutureProvider.family((
   ref,
-  (PuzzleType type, PuzzleDifficulty difficulty) selection,
+  ({PuzzleType type, PuzzleDifficulty difficulty}) selection,
 ) async {
-  if (selection.$1 == PuzzleType.autogen) return true;
+  if (selection.type == PuzzleType.autogen) return true;
 
   final gameSettings = ref.read(settingsProvider).gameSettings[selection]!;
 
-  return await ref.read(gameSettings.date.future) != DateUtils.dateOnly(DateTime.now()) ||
+  return await ref.watch(gameSettings.date.future) != DateUtils.dateOnly(DateTime.now()) ||
       !await ref.watch(gameSettings.isCompleted.future);
 });
 
 final isAnyNewGameAvailableProvider = FutureProvider.family((ref, PuzzleType type) async {
-  return (await Future.wait(
-    PuzzleDifficulty.values.map((d) => ref.watch(isNewGameAvailableProvider((type, d)).future)),
-  )).any((v) => v);
+  return (await Future.wait([
+    for (final d in PuzzleDifficulty.values) ref.watch(isNewGameAvailableProvider((type: type, difficulty: d)).future),
+  ])).contains(true);
 });
