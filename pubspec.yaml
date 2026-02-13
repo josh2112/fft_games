@@ -2,7 +2,7 @@ name: fft_games
 description: "A suite of games similar to NYT."
 publish_to: "none"
 
-version: 1.1.10+15
+version: 1.1.11+16
 
 environment:
     sdk: ^3.10.0
@@ -28,7 +28,7 @@ dependencies:
     flutter_lints: ^6.0.0
     riverpod: ^3.2.0
     flutter_riverpod: ^3.2.0
-    
+
     yarsp:
         git:
             url: https://github.com/josh2112/yarsp.git
