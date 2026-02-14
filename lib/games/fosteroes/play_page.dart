@@ -36,9 +36,10 @@ class PlayPage extends ConsumerStatefulWidget {
 }
 
 class _PlayPageState extends ConsumerState<PlayPage> {
+  final MultiSnackBarMessenger messenger = MultiSnackBarMessenger();
+
   late final SettingsController settings;
   late final AppLifecycleListener appLifecycleListener;
-  late final MultiSnackBarMessenger messenger;
 
   late final BoardState boardState;
   late final GameSettingsController gameSettings;
@@ -52,8 +53,6 @@ class _PlayPageState extends ConsumerState<PlayPage> {
     appLifecycleListener = AppLifecycleListener(
       onStateChange: (state) => boardState.isPaused.value = state != AppLifecycleState.resumed,
     );
-
-    messenger = MultiSnackBarMessenger();
 
     boardState = BoardState(_onPlayerWon, _onBadSolution, widget.params.puzzleDifficulty);
     boardState.isPaused.addListener(maybeUpdateElapsedTime);
@@ -228,35 +227,33 @@ class _PlayPageState extends ConsumerState<PlayPage> {
   Future _maybeApplyBoardState() async {
     final today = DateUtils.dateOnly(DateTime.now());
 
-    final isCompleted = await ref.read(gameSettings.isCompleted.future);
-
     // Different algorithms depending on game type...
     if (widget.params.puzzleType == PuzzleType.daily) {
       // Make today's puzzle. The seed is today's date as an int.
       // Daily games reset only once a day
       boardState.makePuzzle(int.parse(today.toString().split(' ').first.split('-').join()));
 
-      if (await ref.read(gameSettings.date.future) != today) {
+      if ((await ref.read(gameSettings.date.future)).isBefore(today)) {
         // If the last saved-game state is for a different day, reset everything
-        gameSettings.reset(ref);
+        await gameSettings.reset(ref);
         ref.read(settings.numPlayed.notifier).increment();
       } else {
         await restoreGameState();
       }
     } else {
       //Autogen games reset after they have been completed.
-      if (await ref.read(gameSettings.elapsedTime.future) > 0 && !isCompleted) {
+      if (await ref.read(gameSettings.elapsedTime.future) > 0 && !await ref.read(gameSettings.isCompleted.future)) {
         boardState.makePuzzle(await ref.read(gameSettings.seed.future));
         await restoreGameState();
       } else {
         // Start over
         ref.read(gameSettings.seed.notifier).setValue(boardState.makePuzzle(null));
-        gameSettings.reset(ref);
+        await gameSettings.reset(ref);
         ref.read(settings.numPlayed.notifier).increment();
       }
     }
 
-    if (isCompleted && mounted) {
+    if (await ref.read(gameSettings.isCompleted.future) && mounted) {
       showStats(justWon: true);
     }
   }

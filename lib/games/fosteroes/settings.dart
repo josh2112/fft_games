@@ -42,11 +42,11 @@ class GameSettingsController {
 
   GameSettingsController(this.prefix, {Logger? log});
 
-  void reset(WidgetRef ref) {
-    ref.read(date.notifier).setValue(DateUtils.dateOnly(DateTime.now()));
-    ref.read(isCompleted.notifier).setValue(false);
-    ref.read(elapsedTime.notifier).setValue(0);
-    ref.read(state.notifier).setValue([]);
+  Future<void> reset(WidgetRef ref) async {
+    await ref.read(date.notifier).setValue(DateUtils.dateOnly(DateTime.now()));
+    await ref.read(isCompleted.notifier).setValue(false);
+    await ref.read(elapsedTime.notifier).setValue(0);
+    await ref.read(state.notifier).setValue([]);
   }
 }
 
