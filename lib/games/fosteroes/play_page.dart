@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:defer_pointer/defer_pointer.dart';
 import 'package:fft_games_lib/fosteroes/puzzle.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -150,7 +149,7 @@ class _PlayPageState extends ConsumerState<PlayPage> {
                 },
               ),
               Spacer(),
-              TextButton(onPressed: boardState.clearBoard, child: Text("Clear")),
+              TextButton(onPressed: boardState.isInProgress.value ? boardState.clearBoard : null, child: Text("Clear")),
             ],
           ),
         ),
@@ -171,19 +170,17 @@ class _PlayPageState extends ConsumerState<PlayPage> {
                         valueListenable: boardState.isInProgress,
                         builder: (context, inProgress, child) => IgnorePointer(
                           ignoring: !inProgress,
-                          child: DeferredPointerHandler(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.max,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              spacing: 10,
-                              children: [
-                                Expanded(
-                                  child: FittedBox(fit: BoxFit.contain, child: Board(boardState)),
-                                ),
-                                Divider(),
-                                Hand(boardState),
-                              ],
-                            ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.max,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            spacing: 10,
+                            children: [
+                              Expanded(
+                                child: FittedBox(fit: BoxFit.contain, child: Board(boardState)),
+                              ),
+                              Divider(),
+                              Hand(boardState),
+                            ],
                           ),
                         ),
                       ),

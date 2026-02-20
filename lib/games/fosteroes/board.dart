@@ -134,8 +134,8 @@ class _BoardState extends State<Board> {
 
   Cell _globalPositionToCell(Offset globalPosition) {
     final renderBox = _dragTargetKey.currentContext?.findRenderObject() as RenderBox;
-    final pos = renderBox.globalToLocal(globalPosition) ~/ Board.cellSize;
-    return Cell(pos.dx.toInt(), pos.dy.toInt());
+    final pos = renderBox.globalToLocal(globalPosition) / Board.cellSize;
+    return Cell(pos.dx.round(), pos.dy.round());
   }
 
   void onDominoDragged(DragTargetDetails<DominoState> details, BoardState boardState) {

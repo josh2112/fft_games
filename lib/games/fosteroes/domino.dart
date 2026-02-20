@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:defer_pointer/defer_pointer.dart';
 import 'package:fft_games_lib/fosteroes/domino.dart' as model;
 import 'package:fft_games_lib/fosteroes/region.dart';
 import 'package:flutter/material.dart';
@@ -93,23 +92,21 @@ class _DominoState extends State<Domino> {
           alignment: widget.state.location.value == DominoLocation.hand
               ? Alignment.center
               : FractionalOffset(0.25, 0.5),
-          child: DeferPointer(
-            child: GestureDetector(
-              onTap: onRotateDomino,
-              behavior: HitTestBehavior.opaque,
-              child: Draggable<DominoState>(
-                feedback: RotatedBox(
-                  quarterTurns: widget.state.quarterTurns.value,
-                  child: Opacity(opacity: 0.8, child: _Domino(widget.state)),
-                ),
-                childWhenDragging: SizedBox(),
-                hitTestBehavior: HitTestBehavior.opaque,
-                data: widget.state,
-                dragAnchorStrategy: centeredDragAnchorStrategy,
-                onDragStarted: () => widget.state.location.value = DominoLocation.dragging,
-                onDraggableCanceled: (v, o) => widget.state.location.revert(),
-                child: _Domino(widget.state),
+          child: GestureDetector(
+            onTap: onRotateDomino,
+            behavior: HitTestBehavior.opaque,
+            child: Draggable<DominoState>(
+              feedback: RotatedBox(
+                quarterTurns: widget.state.quarterTurns.value,
+                child: Opacity(opacity: 0.8, child: _Domino(widget.state)),
               ),
+              childWhenDragging: SizedBox(),
+              hitTestBehavior: HitTestBehavior.opaque,
+              data: widget.state,
+              dragAnchorStrategy: centeredDragAnchorStrategy,
+              onDragStarted: () => widget.state.location.value = DominoLocation.dragging,
+              onDraggableCanceled: (v, o) => widget.state.location.revert(),
+              child: _Domino(widget.state),
             ),
           ),
         ),

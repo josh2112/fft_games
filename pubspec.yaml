@@ -22,7 +22,6 @@ dependencies:
     collection: ^1.19.1
     path_drawing: ^1.0.1
     svg_path_parser: ^1.1.2
-    defer_pointer: ^0.0.2
     confetti: ^0.8.0
     intl: ^0.20.2
     flutter_lints: ^6.0.0
