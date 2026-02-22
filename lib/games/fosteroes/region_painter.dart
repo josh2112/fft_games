@@ -13,11 +13,13 @@ final fieldRegionPalette = RegionPalette(Colors.brown);
 final dropHighlightRegionPalette = RegionPalette(Colors.amber);
 
 final List<RegionPalette> constraintAreaPalette = [
-  RegionPalette(Colors.green),
   RegionPalette(Colors.red),
   RegionPalette(Colors.blue),
-  RegionPalette(Colors.purple),
+  RegionPalette(Colors.pink),
+  RegionPalette(Colors.teal),
   RegionPalette(Colors.deepOrange),
+  RegionPalette(Colors.purple),
+  RegionPalette(Colors.green),
 ];
 
 RegionPalette paletteForRegion(Region r, [int? i]) => switch (r) {

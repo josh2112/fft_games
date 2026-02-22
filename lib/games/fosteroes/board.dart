@@ -135,16 +135,19 @@ class _BoardState extends State<Board> {
   Cell _globalPositionToCell(Offset globalPosition, DominoState domino) {
     final renderBox = _dragTargetKey.currentContext?.findRenderObject() as RenderBox;
 
+    // Make sure we look at the center of the dragged domino
     if (domino.isVertical) {
       globalPosition += Offset(Board.cellSize / 2, Board.cellSize);
     } else {
       globalPosition += Offset(Board.cellSize, Board.cellSize / 2);
     }
 
+    // Convert to cell coordinates, taking into account the padding around the board edge
     var pos =
         renderBox.globalToLocal(globalPosition).translate(-RegionPainter.padding, -RegionPainter.padding) /
         Board.cellSize;
 
+    // Make sure the domino is placed correctly over 2 consecutive cells
     if (domino.isVertical) {
       pos += Offset(0, -0.5);
     } else {
