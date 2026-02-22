@@ -132,10 +132,25 @@ class _BoardState extends State<Board> {
     );
   }
 
-  Cell _globalPositionToCell(Offset globalPosition) {
+  Cell _globalPositionToCell(Offset globalPosition, DominoState domino) {
     final renderBox = _dragTargetKey.currentContext?.findRenderObject() as RenderBox;
-    final pos = renderBox.globalToLocal(globalPosition) / Board.cellSize;
-    return Cell(pos.dx.round(), pos.dy.round());
+
+    if (domino.isVertical) {
+      globalPosition += Offset(Board.cellSize / 2, Board.cellSize);
+    } else {
+      globalPosition += Offset(Board.cellSize, Board.cellSize / 2);
+    }
+
+    var pos =
+        renderBox.globalToLocal(globalPosition).translate(-RegionPainter.padding, -RegionPainter.padding) /
+        Board.cellSize;
+
+    if (domino.isVertical) {
+      pos += Offset(0, -0.5);
+    } else {
+      pos += Offset(-0.5, 0);
+    }
+    return Cell(pos.dx.toInt(), pos.dy.toInt());
   }
 
   void onDominoDragged(DragTargetDetails<DominoState> details, BoardState boardState) {
@@ -149,8 +164,8 @@ class _BoardState extends State<Board> {
       d?.quarterTurns.value = 0;
     }
 
-    final baseCell = _globalPositionToCell(details.offset);
     final domino = details.data;
+    final baseCell = _globalPositionToCell(details.offset, details.data);
 
     final cells = {baseCell, domino.isVertical ? baseCell.down : baseCell.right};
 
@@ -164,8 +179,8 @@ class _BoardState extends State<Board> {
   void onDominoDropped(DragTargetDetails<DominoState> details, BoardState boardState) {
     highlightArea.value = null;
 
-    var baseCell = _globalPositionToCell(details.offset);
     final domino = details.data;
+    var baseCell = _globalPositionToCell(details.offset, details.data);
 
     final cells = {baseCell, domino.isVertical ? baseCell.down : baseCell.right};
 

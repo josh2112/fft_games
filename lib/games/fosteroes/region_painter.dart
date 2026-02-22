@@ -27,6 +27,8 @@ RegionPalette paletteForRegion(Region r, [int? i]) => switch (r) {
 };
 
 class RegionPainter extends CustomPainter {
+  static const padding = 5.0;
+
   final Region _region;
   final RegionPalette _palette;
   final double cellSize;
@@ -44,8 +46,8 @@ class RegionPainter extends CustomPainter {
   }
 
   void paintContour(Canvas canvas, Contour contour) {
-    final outset = (_region is FieldRegion ? 5.0 : -1.0);
-    final cornerRadius = _region is FieldRegion ? 5.0 : 3.5;
+    final outset = (_region is FieldRegion ? padding : -1.0);
+    final cornerRadius = _region is FieldRegion ? padding : 3.5;
 
     var path = _makePath(contour, outset, cornerRadius);
 
