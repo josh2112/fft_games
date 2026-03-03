@@ -224,6 +224,8 @@ class _PlayPageState extends ConsumerState<PlayPage> {
   Future _maybeApplyBoardState() async {
     final today = DateUtils.dateOnly(DateTime.now());
 
+    bool isCompleted = await ref.read(gameSettings.isCompleted.future);
+
     // Different algorithms depending on game type...
     if (widget.params.puzzleType == PuzzleType.daily) {
       // Make today's puzzle. The seed is today's date as an int.
@@ -239,7 +241,7 @@ class _PlayPageState extends ConsumerState<PlayPage> {
       }
     } else {
       //Autogen games reset after they have been completed.
-      if (await ref.read(gameSettings.elapsedTime.future) > 0 && !await ref.read(gameSettings.isCompleted.future)) {
+      if (await ref.read(gameSettings.elapsedTime.future) > 0 && !isCompleted) {
         boardState.makePuzzle(await ref.read(gameSettings.seed.future));
         await restoreGameState();
       } else {
@@ -250,7 +252,7 @@ class _PlayPageState extends ConsumerState<PlayPage> {
       }
     }
 
-    if (await ref.read(gameSettings.isCompleted.future) && mounted) {
+    if (isCompleted && mounted) {
       showStats(justWon: true);
     }
   }
