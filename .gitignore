@@ -47,3 +47,4 @@ app.*.map.json
 shared_preferences.json
 
 deploy.ps1
+shared_preferences.json - Shortcut.lnk
