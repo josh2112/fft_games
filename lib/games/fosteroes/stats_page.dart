@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '/utils/confetti_star_path.dart';
-import '/utils/stats_widget.dart';
 import '/utils/utils.dart';
 import 'play_page.dart';
 import 'providers.dart';
@@ -98,15 +97,31 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                 ),
               if (_params != null) const Spacer(),
               subtitle(context, "STATISTICS"),
+
               Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 5,
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  StatsWidget("Played", numPlayedState.value!.toString()),
-                  StatsWidget("Win %", (numWonState.value! / max(numPlayedState.value!, 1) * 100).round().toString()),
-                  StatsWidget("Current Streak", currentStreakState.value!.toString()),
-                  StatsWidget("Max Streak", maxStreakState.value!.toString()),
+                  Column(
+                    children: [
+                      Text(numPlayedState.value!.toString(), style: TextTheme.of(context).displayMedium),
+                      Text("Played", textAlign: TextAlign.center),
+                      SizedBox(height: 20),
+                      Text(currentStreakState.value!.toString(), style: TextTheme.of(context).displayMedium),
+                      Text("Current Streak", textAlign: TextAlign.center),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      Text(
+                        (numWonState.value! / max(numPlayedState.value!, 1) * 100).round().toString(),
+                        style: TextTheme.of(context).displayMedium,
+                      ),
+                      Text("Win %", textAlign: TextAlign.center),
+                      SizedBox(height: 20),
+                      Text(maxStreakState.value!.toString(), style: TextTheme.of(context).displayMedium),
+                      Text("Max Streak", textAlign: TextAlign.center),
+                    ],
+                  ),
                 ],
               ),
               const Spacer(),
