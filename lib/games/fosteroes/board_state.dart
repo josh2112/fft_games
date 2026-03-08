@@ -34,7 +34,8 @@ class HandDominoes extends ChangeNotifier {
     domino.location.value = DominoLocation.hand;
     if (_positions.contains(domino)) return false;
     _positions[_positions.indexWhere((ds) => ds == null)] = domino;
-    domino.quarterTurns.value = 0;
+
+    domino.makeHorizontal();
     notifyListeners();
     return true;
   }

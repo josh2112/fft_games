@@ -56,7 +56,7 @@ class Hand extends ConsumerWidget {
         onAcceptWithDetails: (details) {
           if (handState.tryPutBack(details.data)) {
             details.data.location.value == DominoLocation.hand;
-            details.data.quarterTurns.value = 0;
+            details.data.makeHorizontal();
             if (boardState.floatingDomino.value?.domino == details.data) {
               boardState.floatingDomino.value = null;
             } else {
