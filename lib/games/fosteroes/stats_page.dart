@@ -97,9 +97,9 @@ class _StatsPageState extends ConsumerState<StatsPage> {
                 ),
               if (_params != null) const Spacer(),
               subtitle(context, "STATISTICS"),
-
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.center,
+                spacing: 40,
                 children: [
                   Column(
                     children: [
