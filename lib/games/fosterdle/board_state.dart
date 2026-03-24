@@ -236,15 +236,29 @@ class BoardState with ChangeNotifier {
   Future<int> applyGameState(List<List<LetterWithState>> state, bool isComplete) async {
     isGameInProgress = false; // Ignore letter entry while we update the board
 
+    final updatedLetterStates = <String, LetterState>{};
+
     for (int i = 0; i < state.length; ++i) {
       for (int j = 0; j < state[i].length; ++j) {
-        guesses[i].letters[j].updateLetter(state[i][j].letter);
-        guesses[i].letters[j].updateLetterState(state[i][j].state);
+        final ltr = state[i][j].letter;
+        final s = state[i][j].state;
+        guesses[i].letters[j].updateLetter(ltr);
+        guesses[i].letters[j].updateLetterState(s);
         await Future.delayed(Duration(milliseconds: 20));
+
+        if (!updatedLetterStates.containsKey(ltr) || updatedLetterStates[ltr]!.index < s.index) {
+          updatedLetterStates[ltr] = s;
+        }
       }
+
       guesses[i].isSubmitted = true;
       _currentGuess += 1;
     }
+
+    for (final MapEntry(key: c, value: s) in updatedLetterStates.entries) {
+      keyboard.setState(c, s);
+    }
+    keyboard.notify();
 
     isGameInProgress = !isComplete;
 
