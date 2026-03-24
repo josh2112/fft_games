@@ -164,7 +164,7 @@ class _BoardState extends State<Board> {
     }
 
     for (final d in boardState.inHand.positions.where((d) => d?.location.value != DominoLocation.dragging)) {
-      d?.quarterTurns.value = 0;
+      d?.makeHorizontal();
     }
 
     final domino = details.data;

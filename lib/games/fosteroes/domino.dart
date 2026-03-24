@@ -39,6 +39,8 @@ class DominoState extends model.Domino {
 
   @override
   String toString() => "Domino $side1/$side2 ${direction.name}, ${location.value.name}";
+
+  void makeHorizontal() => quarterTurns.value = isVertical ? quarterTurns.value - 1 : quarterTurns.value;
 }
 
 class Domino extends StatefulWidget {
